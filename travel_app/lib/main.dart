@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'home.dart';
+import 'welcome.dart';
 
 void main() {
   runApp(const MyApp());
@@ -12,7 +12,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: MyHomePage(title: ''),
+      home: WelcomePage(),
       theme: new ThemeData(
           scaffoldBackgroundColor: Color.fromARGB(255, 255, 255, 255)),
     );
