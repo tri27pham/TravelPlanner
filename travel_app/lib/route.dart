@@ -190,19 +190,25 @@ class _RoutePlannerState extends State<RoutePlanner> {
                     : Container(),
               ],
             ),
+            Padding(padding: EdgeInsets.fromLTRB(0, 10, 0, 10)),
             AnimatedContainer(
               duration: Duration(milliseconds: 200),
               height: _textEditingController.text.isNotEmpty
-                  ? _containerHeight / 3
+                  ? _containerHeight / 1.75
                   : 0,
-              width: MediaQuery.of(context).size.width * 0.75,
+              width: MediaQuery.of(context).size.width * 0.85,
+              padding: EdgeInsets.fromLTRB(5, 0, 5, 20),
+              decoration: BoxDecoration(
+                color: Colors.grey[200],
+                borderRadius: BorderRadius.circular(25),
+              ),
               child: ListView.builder(
                   itemCount: places.length,
                   itemBuilder: (context, index) {
                     return Container(
-                      color: Colors.white,
+                      color: Colors.transparent,
                       height: MediaQuery.of(context).size.height *
-                          0.05, // Specify the desired height
+                          0.06, // Specify the desired height
                       width:
                           MediaQuery.of(context).size.width, // Use full width
                       child: ListTile(
@@ -212,7 +218,13 @@ class _RoutePlannerState extends State<RoutePlanner> {
                           print(locations.last.longitude);
                           print(locations.last.latitude);
                         },
-                        title: Text(places[index]['description']),
+                        leading: Icon(Icons.location_on),
+                        title: Text(
+                          places[index]['description'],
+                          overflow: TextOverflow
+                              .ellipsis, // Use ellipsis to indicate truncation
+                          maxLines: 1,
+                        ),
                       ),
                     );
                   }),
