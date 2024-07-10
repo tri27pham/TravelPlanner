@@ -125,7 +125,7 @@ class _RoutePlannerState extends State<RoutePlanner> {
         _isEditingStartLocation ||
         _isEditingEndLocation) {
       setState(() {
-        _containerHeight = 400;
+        _containerHeight = 450;
       });
     } else {
       setState(() {
