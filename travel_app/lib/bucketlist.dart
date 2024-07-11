@@ -86,29 +86,43 @@ class _BucketListState extends State<BucketList> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Container(
-                          child: Row(
-                            children: [
-                              Text(
-                                'River Stour',
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(fontSize: 20),
+                        Row(
+                          children: [
+                            ClipRect(
+                              child: Container(
+                                width: 105,
+                                child: Text(
+                                  'River Stour',
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.w500),
+                                ),
                               ),
-                              Text(
-                                'Canterbury, England',
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(fontSize: 14),
-                              )
-                            ],
-                          ),
+                            ),
+                            ClipRect(
+                              child: Padding(
+                                padding: EdgeInsets.fromLTRB(0, 0, 0, 0),
+                                child: Container(
+                                  width: 100,
+                                  child: Text(
+                                    'Canterbury, England',
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                        fontSize: 14, color: Colors.grey),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                         Text(
                           'Added on: 07/10/24',
-                          style: TextStyle(fontSize: 14),
+                          style: TextStyle(fontSize: 12),
                         ),
                         Text(
                           'Added by: Mum',
-                          style: TextStyle(fontSize: 14),
+                          style: TextStyle(fontSize: 12),
                         )
                       ],
                     )
