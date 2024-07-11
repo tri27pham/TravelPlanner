@@ -1,6 +1,11 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'firebase_options.dart';
+import 'dart:async';
 
 class LoginPage extends StatefulWidget {
   @override
@@ -8,14 +13,35 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  // Define any state variables here
-  int _counter = 0;
+  TextEditingController _emailController = TextEditingController();
+  TextEditingController _passwordController = TextEditingController();
 
-  // Define any methods to modify the state here
-  void _incrementCounter() {
-    setState(() {
-      _counter++;
-    });
+  attemptCreateAccount() async {
+    FirebaseAuth auth = FirebaseAuth.instance;
+
+    String email = _emailController.text;
+    String password = _passwordController.text;
+
+    try {
+      UserCredential userCredential =
+          await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'weak-password') {
+        print('The password provided is too weak.');
+      } else if (e.code == 'email-already-in-use') {
+        print('The account already exists for that email.');
+      }
+    } catch (e) {
+      print(e);
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
   }
 
   @override
@@ -35,8 +61,9 @@ class _LoginPageState extends State<LoginPage> {
                       color: Colors.grey[200],
                       borderRadius: BorderRadius.all(Radius.circular(25))),
                   child: TextFormField(
+                    controller: _emailController,
                     decoration: InputDecoration(
-                      hintText: 'Enter username',
+                      hintText: 'Enter email',
                       border: InputBorder.none, // Remove the border
                     ),
                   )),
@@ -51,6 +78,7 @@ class _LoginPageState extends State<LoginPage> {
                       color: Colors.grey[200],
                       borderRadius: BorderRadius.all(Radius.circular(25))),
                   child: TextFormField(
+                    controller: _passwordController,
                     decoration: InputDecoration(
                       hintText: 'Enter password',
                       border: InputBorder.none, // Remove the border
@@ -60,8 +88,10 @@ class _LoginPageState extends State<LoginPage> {
             Container(
               width: MediaQuery.of(context).size.width * 0.8,
               child: ElevatedButton(
-                onPressed: () {},
-                child: Text('LOG IN'),
+                onPressed: () {
+                  attemptCreateAccount();
+                },
+                child: Text('CREATE ACCOUNT'),
                 style: ElevatedButton.styleFrom(
                     primary: Colors.green, foregroundColor: Colors.white),
               ),
