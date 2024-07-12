@@ -1,12 +1,15 @@
 import 'dart:ui';
+import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'firebase_options.dart';
+import '../firebase_options.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'firebase_options.dart';
+import '../firebase_options.dart';
 import 'dart:async';
 import 'createAccount.dart';
+import 'auth_services.dart';
+import 'package:travel_app/home.dart';
 
 class LoginPage extends StatefulWidget {
   @override
@@ -17,32 +20,84 @@ class _LoginPageState extends State<LoginPage> {
   TextEditingController _emailController = TextEditingController();
   TextEditingController _passwordController = TextEditingController();
 
-  attemptCreateAccount() async {
-    FirebaseAuth auth = FirebaseAuth.instance;
+  final _auth = AuthService();
 
-    String email = _emailController.text;
-    String password = _passwordController.text;
-
-    try {
-      UserCredential userCredential =
-          await FirebaseAuth.instance.createUserWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
-    } on FirebaseAuthException catch (e) {
-      if (e.code == 'weak-password') {
-        print('The password provided is too weak.');
-      } else if (e.code == 'email-already-in-use') {
-        print('The account already exists for that email.');
-      }
-    } catch (e) {
-      print(e);
+  logIn() {
+    if (_emailController.text.isEmpty) {
+      _showEmptyEmailDialog(context);
+    } else if (_passwordController.text.isEmpty) {
+      _showEmptyPasswordDialog(context);
+    } else {
+      logInAccount();
     }
+  }
+
+  logInAccount() async {
+    final user = await _auth.singInWithEmailAndPassword(
+        _emailController.text, _passwordController.text);
+    if (user != null) {
+      log('USER LOGIN SUCCESS');
+      goToHomePage(context);
+    } else {
+      log('USER LOGIN FAILED');
+    }
+  }
+
+  goToHomePage(BuildContext content) => Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => HomePage(name: 'John')),
+      );
+
+  void _showEmptyEmailDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text("Empty email"),
+          content: Text("Please enter an email address"),
+          actions: <Widget>[
+            TextButton(
+              child: Text("Close"),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showEmptyPasswordDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text("Empty password"),
+          content: Text("Please enter a password"),
+          actions: <Widget>[
+            TextButton(
+              child: Text("Close"),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
   void initState() {
     super.initState();
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
   }
 
   @override
@@ -52,6 +107,15 @@ class _LoginPageState extends State<LoginPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            Center(
+              child: Text(
+                'WANDER',
+                style: TextStyle(
+                    fontSize: 40,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 10.0),
+              ),
+            ),
             Padding(
               padding: EdgeInsets.fromLTRB(0, 5, 0, 5),
               child: Container(
@@ -90,9 +154,9 @@ class _LoginPageState extends State<LoginPage> {
               width: MediaQuery.of(context).size.width * 0.8,
               child: ElevatedButton(
                 onPressed: () {
-                  attemptCreateAccount();
+                  logIn();
                 },
-                child: Text('CREATE ACCOUNT'),
+                child: Text('LOG IN'),
                 style: ElevatedButton.styleFrom(
                     primary: Colors.green, foregroundColor: Colors.white),
               ),
@@ -107,7 +171,15 @@ class _LoginPageState extends State<LoginPage> {
                         builder: (context) => CreateAccountPage()),
                   );
                 },
-                child: Text('Sign in'),
+                child: Text(
+                  "Don't have an account? Create account",
+                  style: TextStyle(
+                    decoration: TextDecoration.underline,
+                    decorationColor:
+                        Colors.grey, // Optional: Color of the underline
+                    decorationStyle: TextDecorationStyle.solid,
+                  ),
+                ),
                 style: ElevatedButton.styleFrom(
                     primary: Colors.transparent,
                     elevation: 0,
