@@ -2,14 +2,9 @@ import 'dart:ui';
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
-import 'package:firebase_core/firebase_core.dart';
-import '../firebase_options.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import '../firebase_options.dart';
-import 'dart:async';
 import 'createAccount.dart';
 import 'auth_services.dart';
-import 'package:travel_app/home.dart';
+import 'package:travel_app/welcome.dart';
 
 class LoginPage extends StatefulWidget {
   @override
@@ -37,15 +32,15 @@ class _LoginPageState extends State<LoginPage> {
         _emailController.text, _passwordController.text);
     if (user != null) {
       log('USER LOGIN SUCCESS');
-      goToHomePage(context);
+      goToWelcomePage(context);
     } else {
       log('USER LOGIN FAILED');
     }
   }
 
-  goToHomePage(BuildContext content) => Navigator.push(
+  goToWelcomePage(BuildContext content) => Navigator.push(
         context,
-        MaterialPageRoute(builder: (context) => HomePage(name: 'John')),
+        MaterialPageRoute(builder: (context) => WelcomePage()),
       );
 
   void _showEmptyEmailDialog(BuildContext context) {

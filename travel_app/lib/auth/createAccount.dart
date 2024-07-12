@@ -1,14 +1,9 @@
 import 'dart:ui';
 import 'dart:developer';
 import 'package:flutter/material.dart';
-import 'package:firebase_core/firebase_core.dart';
-import '../firebase_options.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import '../firebase_options.dart';
-import 'dart:async';
 import 'login.dart';
 import 'auth_services.dart';
-import 'package:travel_app/home.dart';
+import 'package:travel_app/welcome.dart';
 
 class CreateAccountPage extends StatefulWidget {
   @override
@@ -22,9 +17,9 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
 
   final _auth = AuthService();
 
-  goToHomePage(BuildContext content) => Navigator.push(
+  goToWelcomePage(BuildContext content) => Navigator.push(
         context,
-        MaterialPageRoute(builder: (context) => HomePage(name: 'John')),
+        MaterialPageRoute(builder: (context) => WelcomePage()),
       );
 
   signUp() {
@@ -47,7 +42,7 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
         _emailController.text, _password1Controller.text);
     if (user != null) {
       log('USER CREATION SUCCESS');
-      goToHomePage(context);
+      goToWelcomePage(context);
     } else {
       log('USER CREATION FAILED');
     }
