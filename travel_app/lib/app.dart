@@ -20,6 +20,8 @@ class _AppState extends State<App> {
     BucketList(),
   ];
 
+  DateTime selectedDate = DateTime.now();
+
   void showCustomModalBottomSheet(BuildContext context) {
     Widget LogOutButton() {
       return Container(
@@ -84,13 +86,78 @@ class _AppState extends State<App> {
                           elevation: 0,
                           foregroundColor: Colors.grey[700])),
                   Padding(
-                      padding: EdgeInsets.fromLTRB(0, 0, 0, 0),
+                      padding: EdgeInsets.fromLTRB(30, 0, 30, 0),
                       child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
                         children: [
-                          Text('Name'),
                           Expanded(
-                            child: TextFormField(),
+                            child: Container(
+                              padding: EdgeInsets.fromLTRB(0, 0, 20, 0),
+                              alignment: Alignment.centerRight,
+                              width: 80,
+                              child: Text('Name'),
+                            ),
                           ),
+                          Expanded(
+                            // width: 150,
+                            // height: 40,
+                            child: Padding(
+                              padding: EdgeInsets.fromLTRB(0, 0, 0, 0),
+                              child: TextFormField(
+                                  decoration: InputDecoration(
+                                contentPadding: EdgeInsets.all(0),
+                                // labelText: 'John',
+                                hintText: 'John',
+                                border: InputBorder.none,
+                                enabledBorder: InputBorder.none,
+                                focusedBorder: InputBorder.none,
+                              )),
+                            ),
+                          ),
+                        ],
+                      )),
+                  Padding(
+                      padding: EdgeInsets.fromLTRB(30, 0, 30, 0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        children: [
+                          Expanded(
+                            child: Container(
+                              padding: EdgeInsets.fromLTRB(0, 0, 20, 0),
+                              alignment: Alignment.centerRight,
+                              width: 80,
+                              child: Text('Birthday'),
+                            ),
+                          ),
+                          Expanded(
+                            child: Padding(
+                              padding: EdgeInsets.fromLTRB(0, 0, 0, 0),
+                              child: ElevatedButton(
+                                onPressed: () async {
+                                  final DateTime? dateTime =
+                                      await showDatePicker(
+                                          context: context,
+                                          initialDate: selectedDate,
+                                          firstDate: DateTime(2000),
+                                          lastDate: DateTime(3000));
+                                  if (dateTime != null) {
+                                    setState(() {
+                                      selectedDate = dateTime;
+                                    });
+                                  }
+                                },
+                                child: Text(
+                                    '${selectedDate.day} - ${selectedDate.month} - ${selectedDate.year}'),
+                                style: ElevatedButton.styleFrom(
+                                    elevation: 0,
+                                    minimumSize: Size(0, 0),
+                                    primary: Colors.transparent,
+                                    foregroundColor: Colors.grey[700],
+                                    padding: EdgeInsets.all(0)),
+                              ),
+                            ),
+                          ),
+                          // ),
                         ],
                       )),
                 ],
