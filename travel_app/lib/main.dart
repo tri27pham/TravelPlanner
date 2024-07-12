@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
 import 'welcome.dart';
-import 'login.dart';
+import 'auth/login.dart';
+import 'auth/createAccount.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'firebase_options.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
+  await Firebase.initializeApp();
+  FirebaseFirestore.instance.settings = const Settings(
+    persistenceEnabled: true,
   );
   runApp(const MyApp());
 }
@@ -20,8 +23,8 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      // home: LoginPage(),
-      home: WelcomePage(),
+      home: CreateAccountPage(),
+      // home: WelcomePage(),
       theme: new ThemeData(
           scaffoldBackgroundColor: Color.fromARGB(255, 255, 255, 255)),
     );
