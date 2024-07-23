@@ -22,9 +22,9 @@ class WelcomeViewModel extends ChangeNotifier {
     Profile(name: 'Adam', color: Colors.amber, birthday: DateTime(2000, 3, 21)),
     Profile(
         name: 'Eve', color: Colors.deepOrange, birthday: DateTime(1995, 4, 10)),
-    Profile(name: 'Mum', color: Colors.pink, birthday: DateTime(1965, 5, 15)),
-    Profile(
-        name: 'Dad', color: Colors.deepPurple, birthday: DateTime(1960, 6, 18)),
+    // Profile(name: 'Mum', color: Colors.pink, birthday: DateTime(1965, 5, 15)),
+    // Profile(
+    //     name: 'Dad', color: Colors.deepPurple, birthday: DateTime(1960, 6, 18)),
   ];
 
   String getDaySuffix(int day) {

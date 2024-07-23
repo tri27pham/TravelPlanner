@@ -5,7 +5,7 @@ import 'auth/login.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:travel_app/viewmodels/welcome_viewmodel.dart';
-import 'package:travel_app/viewmodels/dreamlist_viewmodel.dart';
+// import 'package:travel_app/viewmodels/dreamlist_viewmodel.dart';
 import 'package:travel_app/viewmodels/profile_viewmodel.dart';
 // import 'package:travel_app/viewmodels/route_viewmodel.dart';
 
@@ -20,7 +20,7 @@ void main() async {
       providers: [
         ChangeNotifierProvider(create: (_) => WelcomeViewModel()),
         ChangeNotifierProvider(create: (_) => HomeViewModel()),
-        ChangeNotifierProvider(create: (_) => DreamListViewModel()),
+        // ChangeNotifierProvider(create: (_) => DreamListViewModel()),
         ChangeNotifierProvider(create: (_) => ProfileViewModel()),
         // ChangeNotifierProvider(create: (_) => RoutePlannerViewModel()),
       ],

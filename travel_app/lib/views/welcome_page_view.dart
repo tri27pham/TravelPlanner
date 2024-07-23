@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import '../app.dart';
 import '../viewmodels/welcome_viewmodel.dart';
 import '../models/profile_model.dart';
-import 'package:intl/intl.dart';
+// import 'package:intl/intl.dart';
 
 class WelcomePage extends StatelessWidget {
   const WelcomePage({super.key});
@@ -41,7 +41,7 @@ class WelcomePage extends StatelessWidget {
               );
             },
             style: ElevatedButton.styleFrom(
-              fixedSize: Size(75, 75),
+              fixedSize: Size(100, 100),
               primary: profile.color,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(7),
@@ -64,19 +64,59 @@ class WelcomePage extends StatelessWidget {
     );
   }
 
+  Widget addProfileWidget(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.fromLTRB(10, 10, 0, 10),
+      child: Column(
+        children: [
+          ElevatedButton(
+            onPressed: () {},
+            style: ElevatedButton.styleFrom(
+              padding: EdgeInsets.zero,
+              fixedSize: Size(100, 100),
+              primary: Colors.transparent,
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(7),
+                side: BorderSide(
+                  color: Colors.grey, // Set the border color
+                  width: 2, // Set the border width
+                ),
+              ),
+            ),
+            child: Icon(
+              Icons.add_circle_outline_sharp,
+              color: Colors.grey,
+              size: 50,
+            ),
+          ),
+          Padding(
+            padding: EdgeInsets.fromLTRB(0, 10, 0, 0),
+            child: Text(
+              'Add Profile',
+              style: TextStyle(
+                fontSize: 18,
+                color: Color.fromARGB(255, 181, 181, 181),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget buildProfilesWidget(BuildContext context) {
     final viewModel = Provider.of<WelcomeViewModel>(context);
 
     return Container(
-      padding: EdgeInsets.fromLTRB(0, 0, 0, 0),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: viewModel.profiles
+      padding: EdgeInsets.fromLTRB(30, 0, 30, 0),
+      child: Wrap(
+        direction: Axis.horizontal,
+        children: [
+          ...viewModel.profiles
               .map((profile) => buildProfileWidget(context, profile))
               .toList(),
-        ),
+        ],
       ),
     );
   }
@@ -104,6 +144,7 @@ class WelcomePage extends StatelessWidget {
               buildDateWidget(context),
               buildWelcomeTextWidget(),
               buildProfilesWidget(context),
+              addProfileWidget(context),
             ],
           ),
         ),
