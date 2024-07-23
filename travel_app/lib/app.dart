@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
-import 'home.dart';
-import 'route.dart';
-import 'dreamlist.dart';
-import 'profile.dart';
+// import 'home.dart';
+import '/views/home_view.dart';
+import 'views/route_view.dart';
+import 'views/dreamlist_view.dart';
+import '/views/profile_view.dart';
 
 class App extends StatefulWidget {
-  const App({super.key});
+  const App({super.key, required this.name});
+
+  final String name;
 
   @override
   State<App> createState() => _AppState();
@@ -14,230 +17,49 @@ class App extends StatefulWidget {
 class _AppState extends State<App> {
   int _currentIndex = 0;
 
-  final List<Widget> _tabs = [
-    HomePage(name: 'John'),
-    RoutePlanner(),
-    BucketList(),
-  ];
-
-  DateTime selectedDate = DateTime.now();
-
   void showCustomModalBottomSheet(BuildContext context) {
-    Widget LogOutButton() {
-      return Container(
-        child: ElevatedButton(
-          onPressed: () {},
-          child: Row(
-            children: [
-              Padding(
-                padding: EdgeInsets.fromLTRB(0, 0, 5, 0),
-                child: Text('Logout'),
-              ),
-              Icon(Icons.logout_rounded, size: 20)
-            ],
-          ),
-          style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red, foregroundColor: Colors.white),
-        ),
-      );
-    }
-
-    Widget SwitchProfileButton() {
-      return Container(
-        child: ElevatedButton(
-          onPressed: () {},
-          child: Row(
-            children: [
-              Padding(
-                padding: EdgeInsets.fromLTRB(0, 0, 5, 0),
-                child: Text('Switch profile'),
-              ),
-              Icon(Icons.people_outline_outlined, size: 20)
-            ],
-          ),
-          style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.grey, foregroundColor: Colors.white),
-        ),
-      );
-    }
-
-    Widget ProfileInfoWidget() {
-      return Center(
-          child: Container(
-              height: MediaQuery.of(context).size.height * 0.3,
-              width: MediaQuery.of(context).size.width * 0.80,
-              decoration: BoxDecoration(
-                  color: Colors.grey[100],
-                  borderRadius: BorderRadius.all(Radius.circular(20))),
-              child: Column(
-                children: [
-                  Padding(
-                    padding: EdgeInsets.fromLTRB(0, 20, 0, 0),
-                    child: CircleAvatar(
-                      radius: 30.0,
-                      backgroundColor: Colors.blue,
-                    ),
-                  ),
-                  ElevatedButton(
-                      onPressed: () {},
-                      child: Text('Edit picture'),
-                      style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.transparent,
-                          elevation: 0,
-                          foregroundColor: Colors.grey[700])),
-                  Padding(
-                      padding: EdgeInsets.fromLTRB(30, 0, 30, 0),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceAround,
-                        children: [
-                          Expanded(
-                            child: Container(
-                              padding: EdgeInsets.fromLTRB(0, 0, 20, 0),
-                              alignment: Alignment.centerRight,
-                              width: 80,
-                              child: Text('Name'),
-                            ),
-                          ),
-                          Expanded(
-                            // width: 150,
-                            // height: 40,
-                            child: Padding(
-                              padding: EdgeInsets.fromLTRB(0, 0, 0, 0),
-                              child: TextFormField(
-                                  decoration: InputDecoration(
-                                contentPadding: EdgeInsets.all(0),
-                                // labelText: 'John',
-                                hintText: 'John',
-                                border: InputBorder.none,
-                                enabledBorder: InputBorder.none,
-                                focusedBorder: InputBorder.none,
-                              )),
-                            ),
-                          ),
-                        ],
-                      )),
-                  Padding(
-                      padding: EdgeInsets.fromLTRB(30, 0, 30, 0),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceAround,
-                        children: [
-                          Expanded(
-                            child: Container(
-                              padding: EdgeInsets.fromLTRB(0, 0, 20, 0),
-                              alignment: Alignment.centerRight,
-                              width: 80,
-                              child: Text('Birthday'),
-                            ),
-                          ),
-                          Expanded(
-                            child: Padding(
-                              padding: EdgeInsets.fromLTRB(0, 0, 0, 0),
-                              child: ElevatedButton(
-                                onPressed: () async {
-                                  final DateTime? dateTime =
-                                      await showDatePicker(
-                                          context: context,
-                                          initialDate: selectedDate,
-                                          firstDate: DateTime(2000),
-                                          lastDate: DateTime(3000));
-                                  if (dateTime != null) {
-                                    setState(() {
-                                      selectedDate = dateTime;
-                                    });
-                                  }
-                                },
-                                child: Text(
-                                    '${selectedDate.day} - ${selectedDate.month} - ${selectedDate.year}'),
-                                style: ElevatedButton.styleFrom(
-                                    elevation: 0,
-                                    minimumSize: Size(0, 0),
-                                    primary: Colors.transparent,
-                                    foregroundColor: Colors.grey[700],
-                                    padding: EdgeInsets.all(0)),
-                              ),
-                            ),
-                          ),
-                          // ),
-                        ],
-                      )),
-                ],
-              )));
-    }
-
-    Widget ProfileTitle() {
-      return Padding(
-        padding: EdgeInsets.fromLTRB(40, 40, 0, 5),
-        child: Text(
-          'Profile',
-          style: TextStyle(fontSize: 35, fontWeight: FontWeight.w500),
-        ),
-      );
-    }
-
-    Widget ProfileButtonBar() {
-      return Padding(
-          padding: EdgeInsets.fromLTRB(25, 10, 25, 0),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [LogOutButton(), SwitchProfileButton()],
-          ));
-    }
-
     showModalBottomSheet<void>(
       context: context,
       backgroundColor: Colors.transparent,
       builder: (BuildContext context) {
-        return Container(
-          height: MediaQuery.of(context).size.height * 0.5,
-          width: MediaQuery.of(context).size.width,
-          decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(60), topRight: Radius.circular(60))),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              ProfileTitle(),
-              ProfileInfoWidget(),
-              ProfileButtonBar(),
-            ],
-          ),
-        );
+        return ProfileView();
       },
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    final List<Widget> _tabs = [
+      HomeView(name: widget.name),
+      RoutePlanner(),
+      BucketList(),
+    ];
+
     return Scaffold(
       extendBody: true,
       body: _tabs[_currentIndex],
       bottomNavigationBar: Container(
         padding: EdgeInsets.all(10),
         decoration: BoxDecoration(
-          borderRadius:
-              BorderRadius.all(Radius.circular(40)), // Make all corners rounded
+          borderRadius: BorderRadius.all(Radius.circular(40)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.08), // Shadow color
-              spreadRadius: -8, // Spread radius
-              blurRadius: 2, // Blur radius
-              offset: Offset(
-                  0, 0), // Shadow position (horizontal and vertical offset)
+              color: Colors.black.withOpacity(0.08),
+              spreadRadius: -8,
+              blurRadius: 2,
+              offset: Offset(0, 0),
             ),
           ],
         ),
         child: ClipRRect(
-          borderRadius:
-              BorderRadius.all(Radius.circular(40)), // Make all corners rounded
+          borderRadius: BorderRadius.all(Radius.circular(40)),
           child: BottomNavigationBar(
             type: BottomNavigationBarType.fixed,
-            backgroundColor: Colors.white, // Make background transparent
-            selectedItemColor: Colors.green[600], // Change selected item color
-            unselectedItemColor: Colors.grey, // Change unselected item color
+            backgroundColor: Colors.white,
+            selectedItemColor: Colors.green[600],
+            unselectedItemColor: Colors.grey,
             onTap: (index) {
               if (index == 3) {
-                // Show modal bottom sheet for the profile tab
                 showCustomModalBottomSheet(context);
               } else {
                 setState(() {
@@ -248,31 +70,29 @@ class _AppState extends State<App> {
             currentIndex: _currentIndex,
             showUnselectedLabels: false,
             showSelectedLabels: false,
-            selectedIconTheme: IconThemeData(size: 35), // Selected icon size
-            unselectedIconTheme:
-                IconThemeData(size: 24), // Unselected icon size
+            selectedIconTheme: IconThemeData(size: 35),
+            unselectedIconTheme: IconThemeData(size: 24),
             items: const [
               BottomNavigationBarItem(
-                  icon: Icon(
-                    Icons.home,
-                  ),
-                  label: 'Home'),
+                icon: Icon(Icons.home),
+                label: 'Home',
+              ),
               BottomNavigationBarItem(
-                  icon: Icon(Icons.map_outlined), label: 'Route'),
+                icon: Icon(Icons.map_outlined),
+                label: 'Route',
+              ),
               BottomNavigationBarItem(
-                  icon: Icon(Icons.list_alt_outlined), label: 'Bucket List'),
+                icon: Icon(Icons.list_alt_outlined),
+                label: 'Bucket List',
+              ),
               BottomNavigationBarItem(
-                  icon: Icon(Icons.person_2_outlined), label: 'Profile')
+                icon: Icon(Icons.person_2_outlined),
+                label: 'Profile',
+              ),
             ],
           ),
         ),
       ),
     );
   }
-}
-
-void main() {
-  runApp(MaterialApp(
-    home: App(),
-  ));
 }

@@ -1,58 +1,58 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
+import '../viewmodels/home_viewmodel.dart';
 
-class HomePage extends StatefulWidget {
-  const HomePage({super.key, required this.name});
+class HomeView extends StatelessWidget {
+  const HomeView({super.key, required this.name});
 
   final String name;
 
   @override
-  State<HomePage> createState() => _HomePageState();
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(),
+      body: Column(
+        mainAxisAlignment: MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          WelcomeWidget(name: name),
+          SearchBarWidget(),
+          SuggestedLocationsWidget(),
+          UpcomingTripsWidget(),
+        ],
+      ),
+    );
+  }
 }
 
-class _HomePageState extends State<HomePage> {
-  int myIndex = 0;
+class WelcomeWidget extends StatelessWidget {
+  const WelcomeWidget({super.key, required this.name});
 
-  final Map<String, String> unicodeSuperscript = {
-    '1': '\u00B9',
-    '2': '\u00B2',
-    '3': '\u00B3',
-    't': '\u1d57',
-    'h': '\u02b0',
-    's': '\u02e2',
-    'n': '\u207f',
-    'r': '\u02b3',
-    'd': '\u1d48',
-  };
+  final String name;
 
-  String getDaySuffix(int day) {
-    if (day >= 11 && day <= 13) {
-      return 'th';
-    }
-    switch (day % 10) {
-      case 1:
-        return 'st';
-      case 2:
-        return 'nd';
-      case 3:
-        return 'rd';
-      default:
-        return 'th';
-    }
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        DateWidget(),
+        Padding(
+          padding: EdgeInsets.fromLTRB(25, 0, 0, 10),
+          child: Text(
+            'Welcome, $name!',
+            style: TextStyle(fontSize: 40, fontWeight: FontWeight.w400),
+          ),
+        ),
+      ],
+    );
   }
+}
 
-  String toSuperscript(String input) {
-    return input
-        .split('')
-        .map((char) => unicodeSuperscript[char] ?? char)
-        .join('');
-  }
-
-  Widget DateWidget() {
-    DateTime now = DateTime.now();
-    String day = DateFormat('d').format(now);
-    String daySuffix = toSuperscript(getDaySuffix(now.day));
-
+class DateWidget extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final homeViewModel = Provider.of<HomeViewModel>(context);
     return Padding(
       padding: EdgeInsets.fromLTRB(25, 0, 0, 0),
       child: RichText(
@@ -62,35 +62,17 @@ class _HomePageState extends State<HomePage> {
             color: Color.fromARGB(255, 207, 207, 207),
           ),
           children: [
-            TextSpan(text: DateFormat('EEEE ').format(now)),
-            TextSpan(text: day),
-            TextSpan(text: daySuffix),
-            TextSpan(text: DateFormat(' MMMM yyyy').format(now)),
+            TextSpan(text: homeViewModel.getFormattedDate()),
           ],
         ),
       ),
     );
   }
+}
 
-  Widget WelcomeTextWidget() {
-    return Padding(
-      padding: EdgeInsets.fromLTRB(25, 0, 0, 10),
-      child: Text(
-        'Welcome, ${widget.name}!',
-        style: TextStyle(fontSize: 40, fontWeight: FontWeight.w400),
-      ),
-    );
-  }
-
-  Widget WelcomeWidget() {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.start,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [DateWidget(), WelcomeTextWidget()],
-    );
-  }
-
-  Widget SearchBarWidget() {
+class SearchBarWidget extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
     return Center(
       child: Container(
         width: 350,
@@ -113,12 +95,13 @@ class _HomePageState extends State<HomePage> {
               height: 50,
               child: TextField(
                 decoration: InputDecoration(
-                    hintText: 'Search for a location or search by image',
-                    hintStyle: TextStyle(
-                        color: Colors.grey, // Set the hint text color
-                        fontWeight: FontWeight.w300,
-                        fontSize: 13),
-                    border: InputBorder.none),
+                  hintText: 'Search for a location or search by image',
+                  hintStyle: TextStyle(
+                      color: Colors.grey, // Set the hint text color
+                      fontWeight: FontWeight.w300,
+                      fontSize: 13),
+                  border: InputBorder.none,
+                ),
               ),
             ),
           ],
@@ -126,8 +109,11 @@ class _HomePageState extends State<HomePage> {
       ),
     );
   }
+}
 
-  Widget SuggestedLocationsWidget() {
+class SuggestedLocationsWidget extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
     return Padding(
       padding: EdgeInsets.fromLTRB(25, 20, 25, 0),
       child: Column(
@@ -156,8 +142,11 @@ class _HomePageState extends State<HomePage> {
       ),
     );
   }
+}
 
-  Widget SuggestedLocationWidget() {
+class SuggestedLocationWidget extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
     return Padding(
       padding: EdgeInsets.fromLTRB(0, 0, 5, 0),
       child: Container(
@@ -170,8 +159,11 @@ class _HomePageState extends State<HomePage> {
       ),
     );
   }
+}
 
-  Widget UpcomingTripsWidget() {
+class UpcomingTripsWidget extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
     return Padding(
       padding: EdgeInsets.fromLTRB(0, 20, 0, 0),
       child: Column(
@@ -191,23 +183,6 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
           ),
-        ],
-      ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(),
-      body: Column(
-        mainAxisAlignment: MainAxisAlignment.start,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          WelcomeWidget(),
-          SearchBarWidget(),
-          SuggestedLocationsWidget(),
-          UpcomingTripsWidget()
         ],
       ),
     );

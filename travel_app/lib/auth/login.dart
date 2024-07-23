@@ -4,7 +4,7 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'createAccount.dart';
 import 'auth_services.dart';
-import 'package:travel_app/welcome.dart';
+import '../views/welcome_page_view.dart';
 
 class LoginPage extends StatefulWidget {
   @override
