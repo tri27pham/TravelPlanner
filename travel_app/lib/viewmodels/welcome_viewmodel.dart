@@ -4,22 +4,22 @@ import 'package:intl/intl.dart';
 import '../models/profile_model.dart';
 
 class WelcomeViewModel extends ChangeNotifier {
-  WelcomeViewModel() {
-    profileNameController.addListener(onModify);
-  }
+  // WelcomeViewModel() {
+  //   profileNameController.addListener(onModify);
+  // }
 
-  final TextEditingController profileNameController = TextEditingController();
+  // final TextEditingController profileNameController = TextEditingController();
 
-  bool validProfileDetails = false;
+  // bool validProfileDetails = false;
 
-  void onModify() {
-    if (profileNameController.text.isNotEmpty) {
-      validProfileDetails = true;
-    } else {
-      validProfileDetails = false;
-    }
-    notifyListeners();
-  }
+  // void onModify() {
+  //   if (profileNameController.text.isNotEmpty) {
+  //     validProfileDetails = true;
+  //   } else {
+  //     validProfileDetails = false;
+  //   }
+  //   notifyListeners();
+  // }
 
   final Map<String, String> unicodeSuperscript = {
     '1': '\u00B9',
