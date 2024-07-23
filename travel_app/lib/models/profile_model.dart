@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
 class Profile {
-  final String name;
-  final DateTime birthday;
-  final Color color;
+  String name;
+  DateTime birthday;
+  Color color;
 
   Profile({
     required this.name,

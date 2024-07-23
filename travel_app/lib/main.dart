@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:travel_app/viewmodels/home_viewmodel.dart';
 import 'auth/login.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:travel_app/viewmodels/welcome_viewmodel.dart';
+import 'package:travel_app/viewmodels/dreamlist_viewmodel.dart';
+import 'package:travel_app/viewmodels/profile_viewmodel.dart';
+// import 'package:travel_app/viewmodels/route_viewmodel.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -15,6 +19,10 @@ void main() async {
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => WelcomeViewModel()),
+        ChangeNotifierProvider(create: (_) => HomeViewModel()),
+        ChangeNotifierProvider(create: (_) => DreamListViewModel()),
+        ChangeNotifierProvider(create: (_) => ProfileViewModel()),
+        // ChangeNotifierProvider(create: (_) => RoutePlannerViewModel()),
       ],
       child: const MyApp(),
     ),

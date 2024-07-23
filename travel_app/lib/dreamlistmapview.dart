@@ -10,14 +10,14 @@ import 'package:uuid/uuid.dart';
 
 import 'package:geocoding/geocoding.dart';
 
-class RoutePlanner extends StatefulWidget {
-  const RoutePlanner({super.key});
+class DreamListMapView extends StatefulWidget {
+  const DreamListMapView({super.key});
 
   @override
-  State<RoutePlanner> createState() => _RoutePlannerState();
+  State<DreamListMapView> createState() => _DreamListMapViewState();
 }
 
-class _RoutePlannerState extends State<RoutePlanner> {
+class _DreamListMapViewState extends State<DreamListMapView> {
   final Completer<GoogleMapController> _mapController = Completer();
 
   String sessionToken = "12345";
