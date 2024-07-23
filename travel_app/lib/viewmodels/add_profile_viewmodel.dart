@@ -4,6 +4,7 @@ class AddProfileViewModel extends ChangeNotifier {
   AddProfileViewModel() {
     profileNameController.addListener(onModify);
   }
+
   final TextEditingController profileNameController = TextEditingController();
 
   bool validProfileDetails = false;
