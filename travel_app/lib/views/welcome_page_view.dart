@@ -151,6 +151,7 @@ class WelcomePage extends StatelessWidget {
     }, child: Consumer<WelcomeViewModel>(
       builder: (context, viewModel, child) {
         return Scaffold(
+          resizeToAvoidBottomInset: false,
           appBar: AppBar(),
           body: Center(
             child: Column(
