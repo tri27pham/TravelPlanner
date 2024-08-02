@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 import '../app.dart';
 import '../viewmodels/welcome_viewmodel.dart';
 import '../models/profile_model.dart';
+import '../models/AppState.dart';
+import '../models/profile.dart';
 import 'addProfile_view.dart';
 
 class WelcomePage extends StatelessWidget {
@@ -44,10 +46,11 @@ class WelcomePage extends StatelessWidget {
         children: [
           ElevatedButton(
             onPressed: () {
+              final appState = Provider.of<AppState>(context, listen: false);
+              appState.updateProfile(CurrentProfile(name: profile.name));
               Navigator.push(
                 context,
-                MaterialPageRoute(
-                    builder: (context) => App(name: profile.name)),
+                MaterialPageRoute(builder: (context) => App()),
               );
             },
             style: ElevatedButton.styleFrom(

@@ -2,8 +2,13 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../models/profile_model.dart';
+import '../firebase/db_services.dart';
 
 class WelcomeViewModel extends ChangeNotifier {
+  final DbService db_service = DbService();
+
+  List<Profile> profiles = [];
+
   final Map<String, String> unicodeSuperscript = {
     '1': '\u00B9',
     '2': '\u00B2',
@@ -16,16 +21,16 @@ class WelcomeViewModel extends ChangeNotifier {
     'd': '\u1d48',
   };
 
-  List<Profile> profiles = [
-    Profile(name: 'John', color: Colors.red, birthday: DateTime(1990, 1, 1)),
-    Profile(name: 'Mary', color: Colors.blue, birthday: DateTime(1985, 2, 14)),
-    Profile(name: 'Adam', color: Colors.amber, birthday: DateTime(2000, 3, 21)),
-    Profile(
-        name: 'Eve', color: Colors.deepOrange, birthday: DateTime(1995, 4, 10)),
-    // Profile(name: 'Mum', color: Colors.pink, birthday: DateTime(1965, 5, 15)),
-    // Profile(
-    //     name: 'Dad', color: Colors.deepPurple, birthday: DateTime(1960, 6, 18)),
-  ];
+  // List<Profile> profiles = [
+  //   Profile(name: 'John', color: Colors.red, birthday: DateTime(1990, 1, 1)),
+  //   Profile(name: 'Mary', color: Colors.blue, birthday: DateTime(1985, 2, 14)),
+  //   Profile(name: 'Adam', color: Colors.amber, birthday: DateTime(2000, 3, 21)),
+  //   Profile(
+  //       name: 'Eve', color: Colors.deepOrange, birthday: DateTime(1995, 4, 10)),
+  //   // Profile(name: 'Mum', color: Colors.pink, birthday: DateTime(1965, 5, 15)),
+  //   // Profile(
+  //   //     name: 'Dad', color: Colors.deepPurple, birthday: DateTime(1960, 6, 18)),
+  // ];
 
   String getDaySuffix(int day) {
     if (day >= 11 && day <= 13) {
@@ -55,5 +60,9 @@ class WelcomeViewModel extends ChangeNotifier {
     String day = DateFormat('d').format(now);
     String daySuffix = toSuperscript(getDaySuffix(now.day));
     return "${DateFormat('EEEE ').format(now)}$day$daySuffix${DateFormat(' MMMM yyyy').format(now)}";
+  }
+
+  Future<void> loadProfiles(BuildContext context) async {
+    // profiles = await db_service.loadProfilesFromDb(context);
   }
 }

@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:travel_app/app.dart';
 import '../firebase/auth_services.dart';
+import '../models/AppState.dart';
+import '../models/account.dart';
+import 'package:provider/provider.dart';
 
 class LoginViewModel extends ChangeNotifier {
   final AuthService _authService = AuthService();
@@ -19,7 +23,15 @@ class LoginViewModel extends ChangeNotifier {
   Future<void> logInAccount(BuildContext context) async {
     final user = await _authService.singInWithEmailAndPassword(
         emailController.text, passwordController.text);
+
     if (user != null) {
+      final appState = Provider.of<AppState>(context, listen: false);
+      appState.updateAccount(
+        CurrentAccount(
+          email: user.email ?? "Unknown Email",
+        ),
+      );
+      print(user.email);
       Navigator.pushReplacementNamed(context, '/welcome');
     } else {
       _showDialog(context, "Login Failed", "Invalid email or password");

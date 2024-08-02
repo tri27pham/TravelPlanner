@@ -84,7 +84,7 @@ class AddProfile extends StatelessWidget {
                   child: ElevatedButton(
                     onPressed: viewModel.validProfileDetails
                         ? () {
-                            Navigator.of(context).pop();
+                            viewModel.addProfile(context);
                           }
                         : null,
                     child: Text('Add Profile'),
