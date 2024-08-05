@@ -17,6 +17,8 @@ class AddProfileViewModel extends ChangeNotifier {
 
   final TextEditingController profileNameController = TextEditingController();
 
+  List<dynamic> profiles = [];
+
   bool validProfileDetails = false;
 
   void onModify() {

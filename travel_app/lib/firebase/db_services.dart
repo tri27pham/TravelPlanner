@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../models/AppState.dart';
 import 'package:provider/provider.dart';
 import 'dart:developer';
+import '../models/profile_model.dart';
 
 class DbService {
   FirebaseFirestore firestore = FirebaseFirestore.instance;
@@ -65,30 +66,42 @@ class DbService {
     }
   }
 
-  Future<List<String>> loadProfilesFromDb(BuildContext context) async {
+  int hexToInt(String hexString) {
+    // Prepend 'FF' for full opacity if the hex string is in RGB format (6 characters)
+    final buffer = StringBuffer();
+    if (hexString.length == 6) {
+      buffer.write('ff'); // Add 'ff' for full opacity
+    }
+    buffer.write(hexString);
+
+    // Parse the string as a base-16 (hex) integer
+    return int.parse(buffer.toString(), radix: 16);
+  }
+
+  Future<List<Profile>> loadProfilesFromDb(BuildContext context) async {
     final appState = Provider.of<AppState>(context, listen: false);
 
+    List<Profile> profiles = [];
+
     try {
-      // Reference to the profiles collection
       CollectionReference profilesCollection = firestore
           .collection('accounts')
-          .doc(appState.account!.email)
+          .doc(appState.account!.uid)
           .collection('profiles');
 
-      // Get all documents in the profiles collection
       QuerySnapshot querySnapshot = await profilesCollection.get();
 
-      List<String> documentIds =
-          querySnapshot.docs.map((doc) => doc.id).toList();
+      querySnapshot.docs.forEach((doc) {
+        String pid = doc.id;
+        String name = doc["name"];
+        Timestamp dobTimestamp = doc["dob"];
+        DateTime dob = dobTimestamp.toDate();
+        String colorVal = doc["color"] ?? "0xFF000000";
+        Color color = Color(hexToInt(colorVal));
 
-      return documentIds;
-
-      // // Extract data from each document
-      // List<Map<String, dynamic>> profiles = querySnapshot.docs.map((doc) {
-      //   return doc.data() as Map<String, dynamic>;
-      // }).toList();
-
-      // return profiles;
+        profiles.add(Profile(pid: pid, name: name, dob: dob, color: color));
+      });
+      return profiles;
     } catch (e) {
       log("Error fetching profiles: $e");
       return [];
