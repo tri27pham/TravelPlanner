@@ -9,6 +9,8 @@ class AddProfileViewModel extends ChangeNotifier {
     profileNameController.addListener(onModify);
   }
 
+  Color _selectedColor = Colors.orange;
+
   final DbService db_service = DbService();
 
   final TextEditingController profileNameController = TextEditingController();
@@ -24,16 +26,25 @@ class AddProfileViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  set selectedColor(Color color) {
+    if (_selectedColor != color) {
+      _selectedColor = color;
+      notifyListeners();
+    }
+  }
+
+  Color get selectedColor => _selectedColor;
+
   Future<void> addProfile(BuildContext context) async {
     if (profileNameController.text.isEmpty) {
       _showDialog(context, "Empty name", "Please enter a name");
     } else {
-      await addProfileToDb(context, profileNameController.text);
+      await addProfileToDb(context, profileNameController.text, selectedColor);
     }
   }
 
-  Future<void> addProfileToDb(BuildContext context, name) async {
-    await db_service.addProfile(context, name: name);
+  Future<void> addProfileToDb(BuildContext context, name, color) async {
+    await db_service.addProfile(context, name: name, color: color);
     final appState = Provider.of<AppState>(context, listen: false);
     appState.updateProfile(
       CurrentProfile(

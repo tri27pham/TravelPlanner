@@ -2,9 +2,59 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../viewmodels//add_profile_viewmodel.dart';
 import 'package:flutter_material_color_picker/flutter_material_color_picker.dart';
+import 'dart:developer';
 
 class AddProfile extends StatelessWidget {
   const AddProfile({super.key});
+
+  _showColorPickerPopUp(BuildContext context) {
+    final viewModel = Provider.of<AddProfileViewModel>(context, listen: false);
+    Color selectedColor = viewModel.selectedColor;
+
+    showDialog(
+        context: context,
+        builder: (_) {
+          return AlertDialog(
+            elevation: 0,
+            backgroundColor: Colors.white,
+            content: Container(
+              height: MediaQuery.of(context).size.height * 0.57,
+              width: MediaQuery.of(context).size.width * 0.8,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.all(Radius.circular(20)),
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  MaterialColorPicker(
+                      alignment: WrapAlignment.center,
+                      runAlignment: WrapAlignment.center,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      allowShades: false,
+                      circleSize: 55,
+                      selectedColor: selectedColor,
+                      onMainColorChange: (color) =>
+                          {selectedColor = color![500] ?? selectedColor}),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: Navigator.of(context).pop,
+                child: const Text('CANCEL'),
+              ),
+              TextButton(
+                onPressed: () {
+                  viewModel.selectedColor = selectedColor;
+                  Navigator.of(context).pop();
+                },
+                child: const Text('SUBMIT'),
+              ),
+            ],
+          );
+        });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -51,7 +101,7 @@ class AddProfile extends StatelessWidget {
                         height: 100,
                         width: 100,
                         decoration: BoxDecoration(
-                          color: Colors.amber,
+                          color: viewModel.selectedColor,
                           borderRadius: BorderRadius.circular(7),
                         ),
                       ),
@@ -81,10 +131,13 @@ class AddProfile extends StatelessWidget {
                           height: MediaQuery.of(context).size.height * 0.06,
                           width: MediaQuery.of(context).size.width * 0.6,
                           child: ElevatedButton(
-                            onPressed: () {},
+                            onPressed: () {
+                              _showColorPickerPopUp(context);
+                            },
                             child: Text('Choose colour'),
+                            style: ElevatedButton.styleFrom(
+                                elevation: 0.25, backgroundColor: Colors.white),
                           ),
-                          // MaterialColorPicker(),
                         ),
                       ),
                     ],

@@ -7,35 +7,13 @@ import 'dart:developer';
 class DbService {
   FirebaseFirestore firestore = FirebaseFirestore.instance;
 
-  // Future<void> createAccount(BuildContext context) async {}
+  String colorToHex(Color color, {bool includeAlpha = false}) {
+    String hex = color.value.toRadixString(16).padLeft(8, '0').toUpperCase();
+    return includeAlpha ? '#$hex' : '#${hex.substring(2)}';
+  }
 
-  // Future<void> addProfile(BuildContext context, String? name) async {
-  //   final appState = Provider.of<AppState>(context, listen: false);
-
-  //   if (appState.account != null && appState.account!.email.isNotEmpty) {
-  //     try {
-  //       String uid = appState.account!.uid;
-
-  //       Map<String, dynamic> profileData = {
-  //         "name": name ?? appState.account!.email,
-  //       };
-
-  //       DocumentReference docRef = firestore
-  //           .collection('accounts')
-  //           .doc(uid)
-  //           .collection('profiles')
-  //           .doc(name);
-
-  //       await docRef.set(profileData);
-  //     } catch (e) {
-  //       log("Error adding profile: $e");
-  //     }
-  //   } else {
-  //     log("Account is null or email is empty");
-  //   }
-  // }
-
-  Future<void> addProfile(BuildContext context, {String? name}) async {
+  Future<void> addProfile(BuildContext context,
+      {String? name, Color? color}) async {
     final appState = Provider.of<AppState>(context, listen: false);
 
     if (appState.account != null && appState.account!.email.isNotEmpty) {
@@ -44,6 +22,7 @@ class DbService {
       try {
         Map<String, dynamic> profileData = {
           "name": name ?? appState.account!.email,
+          "color": colorToHex(color!) ?? "#ffffff",
         };
 
         CollectionReference collectionRef =
