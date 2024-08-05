@@ -9,6 +9,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:travel_app/viewmodels/welcome_viewmodel.dart';
 import 'package:travel_app/viewmodels/profile_viewmodel.dart';
 import 'package:travel_app/models/AppState.dart';
+import 'app.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -40,6 +41,7 @@ class MyApp extends StatelessWidget {
         '/': (context) => LoginPage(),
         '/welcome': (context) => WelcomePage(),
         '/home': (context) => HomeView(),
+        '/app': (context) => App(),
       },
       theme: ThemeData(
         scaffoldBackgroundColor: Color.fromARGB(255, 255, 255, 255),

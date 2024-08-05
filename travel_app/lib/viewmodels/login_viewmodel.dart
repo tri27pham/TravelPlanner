@@ -28,6 +28,7 @@ class LoginViewModel extends ChangeNotifier {
       final appState = Provider.of<AppState>(context, listen: false);
       appState.updateAccount(
         CurrentAccount(
+          uid: user.uid,
           email: user.email ?? "Unknown Email",
         ),
       );

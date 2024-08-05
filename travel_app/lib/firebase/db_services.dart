@@ -1,35 +1,87 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import '../models/AppState.dart';
-import '../models/profile.dart';
 import 'package:provider/provider.dart';
+import 'dart:developer';
 
 class DbService {
   FirebaseFirestore firestore = FirebaseFirestore.instance;
 
-  Future<void> addProfile(BuildContext context, String name) async {
+  // Future<void> createAccount(BuildContext context) async {}
+
+  // Future<void> addProfile(BuildContext context, String? name) async {
+  //   final appState = Provider.of<AppState>(context, listen: false);
+
+  //   if (appState.account != null && appState.account!.email.isNotEmpty) {
+  //     try {
+  //       String uid = appState.account!.uid;
+
+  //       Map<String, dynamic> profileData = {
+  //         "name": name ?? appState.account!.email,
+  //       };
+
+  //       DocumentReference docRef = firestore
+  //           .collection('accounts')
+  //           .doc(uid)
+  //           .collection('profiles')
+  //           .doc(name);
+
+  //       await docRef.set(profileData);
+  //     } catch (e) {
+  //       log("Error adding profile: $e");
+  //     }
+  //   } else {
+  //     log("Account is null or email is empty");
+  //   }
+  // }
+
+  Future<void> addProfile(BuildContext context, {String? name}) async {
     final appState = Provider.of<AppState>(context, listen: false);
 
     if (appState.account != null && appState.account!.email.isNotEmpty) {
-      try {
-        String email = appState.account!.email;
+      String uid = appState.account!.uid;
 
+      try {
         Map<String, dynamic> profileData = {
-          "name": name,
+          "name": name ?? appState.account!.email,
         };
 
-        DocumentReference docRef = firestore
-            .collection('accounts')
-            .doc(email)
-            .collection('profiles')
-            .doc(name);
+        CollectionReference collectionRef =
+            firestore.collection('accounts').doc(uid).collection('profiles');
+
+        String profileID = collectionRef.doc().id;
+
+        DocumentReference docRef = collectionRef.doc(profileID);
 
         await docRef.set(profileData);
       } catch (e) {
-        print("Error adding profile: $e");
+        log("Error adding profile: $e");
       }
     } else {
-      print("Account is null or email is empty");
+      log("Account is null or email is empty");
+    }
+  }
+
+  Future<void> createAccount(BuildContext context) async {
+    final appState = Provider.of<AppState>(context, listen: false);
+    log(appState.account!.email);
+    if (appState.account != null && appState.account!.email.isNotEmpty) {
+      try {
+        Map<String, dynamic> accountData = {
+          "name": appState.account!.email,
+        };
+
+        CollectionReference collectionRef = firestore.collection('accounts');
+
+        String uid = appState.account!.uid;
+
+        await collectionRef.doc(uid).set(accountData);
+      } catch (e) {
+        log("Error adding profile: $e");
+      }
+    } else {
+      log(appState.account.toString());
+      log("Account is null or email is empty");
     }
   }
 
@@ -58,7 +110,7 @@ class DbService {
 
       // return profiles;
     } catch (e) {
-      print("Error fetching profiles: $e");
+      log("Error fetching profiles: $e");
       return [];
     }
   }

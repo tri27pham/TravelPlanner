@@ -33,14 +33,14 @@ class AddProfileViewModel extends ChangeNotifier {
   }
 
   Future<void> addProfileToDb(BuildContext context, name) async {
-    await db_service.addProfile(context, name);
+    await db_service.addProfile(context, name: name);
     final appState = Provider.of<AppState>(context, listen: false);
     appState.updateProfile(
       CurrentProfile(
         name: name,
       ),
     );
-    Navigator.pushReplacementNamed(context, '/home');
+    Navigator.pushReplacementNamed(context, '/app');
   }
 
   void _showDialog(BuildContext context, String title, String content) {

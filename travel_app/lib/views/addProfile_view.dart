@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../viewmodels//add_profile_viewmodel.dart';
+import 'package:flutter_material_color_picker/flutter_material_color_picker.dart';
 
 class AddProfile extends StatelessWidget {
   const AddProfile({super.key});
@@ -72,6 +73,18 @@ class AddProfile extends StatelessWidget {
                               ),
                             ),
                           ),
+                        ),
+                      ),
+                      Padding(
+                        padding: EdgeInsets.only(top: 20),
+                        child: Container(
+                          height: MediaQuery.of(context).size.height * 0.06,
+                          width: MediaQuery.of(context).size.width * 0.6,
+                          child: ElevatedButton(
+                            onPressed: () {},
+                            child: Text('Choose colour'),
+                          ),
+                          // MaterialColorPicker(),
                         ),
                       ),
                     ],

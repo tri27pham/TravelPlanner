@@ -1,8 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:travel_app/models/profile.dart';
 import '../firebase/auth_services.dart';
+import '../firebase/db_services.dart';
+import '../models/account.dart';
+import 'package:travel_app/models/AppState.dart';
+import 'dart:developer';
+import 'package:provider/provider.dart';
 
 class CreateAccountViewModel extends ChangeNotifier {
   final AuthService _authService = AuthService();
+  final DbService _dbService = DbService();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController password1Controller = TextEditingController();
   final TextEditingController password2Controller = TextEditingController();
@@ -24,9 +31,24 @@ class CreateAccountViewModel extends ChangeNotifier {
   }
 
   Future<void> createAccount(BuildContext context) async {
+    final _appState = Provider.of<AppState>(context, listen: false);
+
     final user = await _authService.createUserWithEmailAndPassword(
         emailController.text, password1Controller.text);
     if (user != null) {
+      _appState.updateAccount(
+        CurrentAccount(
+          uid: user.uid,
+          email: user.email ?? "Unknown Email",
+        ),
+      );
+      await _dbService.createAccount(context);
+      _appState.updateProfile(
+        CurrentProfile(
+          name: user.email ?? "Unknown Email",
+        ),
+      );
+      await _dbService.addProfile(context);
       Navigator.pushReplacementNamed(context, '/welcome');
     } else {
       _showDialog(context, "Account Creation Failed",
