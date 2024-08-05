@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:travel_app/firebase/db_services.dart';
-import 'package:travel_app/models/profile.dart';
+import 'package:travel_app/models/current_profile.dart';
 import 'package:travel_app/models/AppState.dart';
 import 'package:provider/provider.dart';
+import 'package:intl/intl.dart';
 
 class AddProfileViewModel extends ChangeNotifier {
   AddProfileViewModel() {
@@ -10,6 +11,7 @@ class AddProfileViewModel extends ChangeNotifier {
   }
 
   Color _selectedColor = Colors.orange;
+  DateTime _dateOfBirth = DateTime.now();
 
   final DbService db_service = DbService();
 
@@ -33,6 +35,16 @@ class AddProfileViewModel extends ChangeNotifier {
     }
   }
 
+  set dateOfBirth(DateTime DoB) {
+    _dateOfBirth = DoB;
+  }
+
+  String getDoBAsString() {
+    return DateFormat('dd/MM/yy').format(_dateOfBirth);
+  }
+
+  DateTime get dateOfBirth => _dateOfBirth;
+
   Color get selectedColor => _selectedColor;
 
   Future<void> addProfile(BuildContext context) async {
@@ -44,7 +56,8 @@ class AddProfileViewModel extends ChangeNotifier {
   }
 
   Future<void> addProfileToDb(BuildContext context, name, color) async {
-    await db_service.addProfile(context, name: name, color: color);
+    await db_service.addProfile(context,
+        name: name, color: color, dateOfBirth: dateOfBirth);
     final appState = Provider.of<AppState>(context, listen: false);
     appState.updateProfile(
       CurrentProfile(

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'account.dart';
-import 'profile.dart';
+import 'current_profile.dart';
 
 class AppState with ChangeNotifier {
   CurrentAccount? _account;

@@ -4,7 +4,7 @@ import '../app.dart';
 import '../viewmodels/welcome_viewmodel.dart';
 import '../models/profile_model.dart';
 import '../models/AppState.dart';
-import '../models/profile.dart';
+import '../models/current_profile.dart';
 import 'addProfile_view.dart';
 
 class WelcomePage extends StatelessWidget {

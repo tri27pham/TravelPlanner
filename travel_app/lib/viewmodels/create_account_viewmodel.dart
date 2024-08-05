@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:travel_app/models/profile.dart';
+import 'package:travel_app/models/current_profile.dart';
 import '../firebase/auth_services.dart';
 import '../firebase/db_services.dart';
 import '../models/account.dart';

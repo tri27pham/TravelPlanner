@@ -140,6 +140,29 @@ class AddProfile extends StatelessWidget {
                           ),
                         ),
                       ),
+                      Padding(
+                        padding: EdgeInsets.fromLTRB(0, 20, 0, 0),
+                        child: Center(
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text('Date of Birth: '),
+                              ElevatedButton(
+                                  onPressed: () async {
+                                    final DateTime? dateTime =
+                                        await showDatePicker(
+                                            context: context,
+                                            firstDate: DateTime(2000),
+                                            lastDate: DateTime(3000));
+                                    if (dateTime != null) {
+                                      viewModel.dateOfBirth = dateTime;
+                                    }
+                                  },
+                                  child: Text(viewModel.getDoBAsString()))
+                            ],
+                          ),
+                        ),
+                      ),
                     ],
                   ),
                 ),
