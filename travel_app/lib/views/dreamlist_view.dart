@@ -63,14 +63,15 @@ class ListViewContent extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Padding(
-                  padding: EdgeInsets.fromLTRB(30, 40, 0, 10),
+                  padding: EdgeInsets.fromLTRB(40, 40, 0, 0),
                   child: Text(
                     'Dream List',
                     style: TextStyle(fontSize: 35, fontWeight: FontWeight.w500),
                   ),
                 ),
+                switchToMapViewWidget(context),
                 SearchBarWidget(),
-                YourListAndMapViewWidget(context),
+                ListWidget(context),
                 YourListWidget(),
               ],
             ),
@@ -80,48 +81,54 @@ class ListViewContent extends StatelessWidget {
     );
   }
 
-  Widget YourListAndMapViewWidget(BuildContext context) {
+  Widget switchToMapViewWidget(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.fromLTRB(40, 25, 40, 10),
+      padding: EdgeInsets.fromLTRB(40, 0, 0, 10),
+      child: Container(
+        height: 25,
+        width: 150,
+        child: ElevatedButton(
+          onPressed: () {
+            Provider.of<DreamListViewModel>(context, listen: false)
+                .toggleView();
+          },
+          style: ElevatedButton.styleFrom(
+            primary: Colors.green,
+            padding: EdgeInsets.all(0),
+          ),
+          child: Center(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Padding(
+                  padding: EdgeInsets.fromLTRB(0, 0, 5, 0),
+                  child: Text(
+                    'Switch to map view',
+                    style: TextStyle(fontSize: 12, color: Colors.white),
+                  ),
+                ),
+                Icon(
+                  Icons.map_outlined,
+                  size: 15,
+                  color: Colors.white,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget ListWidget(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.fromLTRB(40, 10, 40, 10),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
             'Your list',
             style: TextStyle(fontSize: 25, fontWeight: FontWeight.w400),
-          ),
-          Container(
-            height: 25,
-            width: 150,
-            child: ElevatedButton(
-              onPressed: () {
-                Provider.of<DreamListViewModel>(context, listen: false)
-                    .toggleView();
-              },
-              style: ElevatedButton.styleFrom(
-                primary: Colors.green,
-                padding: EdgeInsets.all(0),
-              ),
-              child: Center(
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Padding(
-                      padding: EdgeInsets.fromLTRB(0, 0, 5, 0),
-                      child: Text(
-                        'Switch to map view',
-                        style: TextStyle(fontSize: 12, color: Colors.white),
-                      ),
-                    ),
-                    Icon(
-                      Icons.map_outlined,
-                      size: 15,
-                      color: Colors.white,
-                    ),
-                  ],
-                ),
-              ),
-            ),
           ),
         ],
       ),
