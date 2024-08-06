@@ -6,12 +6,39 @@ import '../models/list_item.dart'; // Import the model
 
 class DreamListViewModel extends ChangeNotifier {
   bool showList = true;
+
+  int page = 1;
+
   final List<Marker> myMarker = [];
   final Completer<GoogleMapController> _mapController = Completer();
   static const CameraPosition initPos =
       CameraPosition(target: LatLng(51.5131, 0.1174), zoom: 10);
 
   List<ListItem> items = [
+    ListItem(
+      title: 'River Stour',
+      location: 'Canterbury, England',
+      dateAdded: '07/10/24',
+      addedBy: 'Mum',
+    ),
+    ListItem(
+      title: 'River Stour',
+      location: 'Canterbury, England',
+      dateAdded: '07/10/24',
+      addedBy: 'Mum',
+    ),
+    ListItem(
+      title: 'River Stour',
+      location: 'Canterbury, England',
+      dateAdded: '07/10/24',
+      addedBy: 'Mum',
+    ),
+    ListItem(
+      title: 'River Stour',
+      location: 'Canterbury, England',
+      dateAdded: '07/10/24',
+      addedBy: 'Mum',
+    ),
     ListItem(
       title: 'River Stour',
       location: 'Canterbury, England',

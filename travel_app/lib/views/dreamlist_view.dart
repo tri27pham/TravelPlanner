@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
-import '../../viewmodels/dreamlist_viewmodel.dart'; // Import the ViewModel
+import '../../viewmodels/dreamlist_viewmodel.dart';
+import 'dreamlist_listview.dart';
 
 class BucketList extends StatelessWidget {
   const BucketList({super.key});
@@ -13,7 +14,19 @@ class BucketList extends StatelessWidget {
       child: Scaffold(
         body: Consumer<DreamListViewModel>(
           builder: (context, viewModel, child) {
+            // if (viewModel.page == 1) {
+            //   ListViewContent();
+            // } else if (viewModel.page == 2) {
+            //   MapViewContent();
+            // } else if (viewModel.page == 3) {
+            //   EditList();
+            // } else {
+            //   Container();
+            // }
+            // return Container();
             return viewModel.showList ? ListViewContent() : MapViewContent();
+            // return viewModel.showList ? ListViewContent() : MapViewContent();
+            // return EditList();
           },
         ),
       ),
@@ -22,6 +35,15 @@ class BucketList extends StatelessWidget {
 }
 
 class ListViewContent extends StatelessWidget {
+  void showBucketListDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return BucketListListView();
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final viewModel = Provider.of<DreamListViewModel>(context);
@@ -71,7 +93,7 @@ class ListViewContent extends StatelessWidget {
                 ),
                 switchToMapViewWidget(context),
                 SearchBarWidget(),
-                ListWidget(context),
+                ListTitleAndEditListWidget(context),
                 YourListWidget(),
               ],
             ),
@@ -120,9 +142,9 @@ class ListViewContent extends StatelessWidget {
     );
   }
 
-  Widget ListWidget(BuildContext context) {
+  Widget ListTitleAndEditListWidget(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.fromLTRB(40, 10, 40, 10),
+      padding: EdgeInsets.fromLTRB(40, 10, 40, 5),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -130,10 +152,124 @@ class ListViewContent extends StatelessWidget {
             'Your list',
             style: TextStyle(fontSize: 25, fontWeight: FontWeight.w400),
           ),
+          Padding(
+            padding: EdgeInsets.fromLTRB(40, 10, 0, 10),
+            child: Container(
+              height: 25,
+              width: 90,
+              child: ElevatedButton(
+                onPressed: () {
+                  showBucketListDialog(context);
+                },
+                style: ElevatedButton.styleFrom(
+                  primary: Colors.green,
+                  padding: EdgeInsets.all(0),
+                ),
+                child: Center(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Padding(
+                        padding: EdgeInsets.fromLTRB(0, 0, 5, 0),
+                        child: Text(
+                          'Edit list',
+                          style: TextStyle(fontSize: 12, color: Colors.white),
+                        ),
+                      ),
+                      Icon(
+                        Icons.mode_edit_outline_outlined,
+                        size: 15,
+                        color: Colors.white,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          )
         ],
       ),
     );
   }
+
+  // Widget ListItem(item, BuildContext context) {
+  //   return Align(
+  //     alignment: Alignment.topCenter,
+  //     child: Padding(
+  //       padding: EdgeInsets.fromLTRB(0, 3, 0, 3),
+  //       child: Container(
+  //         height: 90,
+  //         width: MediaQuery.of(context).size.width * 0.8,
+  //         decoration: BoxDecoration(
+  //           color: Color.fromARGB(255, 240, 240, 240),
+  //           borderRadius: BorderRadius.circular(10),
+  //         ),
+  //         child: Row(
+  //           children: [
+  //             Padding(
+  //               padding: EdgeInsets.all(10),
+  //               child: Container(
+  //                 height: 70,
+  //                 width: 70,
+  //                 decoration: BoxDecoration(
+  //                   color: Colors.blue,
+  //                   borderRadius: BorderRadius.circular(10),
+  //                 ),
+  //               ),
+  //             ),
+  //             Column(
+  //               crossAxisAlignment: CrossAxisAlignment.start,
+  //               mainAxisAlignment: MainAxisAlignment.center,
+  //               children: [
+  //                 Row(
+  //                   children: [
+  //                     ClipRect(
+  //                       child: Container(
+  //                         width: 105,
+  //                         child: Text(
+  //                           item.title,
+  //                           overflow: TextOverflow.ellipsis,
+  //                           style: TextStyle(
+  //                             fontSize: 20,
+  //                             fontWeight: FontWeight.w500,
+  //                           ),
+  //                         ),
+  //                       ),
+  //                     ),
+  //                     ClipRect(
+  //                       child: Padding(
+  //                         padding: EdgeInsets.fromLTRB(0, 0, 0, 0),
+  //                         child: Container(
+  //                           width: 100,
+  //                           child: Text(
+  //                             item.location,
+  //                             overflow: TextOverflow.ellipsis,
+  //                             style: TextStyle(
+  //                               fontSize: 14,
+  //                               color: Colors.grey,
+  //                             ),
+  //                           ),
+  //                         ),
+  //                       ),
+  //                     ),
+  //                   ],
+  //                 ),
+  //                 Text(
+  //                   'Added on: ${item.dateAdded}',
+  //                   style: TextStyle(fontSize: 12),
+  //                 ),
+  //                 Text(
+  //                   'Added by: ${item.addedBy}',
+  //                   style: TextStyle(fontSize: 12),
+  //                 ),
+  //               ],
+  //             ),
+  //           ],
+  //         ),
+  //       ),
+  //     ),
+  //   );
+  // }
 
   Widget ListItem(item, BuildContext context) {
     return Align(
@@ -141,7 +277,7 @@ class ListViewContent extends StatelessWidget {
       child: Padding(
         padding: EdgeInsets.fromLTRB(0, 3, 0, 3),
         child: Container(
-          height: 90,
+          height: MediaQuery.of(context).size.height * 0.13,
           width: MediaQuery.of(context).size.width * 0.8,
           decoration: BoxDecoration(
             color: Color.fromARGB(255, 240, 240, 240),
@@ -160,52 +296,76 @@ class ListViewContent extends StatelessWidget {
                   ),
                 ),
               ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Row(
-                    children: [
-                      ClipRect(
-                        child: Container(
-                          width: 105,
-                          child: Text(
-                            item.title,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    ClipRRect(
+                      child: Text(
+                        item.title,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w500,
                         ),
                       ),
-                      ClipRect(
-                        child: Padding(
-                          padding: EdgeInsets.fromLTRB(0, 0, 0, 0),
-                          child: Container(
-                            width: 100,
-                            child: Text(
-                              item.location,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Colors.grey,
-                              ),
-                            ),
-                          ),
+                    ),
+                    ClipRRect(
+                      child: Text(
+                        item.location,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey,
                         ),
                       ),
-                    ],
-                  ),
-                  Text(
-                    'Added on: ${item.dateAdded}',
-                    style: TextStyle(fontSize: 12),
-                  ),
-                  Text(
-                    'Added by: ${item.addedBy}',
-                    style: TextStyle(fontSize: 12),
-                  ),
-                ],
+                    ),
+                    // ClipRect(
+                    //   child: Row(
+                    //     children: [
+                    //       // ClipRect(
+                    //       //   child:
+                    //       Flexible(
+                    //         flex: 3,
+                    //         child: Text(
+                    //           item.title,
+                    //           overflow: TextOverflow.ellipsis,
+                    //           style: TextStyle(
+                    //             fontSize: 20,
+                    //             fontWeight: FontWeight.w500,
+                    //           ),
+                    //         ),
+                    //       ),
+                    //       // ),
+                    //       // ClipRect(
+                    //       // child:
+                    //       Flexible(
+                    //         flex: 1,
+                    //         child: Text(
+                    //           item.location,
+                    //           overflow: TextOverflow.ellipsis,
+                    //           style: TextStyle(
+                    //             fontSize: 14,
+                    //             color: Colors.grey,
+                    //           ),
+                    //         ),
+
+                    //         // ),
+                    //       ),
+                    //     ],
+                    //   ),
+                    // ),
+                    Text(
+                      'Added on: ${item.dateAdded}',
+                      style: TextStyle(fontSize: 12),
+                    ),
+                    Text(
+                      'Added by: ${item.addedBy}',
+                      style: TextStyle(fontSize: 12),
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
@@ -436,6 +596,63 @@ class MapViewContent extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+class EditList extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final viewModel = Provider.of<DreamListViewModel>(context);
+
+    return Stack(
+      children: [
+        Positioned(
+          top: -35,
+          left: 0,
+          right: 0,
+          child: Image.asset(
+            'assets/grandcanyon.png',
+            fit: BoxFit.fitWidth,
+            height: MediaQuery.of(context).size.height * 0.5,
+          ),
+        ),
+        Align(
+          alignment: Alignment.bottomCenter,
+          child: AnimatedContainer(
+            duration: Duration(milliseconds: 200),
+            width: MediaQuery.of(context).size.width,
+            height: MediaQuery.of(context).size.height * 0.85,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(60.0),
+                topRight: Radius.circular(60.0),
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black26,
+                  offset: Offset(0, -2),
+                  blurRadius: 1,
+                  spreadRadius: 0.5,
+                ),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: EdgeInsets.fromLTRB(40, 40, 0, 0),
+                  child: Text(
+                    'Edit List',
+                    style: TextStyle(fontSize: 35, fontWeight: FontWeight.w500),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
