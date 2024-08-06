@@ -1,14 +1,11 @@
 import 'package:flutter/material.dart';
-// import 'home.dart';
 import '/views/home_view.dart';
 import 'views/route_view.dart';
 import 'views/dreamlist_view.dart';
 import '/views/profile_view.dart';
 
 class App extends StatefulWidget {
-  const App({super.key, required this.name});
-
-  final String name;
+  const App({super.key});
 
   @override
   State<App> createState() => _AppState();
@@ -30,7 +27,7 @@ class _AppState extends State<App> {
   @override
   Widget build(BuildContext context) {
     final List<Widget> _tabs = [
-      HomeView(name: widget.name),
+      HomeView(),
       RoutePlanner(),
       BucketList(),
     ];

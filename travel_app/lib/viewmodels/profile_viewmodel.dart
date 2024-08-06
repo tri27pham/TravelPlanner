@@ -5,21 +5,23 @@ class ProfileViewModel extends ChangeNotifier {
   Profile profile;
 
   ProfileViewModel({
+    String? pid,
     String? name,
-    DateTime? birthday,
+    DateTime? dob,
     Color? color,
   }) : profile = Profile(
+          pid: pid ?? '',
           name: name ?? "Default Name",
-          birthday: birthday ??
+          dob: dob ??
               DateTime(2000, 1,
                   1), // Default birthday to January 1, 2000 if not provided
           color: color ?? Colors.blue,
         );
 
-  DateTime get selectedDate => profile.birthday;
+  DateTime get selectedDate => profile.dob;
 
   set selectedDate(DateTime date) {
-    profile.birthday = date;
+    profile.dob = date;
     notifyListeners();
   }
 
@@ -40,7 +42,7 @@ class ProfileViewModel extends ChangeNotifier {
   Future<void> selectDate(BuildContext context) async {
     final DateTime? dateTime = await showDatePicker(
       context: context,
-      initialDate: profile.birthday,
+      initialDate: profile.dob,
       firstDate: DateTime(2000),
       lastDate: DateTime(3000),
     );

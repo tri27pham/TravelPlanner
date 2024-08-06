@@ -44,6 +44,7 @@ dependencies:
   firebase_auth: ^4.17.8
   cloud_firestore: ^4.15.8
   provider: ^6.1.2
+  flutter_material_color_picker: ^1.2.0
 
 
 dev_dependencies:

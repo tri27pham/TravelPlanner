@@ -1,21 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../viewmodels/home_viewmodel.dart';
+import '../models/AppState.dart';
 
 class HomeView extends StatelessWidget {
-  const HomeView({super.key, required this.name});
-
-  final String name;
+  const HomeView({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final appState = Provider.of<AppState>(context, listen: false);
+
     return Scaffold(
       appBar: AppBar(),
       body: Column(
         mainAxisAlignment: MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          WelcomeWidget(name: name),
+          WelcomeWidget(name: appState.profile!.name),
           SearchBarWidget(),
           SuggestedLocationsWidget(),
           UpcomingTripsWidget(),

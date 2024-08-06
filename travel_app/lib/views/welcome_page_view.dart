@@ -1,13 +1,26 @@
-// welcome_page.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../app.dart';
 import '../viewmodels/welcome_viewmodel.dart';
 import '../models/profile_model.dart';
-// import 'package:intl/intl.dart';
+import '../models/AppState.dart';
+import '../models/current_profile.dart';
+import 'addProfile_view.dart';
+import 'dart:developer';
 
 class WelcomePage extends StatelessWidget {
   const WelcomePage({super.key});
+
+  void showAddProfile(BuildContext context) {
+    showDialog<void>(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          child: AddProfile(),
+        );
+      },
+    );
+  }
 
   Widget buildDateWidget(BuildContext context) {
     final viewModel = Provider.of<WelcomeViewModel>(context);
@@ -34,10 +47,11 @@ class WelcomePage extends StatelessWidget {
         children: [
           ElevatedButton(
             onPressed: () {
+              final appState = Provider.of<AppState>(context, listen: false);
+              appState.updateProfile(CurrentProfile(name: profile.name));
               Navigator.push(
                 context,
-                MaterialPageRoute(
-                    builder: (context) => App(name: profile.name)),
+                MaterialPageRoute(builder: (context) => App()),
               );
             },
             style: ElevatedButton.styleFrom(
@@ -64,13 +78,15 @@ class WelcomePage extends StatelessWidget {
     );
   }
 
-  Widget addProfileWidget(BuildContext context) {
+  Widget addProfileButton(WelcomeViewModel viewModel, BuildContext context) {
     return Padding(
       padding: EdgeInsets.fromLTRB(10, 10, 0, 10),
       child: Column(
         children: [
           ElevatedButton(
-            onPressed: () {},
+            onPressed: () {
+              showAddProfile(context);
+            },
             style: ElevatedButton.styleFrom(
               padding: EdgeInsets.zero,
               fixedSize: Size(100, 100),
@@ -134,20 +150,41 @@ class WelcomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      create: (context) => WelcomeViewModel(),
-      child: Scaffold(
-        appBar: AppBar(),
-        body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              buildDateWidget(context),
-              buildWelcomeTextWidget(),
-              buildProfilesWidget(context),
-              addProfileWidget(context),
-            ],
-          ),
-        ),
+      create: (_) => WelcomeViewModel(),
+      child: Consumer<WelcomeViewModel>(
+        builder: (context, viewModel, child) {
+          return FutureBuilder<void>(
+            future: viewModel
+                .loadProfiles(context), // Wait for this future to complete
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return Center(
+                  child: CircularProgressIndicator(), // Show loading indicator
+                );
+              } else if (snapshot.hasError) {
+                return Center(
+                  child: Text('Error loading profiles'), // Show error message
+                );
+              } else {
+                return Scaffold(
+                  resizeToAvoidBottomInset: false,
+                  appBar: AppBar(),
+                  body: Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        buildDateWidget(context),
+                        buildWelcomeTextWidget(),
+                        buildProfilesWidget(context),
+                        addProfileButton(viewModel, context),
+                      ],
+                    ),
+                  ),
+                );
+              }
+            },
+          );
+        },
       ),
     );
   }
