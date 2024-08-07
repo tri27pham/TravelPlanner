@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
 import '../../viewmodels/dreamlist_viewmodel.dart';
+import 'add_dreamlist_location_view.dart';
 
 class BucketList extends StatelessWidget {
   const BucketList({super.key});
@@ -598,6 +599,17 @@ class MapViewContent extends StatelessWidget {
 class BucketListListView extends StatelessWidget {
   const BucketListListView({super.key});
 
+  void showAddLocation(BuildContext context) {
+    showDialog<void>(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          child: AddDreamlistLocation(),
+        );
+      },
+    );
+  }
+
   Widget YourListWidget() {
     return Expanded(
       child: Padding(
@@ -765,7 +777,9 @@ class BucketListListView extends StatelessWidget {
                       height: 30,
                       width: MediaQuery.of(context).size.width * 0.8,
                       child: ElevatedButton(
-                        onPressed: () {},
+                        onPressed: () {
+                          showAddLocation(context);
+                        },
                         style: ElevatedButton.styleFrom(
                           primary: Colors.green,
                           padding: EdgeInsets.all(0),
@@ -806,61 +820,3 @@ class BucketListListView extends StatelessWidget {
     );
   }
 }
-
-
-// class EditList extends StatelessWidget {
-//   @override
-//   Widget build(BuildContext context) {
-//     final viewModel = Provider.of<DreamListViewModel>(context);
-
-//     return Stack(
-//       children: [
-//         Positioned(
-//           top: -35,
-//           left: 0,
-//           right: 0,
-//           child: Image.asset(
-//             'assets/grandcanyon.png',
-//             fit: BoxFit.fitWidth,
-//             height: MediaQuery.of(context).size.height * 0.5,
-//           ),
-//         ),
-//         Align(
-//           alignment: Alignment.bottomCenter,
-//           child: AnimatedContainer(
-//             duration: Duration(milliseconds: 200),
-//             width: MediaQuery.of(context).size.width,
-//             height: MediaQuery.of(context).size.height * 0.85,
-//             decoration: BoxDecoration(
-//               color: Colors.white,
-//               borderRadius: BorderRadius.only(
-//                 topLeft: Radius.circular(60.0),
-//                 topRight: Radius.circular(60.0),
-//               ),
-//               boxShadow: [
-//                 BoxShadow(
-//                   color: Colors.black26,
-//                   offset: Offset(0, -2),
-//                   blurRadius: 1,
-//                   spreadRadius: 0.5,
-//                 ),
-//               ],
-//             ),
-//             child: Column(
-//               crossAxisAlignment: CrossAxisAlignment.start,
-//               children: [
-//                 Padding(
-//                   padding: EdgeInsets.fromLTRB(40, 40, 0, 0),
-//                   child: Text(
-//                     'Edit List',
-//                     style: TextStyle(fontSize: 35, fontWeight: FontWeight.w500),
-//                   ),
-//                 ),
-//               ],
-//             ),
-//           ),
-//         ),
-//       ],
-//     );
-//   }
-// }

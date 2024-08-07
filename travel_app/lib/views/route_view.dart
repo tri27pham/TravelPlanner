@@ -190,8 +190,7 @@ class RoutePlanner extends StatelessWidget {
                           controller: viewModel.textEditingController,
                           focusNode: viewModel.mapSearchFocusNode,
                           decoration: InputDecoration(
-                            hintText:
-                                'Search for a location or search by image',
+                            hintText: 'Search for a location',
                             hintStyle: TextStyle(
                               color: Colors.grey,
                               fontWeight: FontWeight.w300,
