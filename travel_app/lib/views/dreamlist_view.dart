@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
-import '../../viewmodels/dreamlist_viewmodel.dart'; // Import the ViewModel
+import '../../viewmodels/dreamlist_viewmodel.dart';
+import 'add_dreamlist_location_view.dart';
 
 class BucketList extends StatelessWidget {
   const BucketList({super.key});
@@ -13,7 +14,15 @@ class BucketList extends StatelessWidget {
       child: Scaffold(
         body: Consumer<DreamListViewModel>(
           builder: (context, viewModel, child) {
-            return viewModel.showList ? ListViewContent() : MapViewContent();
+            final pageWidgets = {
+              1: ListViewContent(),
+              2: MapViewContent(),
+              3: BucketListListView(),
+            };
+            return pageWidgets[viewModel.page] ??
+                Center(
+                  child: Text('Page not found'),
+                );
           },
         ),
       ),
@@ -22,10 +31,17 @@ class BucketList extends StatelessWidget {
 }
 
 class ListViewContent extends StatelessWidget {
+  void showBucketListDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return BucketListListView();
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final viewModel = Provider.of<DreamListViewModel>(context);
-
     return Stack(
       children: [
         Positioned(
@@ -63,14 +79,15 @@ class ListViewContent extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Padding(
-                  padding: EdgeInsets.fromLTRB(30, 40, 0, 10),
+                  padding: EdgeInsets.fromLTRB(40, 40, 0, 0),
                   child: Text(
                     'Dream List',
                     style: TextStyle(fontSize: 35, fontWeight: FontWeight.w500),
                   ),
                 ),
+                switchToMapViewWidget(context),
                 SearchBarWidget(),
-                YourListAndMapViewWidget(context),
+                ListTitleAndEditListWidget(context),
                 YourListWidget(),
               ],
             ),
@@ -80,9 +97,49 @@ class ListViewContent extends StatelessWidget {
     );
   }
 
-  Widget YourListAndMapViewWidget(BuildContext context) {
+  Widget switchToMapViewWidget(BuildContext context) {
+    final viewModel = Provider.of<DreamListViewModel>(context);
     return Padding(
-      padding: EdgeInsets.fromLTRB(40, 25, 40, 10),
+      padding: EdgeInsets.fromLTRB(40, 0, 0, 10),
+      child: Container(
+        height: 25,
+        width: 150,
+        child: ElevatedButton(
+          onPressed: () {
+            viewModel.setPage(2);
+          },
+          style: ElevatedButton.styleFrom(
+            primary: Colors.green,
+            padding: EdgeInsets.all(0),
+          ),
+          child: Center(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Padding(
+                  padding: EdgeInsets.fromLTRB(0, 0, 5, 0),
+                  child: Text(
+                    'Switch to map view',
+                    style: TextStyle(fontSize: 12, color: Colors.white),
+                  ),
+                ),
+                Icon(
+                  Icons.map_outlined,
+                  size: 15,
+                  color: Colors.white,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget ListTitleAndEditListWidget(BuildContext context) {
+    final viewModel = Provider.of<DreamListViewModel>(context);
+    return Padding(
+      padding: EdgeInsets.fromLTRB(40, 10, 40, 5),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -90,43 +147,124 @@ class ListViewContent extends StatelessWidget {
             'Your list',
             style: TextStyle(fontSize: 25, fontWeight: FontWeight.w400),
           ),
-          Container(
-            height: 25,
-            width: 150,
-            child: ElevatedButton(
-              onPressed: () {
-                Provider.of<DreamListViewModel>(context, listen: false)
-                    .toggleView();
-              },
-              style: ElevatedButton.styleFrom(
-                primary: Colors.green,
-                padding: EdgeInsets.all(0),
-              ),
-              child: Center(
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Padding(
-                      padding: EdgeInsets.fromLTRB(0, 0, 5, 0),
-                      child: Text(
-                        'Switch to map view',
-                        style: TextStyle(fontSize: 12, color: Colors.white),
+          Padding(
+            padding: EdgeInsets.fromLTRB(40, 10, 0, 10),
+            child: Container(
+              height: 25,
+              width: 90,
+              child: ElevatedButton(
+                onPressed: () {
+                  viewModel.setPage(3);
+                },
+                style: ElevatedButton.styleFrom(
+                  primary: Colors.green,
+                  padding: EdgeInsets.all(0),
+                ),
+                child: Center(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Padding(
+                        padding: EdgeInsets.fromLTRB(0, 0, 5, 0),
+                        child: Text(
+                          'Edit list',
+                          style: TextStyle(fontSize: 12, color: Colors.white),
+                        ),
                       ),
-                    ),
-                    Icon(
-                      Icons.map_outlined,
-                      size: 15,
-                      color: Colors.white,
-                    ),
-                  ],
+                      Icon(
+                        Icons.mode_edit_outline_outlined,
+                        size: 15,
+                        color: Colors.white,
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
+          )
         ],
       ),
     );
   }
+
+  // Widget ListItem(item, BuildContext context) {
+  //   return Align(
+  //     alignment: Alignment.topCenter,
+  //     child: Padding(
+  //       padding: EdgeInsets.fromLTRB(0, 3, 0, 3),
+  //       child: Container(
+  //         height: 90,
+  //         width: MediaQuery.of(context).size.width * 0.8,
+  //         decoration: BoxDecoration(
+  //           color: Color.fromARGB(255, 240, 240, 240),
+  //           borderRadius: BorderRadius.circular(10),
+  //         ),
+  //         child: Row(
+  //           children: [
+  //             Padding(
+  //               padding: EdgeInsets.all(10),
+  //               child: Container(
+  //                 height: 70,
+  //                 width: 70,
+  //                 decoration: BoxDecoration(
+  //                   color: Colors.blue,
+  //                   borderRadius: BorderRadius.circular(10),
+  //                 ),
+  //               ),
+  //             ),
+  //             Column(
+  //               crossAxisAlignment: CrossAxisAlignment.start,
+  //               mainAxisAlignment: MainAxisAlignment.center,
+  //               children: [
+  //                 Row(
+  //                   children: [
+  //                     ClipRect(
+  //                       child: Container(
+  //                         width: 105,
+  //                         child: Text(
+  //                           item.title,
+  //                           overflow: TextOverflow.ellipsis,
+  //                           style: TextStyle(
+  //                             fontSize: 20,
+  //                             fontWeight: FontWeight.w500,
+  //                           ),
+  //                         ),
+  //                       ),
+  //                     ),
+  //                     ClipRect(
+  //                       child: Padding(
+  //                         padding: EdgeInsets.fromLTRB(0, 0, 0, 0),
+  //                         child: Container(
+  //                           width: 100,
+  //                           child: Text(
+  //                             item.location,
+  //                             overflow: TextOverflow.ellipsis,
+  //                             style: TextStyle(
+  //                               fontSize: 14,
+  //                               color: Colors.grey,
+  //                             ),
+  //                           ),
+  //                         ),
+  //                       ),
+  //                     ),
+  //                   ],
+  //                 ),
+  //                 Text(
+  //                   'Added on: ${item.dateAdded}',
+  //                   style: TextStyle(fontSize: 12),
+  //                 ),
+  //                 Text(
+  //                   'Added by: ${item.addedBy}',
+  //                   style: TextStyle(fontSize: 12),
+  //                 ),
+  //               ],
+  //             ),
+  //           ],
+  //         ),
+  //       ),
+  //     ),
+  //   );
+  // }
 
   Widget ListItem(item, BuildContext context) {
     return Align(
@@ -134,7 +272,7 @@ class ListViewContent extends StatelessWidget {
       child: Padding(
         padding: EdgeInsets.fromLTRB(0, 3, 0, 3),
         child: Container(
-          height: 90,
+          height: MediaQuery.of(context).size.height * 0.13,
           width: MediaQuery.of(context).size.width * 0.8,
           decoration: BoxDecoration(
             color: Color.fromARGB(255, 240, 240, 240),
@@ -153,52 +291,76 @@ class ListViewContent extends StatelessWidget {
                   ),
                 ),
               ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Row(
-                    children: [
-                      ClipRect(
-                        child: Container(
-                          width: 105,
-                          child: Text(
-                            item.title,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    ClipRRect(
+                      child: Text(
+                        item.title,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w500,
                         ),
                       ),
-                      ClipRect(
-                        child: Padding(
-                          padding: EdgeInsets.fromLTRB(0, 0, 0, 0),
-                          child: Container(
-                            width: 100,
-                            child: Text(
-                              item.location,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Colors.grey,
-                              ),
-                            ),
-                          ),
+                    ),
+                    ClipRRect(
+                      child: Text(
+                        item.location,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey,
                         ),
                       ),
-                    ],
-                  ),
-                  Text(
-                    'Added on: ${item.dateAdded}',
-                    style: TextStyle(fontSize: 12),
-                  ),
-                  Text(
-                    'Added by: ${item.addedBy}',
-                    style: TextStyle(fontSize: 12),
-                  ),
-                ],
+                    ),
+                    // ClipRect(
+                    //   child: Row(
+                    //     children: [
+                    //       // ClipRect(
+                    //       //   child:
+                    //       Flexible(
+                    //         flex: 3,
+                    //         child: Text(
+                    //           item.title,
+                    //           overflow: TextOverflow.ellipsis,
+                    //           style: TextStyle(
+                    //             fontSize: 20,
+                    //             fontWeight: FontWeight.w500,
+                    //           ),
+                    //         ),
+                    //       ),
+                    //       // ),
+                    //       // ClipRect(
+                    //       // child:
+                    //       Flexible(
+                    //         flex: 1,
+                    //         child: Text(
+                    //           item.location,
+                    //           overflow: TextOverflow.ellipsis,
+                    //           style: TextStyle(
+                    //             fontSize: 14,
+                    //             color: Colors.grey,
+                    //           ),
+                    //         ),
+
+                    //         // ),
+                    //       ),
+                    //     ],
+                    //   ),
+                    // ),
+                    Text(
+                      'Added on: ${item.dateAdded}',
+                      style: TextStyle(fontSize: 12),
+                    ),
+                    Text(
+                      'Added by: ${item.addedBy}',
+                      style: TextStyle(fontSize: 12),
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
@@ -328,7 +490,7 @@ class MapViewContent extends StatelessWidget {
                             width: 80,
                             child: ElevatedButton(
                               onPressed: () {
-                                viewModel.toggleView();
+                                viewModel.setPage(1);
                               },
                               child: Icon(Icons.arrow_back_sharp),
                               style: ElevatedButton.styleFrom(
@@ -355,6 +517,8 @@ class MapViewContent extends StatelessWidget {
   }
 
   Widget SwitchToListViewWidget(BuildContext context) {
+    final viewModel = Provider.of<DreamListViewModel>(context);
+
     return Padding(
       padding: EdgeInsets.fromLTRB(40, 0, 0, 12),
       child: Container(
@@ -362,8 +526,7 @@ class MapViewContent extends StatelessWidget {
         width: 150,
         child: ElevatedButton(
           onPressed: () {
-            Provider.of<DreamListViewModel>(context, listen: false)
-                .toggleView();
+            viewModel.setPage(1);
           },
           style: ElevatedButton.styleFrom(
             primary: Colors.green,
@@ -429,6 +592,231 @@ class MapViewContent extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+class BucketListListView extends StatelessWidget {
+  const BucketListListView({super.key});
+
+  void showAddLocation(BuildContext context) {
+    showDialog<void>(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          child: AddDreamlistLocation(),
+        );
+      },
+    );
+  }
+
+  Widget YourListWidget() {
+    return Expanded(
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(0, 0, 0, 0),
+        child: Consumer<DreamListViewModel>(
+          builder: (context, viewModel, child) {
+            return ListView.builder(
+              padding: EdgeInsets.only(bottom: 10),
+              itemCount: viewModel.items.length,
+              itemBuilder: (context, index) {
+                final item = viewModel.items[index];
+                return ListItem(item, context);
+              },
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget ListItem(item, BuildContext context) {
+    return Align(
+      alignment: Alignment.topCenter,
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(0, 3, 0, 3),
+        child: Container(
+          height: MediaQuery.of(context).size.height * 0.13,
+          width: MediaQuery.of(context).size.width * 0.8,
+          decoration: BoxDecoration(
+            color: Color.fromARGB(255, 240, 240, 240),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Row(
+            children: [
+              Padding(
+                padding: EdgeInsets.all(10),
+                child: Container(
+                  height: 70,
+                  width: 70,
+                  decoration: BoxDecoration(
+                    color: Colors.blue,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+              ),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    ClipRRect(
+                      child: Text(
+                        item.title,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                    ClipRRect(
+                      child: Text(
+                        item.location,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey,
+                        ),
+                      ),
+                    ),
+                    Text(
+                      'Added on: ${item.dateAdded}',
+                      style: TextStyle(fontSize: 12),
+                    ),
+                    Text(
+                      'Added by: ${item.addedBy}',
+                      style: TextStyle(fontSize: 12),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final viewModel = Provider.of<DreamListViewModel>(context);
+
+    return Stack(
+      children: [
+        Positioned(
+          top: -35,
+          left: 0,
+          right: 0,
+          child: Image.asset(
+            'assets/grandcanyon.png',
+            fit: BoxFit.fitWidth,
+            height: MediaQuery.of(context).size.height * 0.5,
+          ),
+        ),
+        Align(
+          alignment: Alignment.bottomCenter,
+          child: AnimatedContainer(
+            duration: Duration(milliseconds: 200),
+            width: MediaQuery.of(context).size.width,
+            height: MediaQuery.of(context).size.height * 0.8,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(60.0),
+                topRight: Radius.circular(60.0),
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black26,
+                  offset: Offset(0, -2),
+                  blurRadius: 1,
+                  spreadRadius: 0.5,
+                ),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: EdgeInsets.fromLTRB(0, 30, 0, 0),
+                  child: Padding(
+                    padding: EdgeInsets.fromLTRB(0, 0, 0, 10),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        Container(
+                          height: 40,
+                          width: 40,
+                          child: ElevatedButton(
+                            onPressed: () {
+                              viewModel.setPage(1);
+                            },
+                            child: Icon(Icons.arrow_back_sharp),
+                            style: ElevatedButton.styleFrom(
+                              primary: Colors.grey[900],
+                              onPrimary: Colors.white,
+                              padding: EdgeInsets.zero,
+                              minimumSize: Size(35, 35),
+                            ),
+                          ),
+                        ),
+                        Text(
+                          'Edit List',
+                          style: TextStyle(
+                              fontSize: 35, fontWeight: FontWeight.w500),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: EdgeInsets.fromLTRB(0, 0, 0, 10),
+                  child: Center(
+                    child: Container(
+                      height: 30,
+                      width: MediaQuery.of(context).size.width * 0.8,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          showAddLocation(context);
+                        },
+                        style: ElevatedButton.styleFrom(
+                          primary: Colors.green,
+                          padding: EdgeInsets.all(0),
+                        ),
+                        child: Center(
+                          child: Padding(
+                            padding: EdgeInsets.fromLTRB(10, 0, 10, 0),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Padding(
+                                  padding: EdgeInsets.fromLTRB(0, 0, 5, 0),
+                                  child: Text(
+                                    'Add a location',
+                                    style: TextStyle(
+                                        fontSize: 12, color: Colors.white),
+                                  ),
+                                ),
+                                Icon(
+                                  Icons.add_location_alt_outlined,
+                                  size: 15,
+                                  color: Colors.white,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                YourListWidget(),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
