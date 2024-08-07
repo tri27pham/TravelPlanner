@@ -1,8 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'dart:async';
-
+import 'package:uuid/uuid.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import '../models/predicted_dreamlist_place_model.dart';
 import '../models/list_item.dart'; // Import the model
+import 'dart:convert';
+import 'dart:async';
+import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:http/http.dart' as http;
+import 'package:uuid/uuid.dart';
+import 'package:geocoding/geocoding.dart';
+import '../models/predicted_route_place_model.dart';
 
 class DreamListViewModel extends ChangeNotifier {
   bool showList = true;
@@ -20,10 +32,77 @@ class DreamListViewModel extends ChangeNotifier {
     }
   }
 
+  DreamListViewModel() {
+    textEditingController.addListener(onModify);
+    packData();
+  }
+
+  void packData() {
+    getUserLocation().then((value) async {
+      if (_isDisposed) return;
+      myMarker.add(Marker(
+        markerId: const MarkerId('CurrentLocation'),
+        position: LatLng(value.latitude, value.longitude),
+        infoWindow: const InfoWindow(title: 'CurrentLocation'),
+      ));
+      CameraPosition cameraPosition = CameraPosition(
+          target: LatLng(value.latitude, value.longitude), zoom: 14);
+      final GoogleMapController controller = await _mapController.future;
+      if (_isDisposed) return;
+      controller.animateCamera(CameraUpdate.newCameraPosition(cameraPosition));
+      if (_isDisposed) return;
+      notifyListeners();
+    });
+  }
+
+  Future<Position> getUserLocation() async {
+    await Geolocator.requestPermission();
+    return await Geolocator.getCurrentPosition();
+  }
+
+  bool _isDisposed = false;
+
+  String sessionToken = "12345";
+  var uuid = Uuid();
+
+  List<PredictedDreamlistPlace> places = [];
+
+  final TextEditingController textEditingController = TextEditingController();
+
   final List<Marker> myMarker = [];
   final Completer<GoogleMapController> _mapController = Completer();
   static const CameraPosition initPos =
       CameraPosition(target: LatLng(51.5131, 0.1174), zoom: 10);
+
+  void onModify() {
+    if (textEditingController.text.isEmpty) {
+      places.clear();
+      notifyListeners();
+      return;
+    }
+    if (sessionToken == null) {
+      sessionToken = uuid.v4();
+    }
+    makeSuggestion(textEditingController.text);
+  }
+
+  void makeSuggestion(String input) async {
+    String apiKey = 'AIzaSyC3Qfm0kEEILIuqvgu21OnlhSkWoBiyVNQ';
+    String url = 'https://maps.googleapis.com/maps/api/place/autocomplete/json';
+    String request = '$url?input=$input&key=$apiKey&sessiontoken=$sessionToken';
+
+    var response = await http.get(Uri.parse(request));
+
+    if (response.statusCode == 200) {
+      var responseData = jsonDecode(response.body);
+      places = (responseData['predictions'] as List)
+          .map((e) => PredictedDreamlistPlace.fromJson(e))
+          .toList();
+      notifyListeners();
+    } else {
+      throw Exception('FAILED');
+    }
+  }
 
   List<ListItem> items = [
     ListItem(
@@ -76,11 +155,6 @@ class DreamListViewModel extends ChangeNotifier {
     ),
     // Add more items as needed
   ];
-
-  void toggleView() {
-    showList = !showList;
-    notifyListeners();
-  }
 
   void disposeController() {
     _mapController.future.then((controller) => controller.dispose());
