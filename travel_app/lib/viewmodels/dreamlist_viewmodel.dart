@@ -7,7 +7,18 @@ import '../models/list_item.dart'; // Import the model
 class DreamListViewModel extends ChangeNotifier {
   bool showList = true;
 
-  int page = 1;
+  int _page = 1; // Default page
+
+  // Getter for the page
+  int get page => _page;
+
+  // Method to set the page and notify listeners
+  void setPage(int newPage) {
+    if (newPage != _page) {
+      _page = newPage;
+      notifyListeners(); // Notify listeners about the change
+    }
+  }
 
   final List<Marker> myMarker = [];
   final Completer<GoogleMapController> _mapController = Completer();

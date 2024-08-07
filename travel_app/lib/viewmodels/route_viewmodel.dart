@@ -8,7 +8,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:http/http.dart' as http;
 import 'package:uuid/uuid.dart';
 import 'package:geocoding/geocoding.dart';
-import '../models/place_model.dart';
+import '../models/predicted_route_place_model.dart';
 
 class RoutePlannerViewModel extends ChangeNotifier {
   final Completer<GoogleMapController> _mapController = Completer();
@@ -32,7 +32,7 @@ class RoutePlannerViewModel extends ChangeNotifier {
   bool showStart = true;
   bool showEnd = true;
 
-  List<Place> places = [];
+  List<PredictedRoutePlace> places = [];
 
   static const CameraPosition initPos =
       CameraPosition(target: LatLng(51.5131, 0.1174), zoom: 14);
@@ -84,7 +84,7 @@ class RoutePlannerViewModel extends ChangeNotifier {
     if (response.statusCode == 200) {
       var responseData = jsonDecode(response.body);
       places = (responseData['predictions'] as List)
-          .map((e) => Place.fromJson(e))
+          .map((e) => PredictedRoutePlace.fromJson(e))
           .toList();
       notifyListeners();
     } else {
