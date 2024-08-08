@@ -1,8 +1,12 @@
+// import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:travel_app/models/dreamlist_location.dart';
 import '../viewmodels/dreamlist_viewmodel.dart';
 
 import 'package:geocoding/geocoding.dart';
+import 'dart:developer';
 
 class AddDreamlistLocation extends StatelessWidget {
   const AddDreamlistLocation({super.key});
@@ -94,10 +98,10 @@ class AddDreamlistLocation extends StatelessWidget {
                     width: MediaQuery.of(context).size.width,
                     child: ListTile(
                       onTap: () async {
-                        List<Location> locations = await locationFromAddress(
-                            viewModel.places[index].description);
-                        print(locations.last.longitude);
-                        print(locations.last.latitude);
+                        DreamListLocation dreamListLocation =
+                            await viewModel.getDreamlistLocationInfo(
+                                viewModel.places[index].placeId);
+                        dreamListLocation.displayInfo();
                       },
                       leading: Icon(Icons.location_on),
                       title: Text(

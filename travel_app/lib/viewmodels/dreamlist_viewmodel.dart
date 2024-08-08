@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:travel_app/models/dreamlist_location.dart';
 import 'dart:async';
 import 'package:uuid/uuid.dart';
 import 'dart:convert';
@@ -15,6 +16,8 @@ import 'package:http/http.dart' as http;
 import 'package:uuid/uuid.dart';
 import 'package:geocoding/geocoding.dart';
 import '../models/predicted_route_place_model.dart';
+import 'package:dio/dio.dart';
+import 'dart:developer';
 
 class DreamListViewModel extends ChangeNotifier {
   bool showList = true;
@@ -35,6 +38,40 @@ class DreamListViewModel extends ChangeNotifier {
   DreamListViewModel() {
     textEditingController.addListener(onModify);
     packData();
+  }
+
+  Future<DreamListLocation> getDreamlistLocationInfo(String placeId) async {
+    final String apiKey = 'AIzaSyC3Qfm0kEEILIuqvgu21OnlhSkWoBiyVNQ';
+    final String placeImgRequest =
+        'https://places.googleapis.com/v1/places/$placeId?fields=id,displayName,editorial_summary,location,formattedAddress,userRatingCount,photos,rating&key=$apiKey';
+    final dio = Dio();
+
+    try {
+      final response = await dio.get(placeImgRequest);
+      DreamListLocation dreamlistLocation =
+          DreamListLocation.fromJson(response.data);
+      return dreamlistLocation;
+    } on DioException catch (e) {
+      log('DioException: ${e.message}');
+      if (e.response != null) {
+        log('Error response: ${e.response?.statusCode} ${e.response?.statusMessage}');
+        log('Response data: ${e.response?.data}');
+      } else {
+        log('Error request: ${e.message}');
+      }
+    } catch (e) {
+      log('General error: $e');
+    }
+
+    return DreamListLocation(
+        id: 'id',
+        name: 'name',
+        locationName: 'locationName',
+        locationCoordinates: LatLng(0, 0),
+        description: 'description',
+        rating: 0,
+        numReviews: 0,
+        photoRefs: []);
   }
 
   void packData() {
