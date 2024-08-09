@@ -11,7 +11,18 @@ import 'dart:developer';
 
 class DreamListLocationViewModel extends ChangeNotifier {
   bool showList = true;
-  bool locationSelected = false;
+  // bool locationSelected = false;
+
+  bool _locationSelected = false;
+
+  bool get locationSelected => _locationSelected;
+
+  set locationSelected(bool value) {
+    if (_locationSelected != value) {
+      _locationSelected = value;
+      notifyListeners();
+    }
+  }
 
   String sessionToken = "12345";
   var uuid = Uuid();
@@ -20,11 +31,24 @@ class DreamListLocationViewModel extends ChangeNotifier {
 
   final TextEditingController textEditingController = TextEditingController();
 
+  DreamListLocation selectedLocation = DreamListLocation(
+      id: 'id',
+      name: 'name',
+      locationName: 'locationName',
+      locationCoordinates: LatLng(0, 0),
+      description: 'description',
+      rating: 0,
+      numReviews: 0,
+      photoRefs: []);
+
   DreamListLocationViewModel() {
     textEditingController.addListener(onModify);
   }
 
-  void selectLocation(DreamListLocation listLocation) {}
+  void selectLocation(DreamListLocation listLocation) {
+    selectedLocation = listLocation;
+    locationSelected = true;
+  }
 
   Future<DreamListLocation> getDreamlistLocationInfo(String placeId) async {
     final String apiKey = 'AIzaSyC3Qfm0kEEILIuqvgu21OnlhSkWoBiyVNQ';

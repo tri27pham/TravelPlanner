@@ -12,94 +12,98 @@ class AddDreamlistLocation extends StatelessWidget {
   const AddDreamlistLocation({super.key});
 
   void selectLocation(BuildContext context, DreamListLocation location) {
-    final viewModel = Provider.of<DreamListLocationViewModel>(context);
+    final viewModel =
+        Provider.of<DreamListLocationViewModel>(context, listen: false);
     viewModel.selectLocation(location);
   }
 
   Widget SearchBarWidget(BuildContext context) {
-    final viewModel = Provider.of<DreamListLocationViewModel>(context);
-    return Padding(
-      padding: EdgeInsets.fromLTRB(0, 10, 0, 5),
-      child: Center(
-        child: viewModel.locationSelected
-            ? Container()
-            : Column(
-                children: [
-                  Container(
-                    height: 50,
-                    decoration: BoxDecoration(
-                      color: Color.fromARGB(255, 240, 240, 240),
-                      borderRadius: BorderRadius.circular(25),
-                    ),
-                    child: Row(
-                      children: [
-                        Padding(
-                          padding: EdgeInsets.fromLTRB(20, 0, 5, 0),
-                          child: Icon(
-                            Icons.search,
-                            color: Colors.grey,
+    // final viewModel = Provider.of<DreamListLocationViewModel>(context);
+    return Consumer<DreamListLocationViewModel>(
+        builder: (context, viewModel, child) {
+      return Padding(
+        padding: EdgeInsets.fromLTRB(0, 10, 0, 5),
+        child: Center(
+          child: viewModel.locationSelected
+              ? Container()
+              : Column(
+                  children: [
+                    Container(
+                      height: 50,
+                      decoration: BoxDecoration(
+                        color: Color.fromARGB(255, 240, 240, 240),
+                        borderRadius: BorderRadius.circular(25),
+                      ),
+                      child: Row(
+                        children: [
+                          Padding(
+                            padding: EdgeInsets.fromLTRB(20, 0, 5, 0),
+                            child: Icon(
+                              Icons.search,
+                              color: Colors.grey,
+                            ),
                           ),
-                        ),
-                        Container(
-                          width: 200,
-                          height: 50,
-                          child: TextFormField(
-                            controller: viewModel.textEditingController,
-                            decoration: InputDecoration(
-                              hintText: 'Search for a location',
-                              hintStyle: TextStyle(
-                                color: Colors.grey,
-                                fontWeight: FontWeight.w300,
-                                fontSize: 13,
+                          Container(
+                            width: 200,
+                            height: 50,
+                            child: TextFormField(
+                              controller: viewModel.textEditingController,
+                              decoration: InputDecoration(
+                                hintText: 'Search for a location',
+                                hintStyle: TextStyle(
+                                  color: Colors.grey,
+                                  fontWeight: FontWeight.w300,
+                                  fontSize: 13,
+                                ),
+                                border: InputBorder.none,
                               ),
-                              border: InputBorder.none,
                             ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                  AnimatedContainer(
-                    duration: Duration(milliseconds: 200),
-                    margin: EdgeInsets.fromLTRB(0, 15, 0, 0),
-                    height: viewModel.textEditingController.text.isEmpty
-                        ? 0
-                        : MediaQuery.of(context).size.width * 0.7,
-                    width: MediaQuery.of(context).size.width * 0.85,
-                    padding: EdgeInsets.fromLTRB(5, 10, 5, 10),
-                    decoration: BoxDecoration(
-                      color: Colors.grey[200],
-                      borderRadius: BorderRadius.circular(25),
-                    ),
-                    child: ListView.builder(
-                      itemCount: viewModel.places.length,
-                      itemBuilder: (context, index) {
-                        return Container(
-                          color: Colors.transparent,
-                          height: MediaQuery.of(context).size.height * 0.06,
-                          width: MediaQuery.of(context).size.width,
-                          child: ListTile(
-                            onTap: () async {
-                              DreamListLocation dreamListLocation =
-                                  await viewModel.getDreamlistLocationInfo(
-                                      viewModel.places[index].placeId);
-                              selectLocation(context, dreamListLocation);
-                            },
-                            leading: Icon(Icons.location_on),
-                            title: Text(
-                              viewModel.places[index].description,
-                              overflow: TextOverflow.ellipsis,
-                              maxLines: 1,
+                    AnimatedContainer(
+                      duration: Duration(milliseconds: 200),
+                      margin: EdgeInsets.fromLTRB(0, 15, 0, 0),
+                      height: viewModel.textEditingController.text.isEmpty
+                          ? 0
+                          : MediaQuery.of(context).size.width * 0.7,
+                      width: MediaQuery.of(context).size.width * 0.85,
+                      padding: EdgeInsets.fromLTRB(5, 10, 5, 10),
+                      decoration: BoxDecoration(
+                        color: Colors.grey[200],
+                        borderRadius: BorderRadius.circular(25),
+                      ),
+                      child: ListView.builder(
+                        itemCount: viewModel.places.length,
+                        itemBuilder: (context, index) {
+                          return Container(
+                            color: Colors.transparent,
+                            height: MediaQuery.of(context).size.height * 0.06,
+                            width: MediaQuery.of(context).size.width,
+                            child: ListTile(
+                              onTap: () async {
+                                DreamListLocation dreamListLocation =
+                                    await viewModel.getDreamlistLocationInfo(
+                                        viewModel.places[index].placeId);
+                                selectLocation(context, dreamListLocation);
+                              },
+                              leading: Icon(Icons.location_on),
+                              title: Text(
+                                viewModel.places[index].description,
+                                overflow: TextOverflow.ellipsis,
+                                maxLines: 1,
+                              ),
                             ),
-                          ),
-                        );
-                      },
+                          );
+                        },
+                      ),
                     ),
-                  ),
-                ],
-              ),
-      ),
-    );
+                  ],
+                ),
+        ),
+      );
+    });
   }
 
   @override
@@ -120,56 +124,105 @@ class AddDreamlistLocation extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Padding(
-                padding: EdgeInsets.fromLTRB(10, 5, 0, 0),
-                child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                  },
-                  child: Text(
-                    'Cancel',
-                    style: TextStyle(fontSize: 15),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    padding: EdgeInsets.zero,
-                    elevation: 0,
-                    foregroundColor: Colors.grey[700],
-                    backgroundColor: Colors.transparent,
-                  ),
-                ),
-              ),
-              Expanded(
-                child: Container(
-                  padding: EdgeInsets.fromLTRB(30, 0, 30, 0),
-                  child: SingleChildScrollView(
-                    child: Column(
-                      children: [
-                        SearchBarWidget(context),
-                        // TextFormField(),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-              Padding(
-                padding: EdgeInsets.only(bottom: 20),
-                child: Center(
-                  child: ElevatedButton(
-                    onPressed: () {},
-                    child: Text('Add Location'),
-                    style: ElevatedButton.styleFrom(
-                      minimumSize: Size(150, 40),
-                      elevation: 0,
-                      backgroundColor: viewModel.locationSelected
-                          ? Colors.green
-                          : Colors.transparent,
-                      foregroundColor: viewModel.locationSelected
-                          ? Colors.white
-                          : Colors.grey[700],
-                    ),
-                  ),
-                ),
-              ),
+              viewModel.locationSelected
+                  ? Container(
+                      height: MediaQuery.of(context).size.height * 0.7,
+                      width: MediaQuery.of(context).size.width * 0.8,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Padding(
+                            padding: EdgeInsets.fromLTRB(10, 5, 0, 0),
+                            child: ElevatedButton(
+                              onPressed: () {
+                                viewModel.locationSelected = false;
+                                log(viewModel.locationSelected.toString());
+                              },
+                              child: Text(
+                                'Back',
+                                style: TextStyle(fontSize: 15),
+                              ),
+                              style: ElevatedButton.styleFrom(
+                                padding: EdgeInsets.zero,
+                                elevation: 0,
+                                foregroundColor: Colors.grey[700],
+                                backgroundColor: Colors.transparent,
+                              ),
+                            ),
+                          ),
+                          Expanded(
+                            child: Column(
+                              children: [
+                                Text(viewModel.selectedLocation.name),
+                                Text(viewModel.selectedLocation.locationName),
+                                Text(viewModel.selectedLocation.rating
+                                    .toString()),
+                                Text(viewModel.selectedLocation.numReviews
+                                    .toString()),
+                                Text(viewModel.selectedLocation.description),
+                              ],
+                            ),
+                          ),
+                          Padding(
+                            padding: EdgeInsets.only(bottom: 20),
+                            child: Center(
+                              child: ElevatedButton(
+                                onPressed: () {},
+                                child: Text('Add Location'),
+                                style: ElevatedButton.styleFrom(
+                                  minimumSize: Size(150, 40),
+                                  elevation: 0,
+                                  backgroundColor: viewModel.locationSelected
+                                      ? Colors.green
+                                      : Colors.transparent,
+                                  foregroundColor: viewModel.locationSelected
+                                      ? Colors.white
+                                      : Colors.grey[700],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ))
+                  : Container(
+                      height: MediaQuery.of(context).size.height * 0.7,
+                      width: MediaQuery.of(context).size.width * 0.8,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Padding(
+                            padding: EdgeInsets.fromLTRB(10, 5, 0, 0),
+                            child: ElevatedButton(
+                              onPressed: () {
+                                Navigator.of(context).pop();
+                              },
+                              child: Text(
+                                'Cancel',
+                                style: TextStyle(fontSize: 15),
+                              ),
+                              style: ElevatedButton.styleFrom(
+                                padding: EdgeInsets.zero,
+                                elevation: 0,
+                                foregroundColor: Colors.grey[700],
+                                backgroundColor: Colors.transparent,
+                              ),
+                            ),
+                          ),
+                          Expanded(
+                            child: Container(
+                              padding: EdgeInsets.fromLTRB(30, 0, 30, 0),
+                              child: SingleChildScrollView(
+                                child: Column(
+                                  children: [
+                                    SearchBarWidget(context),
+                                    // TextFormField(),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ))
             ],
           ),
         );
