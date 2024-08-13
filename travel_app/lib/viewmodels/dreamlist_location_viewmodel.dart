@@ -8,10 +8,12 @@ import 'package:http/http.dart' as http;
 import '../models/predicted_dreamlist_place_model.dart';
 import 'package:dio/dio.dart';
 import 'dart:developer';
+import '../firebase/db_services.dart';
 
 class DreamListLocationViewModel extends ChangeNotifier {
+  final DbService db_service = DbService();
+
   bool showList = true;
-  // bool locationSelected = false;
 
   bool _locationSelected = false;
 
@@ -48,6 +50,11 @@ class DreamListLocationViewModel extends ChangeNotifier {
   void selectLocation(DreamListLocation listLocation) {
     selectedLocation = listLocation;
     locationSelected = true;
+  }
+
+  Future<void> addLocationToDb(BuildContext context) async {
+    await db_service.addBucketListLocation(context, selectedLocation);
+    Navigator.pop(context);
   }
 
   Future<DreamListLocation> getDreamlistLocationInfo(String placeId) async {

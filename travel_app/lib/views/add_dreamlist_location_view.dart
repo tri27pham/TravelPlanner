@@ -191,7 +191,9 @@ class AddDreamlistLocation extends StatelessWidget {
                             padding: EdgeInsets.only(bottom: 20),
                             child: Center(
                               child: ElevatedButton(
-                                onPressed: () {},
+                                onPressed: () {
+                                  viewModel.addLocationToDb(context);
+                                },
                                 child: Text('Add Location'),
                                 style: ElevatedButton.styleFrom(
                                   minimumSize: Size(150, 40),

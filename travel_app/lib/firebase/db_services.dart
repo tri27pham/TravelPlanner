@@ -4,6 +4,8 @@ import '../models/AppState.dart';
 import 'package:provider/provider.dart';
 import 'dart:developer';
 import '../models/profile_model.dart';
+import '../models/profile_model.dart';
+import '../models/dreamlist_location.dart';
 
 class DbService {
   FirebaseFirestore firestore = FirebaseFirestore.instance;
@@ -105,6 +107,43 @@ class DbService {
     } catch (e) {
       log("Error fetching profiles: $e");
       return [];
+    }
+  }
+
+  Future<void> addBucketListLocation(
+      BuildContext context, DreamListLocation location) async {
+    final appState = Provider.of<AppState>(context, listen: false);
+
+    if (appState.account != null && appState.account!.email.isNotEmpty) {
+      String uid = appState.account!.uid;
+
+      try {
+        Map<String, dynamic> locationData = {
+          "id": location.id,
+          "name": location.name,
+          "locationName": location.locationName,
+          "latitude": location.locationCoordinates.latitude,
+          "longitude": location.locationCoordinates.longitude,
+          "description": location.description,
+          "rating": location.rating,
+          "numReviews": location.numReviews,
+          "addedOn": DateTime.now(),
+          "addedBy": appState.profile!.name,
+        };
+
+        CollectionReference collectionRef =
+            firestore.collection('accounts').doc(uid).collection('dreamlist');
+
+        String locationID = collectionRef.doc().id;
+
+        DocumentReference docRef = collectionRef.doc(locationID);
+
+        await docRef.set(locationData);
+      } catch (e) {
+        log("Error adding location: $e");
+      }
+    } else {
+      log("Account is null or email is empty");
     }
   }
 }
