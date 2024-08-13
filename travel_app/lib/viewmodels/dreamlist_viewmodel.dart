@@ -6,6 +6,7 @@ import '../models/list_item.dart';
 import 'package:geolocator/geolocator.dart';
 import '../firebase/db_services.dart';
 import 'dart:developer';
+import '../models/dreamlist_location.dart';
 
 class DreamListViewModel extends ChangeNotifier {
   int _page = 1;
@@ -24,12 +25,25 @@ class DreamListViewModel extends ChangeNotifier {
 
   final db_service = DbService();
 
+  createMarkers() {
+    markers.clear();
+    for (DreamListLocation location in locations) {
+      log(location.name);
+      log(location.locationCoordinates.toString());
+      markers.add(Marker(
+          markerId: MarkerId(location.name),
+          position: location.locationCoordinates,
+          icon: BitmapDescriptor.defaultMarker));
+    }
+  }
+
   Future<void> loadLocations(BuildContext context) async {
     if (locationsLoaded) {
       return;
     }
     try {
       locations = await db_service.loadDreamlistFromDb(context);
+      createMarkers();
       locationsLoaded = true;
       log('Locations loaded successfully.');
       log(locations.length.toString());
@@ -44,7 +58,12 @@ class DreamListViewModel extends ChangeNotifier {
     return await Geolocator.getCurrentPosition();
   }
 
-  final List<Marker> myMarker = [];
+  final List<Marker> markers = [
+    // Marker(
+    //     markerId: MarkerId('test'),
+    //     position: LatLng(51.510357, -0.116773),
+    //     icon: BitmapDescriptor.defaultMarker)
+  ];
 
   final Completer<GoogleMapController> _mapController = Completer();
   static const CameraPosition initPos =

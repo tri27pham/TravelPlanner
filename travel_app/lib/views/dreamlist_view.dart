@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../viewmodels/dreamlist_viewmodel.dart';
 import 'add_dreamlist_location_view.dart';
 import '../models/dreamlist_location.dart';
+import 'dart:developer';
 
 class BucketList extends StatelessWidget {
   const BucketList({super.key});
@@ -343,9 +344,10 @@ class MapViewContent extends StatelessWidget {
         GoogleMap(
           initialCameraPosition: DreamListViewModel.initPos,
           mapType: MapType.normal,
-          markers: Set<Marker>.of(viewModel.myMarker),
+          markers: Set<Marker>.of(viewModel.markers),
           zoomControlsEnabled: false,
           onMapCreated: (GoogleMapController controller) {
+            log(viewModel.markers.length.toString());
             if (!viewModel.mapController.isCompleted) {
               viewModel.mapController.complete(controller);
             }

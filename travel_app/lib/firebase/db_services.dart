@@ -132,7 +132,7 @@ class DbService {
 
       QuerySnapshot querySnapshot = await dreamlistCollection.get();
 
-      querySnapshot.docs.forEach((doc) async {
+      for (var doc in querySnapshot.docs) {
         String id = doc.id;
         String name = doc['name'];
         String locationName = doc['locationName'];
@@ -148,9 +148,9 @@ class DbService {
 
         List<String> photoRefs = [];
 
-        querySnapshotPhotos.docs.forEach((doc) {
-          photoRefs.add(doc['photoRef']);
-        });
+        for (var photoDoc in querySnapshotPhotos.docs) {
+          photoRefs.add(photoDoc['photoRef']);
+        }
 
         locations.add(DreamListLocation(
             id: id,
@@ -163,7 +163,7 @@ class DbService {
             photoRefs: photoRefs,
             addedOn: addedOn,
             addedBy: addedBy));
-      });
+      }
       log('length ${locations.length.toString()}');
       return locations;
     } catch (e) {
