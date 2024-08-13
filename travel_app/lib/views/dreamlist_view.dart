@@ -3,6 +3,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
 import '../../viewmodels/dreamlist_viewmodel.dart';
 import 'add_dreamlist_location_view.dart';
+import '../models/dreamlist_location.dart';
 
 class BucketList extends StatelessWidget {
   const BucketList({super.key});
@@ -14,15 +15,32 @@ class BucketList extends StatelessWidget {
       child: Scaffold(
         body: Consumer<DreamListViewModel>(
           builder: (context, viewModel, child) {
-            final pageWidgets = {
-              1: ListViewContent(),
-              2: MapViewContent(),
-              3: BucketListListView(),
-            };
-            return pageWidgets[viewModel.page] ??
-                Center(
-                  child: Text('Page not found'),
-                );
+            return FutureBuilder(
+              future: viewModel.loadLocations(
+                  context), // Call loadLocations before displaying content
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  // if (!viewModel.locationsLoaded) {
+                  // While waiting for the future to complete, show a loading indicator
+                  return Center(child: CircularProgressIndicator());
+                } else if (snapshot.hasError) {
+                  // If there was an error, show an error message
+                  return Center(
+                      child: Text('Error loading data: ${snapshot.error}'));
+                } else {
+                  // Once the future is complete, show the actual content
+                  final pageWidgets = {
+                    1: ListViewContent(),
+                    2: MapViewContent(),
+                    3: BucketListListView(),
+                  };
+                  return pageWidgets[viewModel.page] ??
+                      Center(
+                        child: Text('Page not found'),
+                      );
+                }
+              },
+            );
           },
         ),
       ),
@@ -187,86 +205,7 @@ class ListViewContent extends StatelessWidget {
     );
   }
 
-  // Widget ListItem(item, BuildContext context) {
-  //   return Align(
-  //     alignment: Alignment.topCenter,
-  //     child: Padding(
-  //       padding: EdgeInsets.fromLTRB(0, 3, 0, 3),
-  //       child: Container(
-  //         height: 90,
-  //         width: MediaQuery.of(context).size.width * 0.8,
-  //         decoration: BoxDecoration(
-  //           color: Color.fromARGB(255, 240, 240, 240),
-  //           borderRadius: BorderRadius.circular(10),
-  //         ),
-  //         child: Row(
-  //           children: [
-  //             Padding(
-  //               padding: EdgeInsets.all(10),
-  //               child: Container(
-  //                 height: 70,
-  //                 width: 70,
-  //                 decoration: BoxDecoration(
-  //                   color: Colors.blue,
-  //                   borderRadius: BorderRadius.circular(10),
-  //                 ),
-  //               ),
-  //             ),
-  //             Column(
-  //               crossAxisAlignment: CrossAxisAlignment.start,
-  //               mainAxisAlignment: MainAxisAlignment.center,
-  //               children: [
-  //                 Row(
-  //                   children: [
-  //                     ClipRect(
-  //                       child: Container(
-  //                         width: 105,
-  //                         child: Text(
-  //                           item.title,
-  //                           overflow: TextOverflow.ellipsis,
-  //                           style: TextStyle(
-  //                             fontSize: 20,
-  //                             fontWeight: FontWeight.w500,
-  //                           ),
-  //                         ),
-  //                       ),
-  //                     ),
-  //                     ClipRect(
-  //                       child: Padding(
-  //                         padding: EdgeInsets.fromLTRB(0, 0, 0, 0),
-  //                         child: Container(
-  //                           width: 100,
-  //                           child: Text(
-  //                             item.location,
-  //                             overflow: TextOverflow.ellipsis,
-  //                             style: TextStyle(
-  //                               fontSize: 14,
-  //                               color: Colors.grey,
-  //                             ),
-  //                           ),
-  //                         ),
-  //                       ),
-  //                     ),
-  //                   ],
-  //                 ),
-  //                 Text(
-  //                   'Added on: ${item.dateAdded}',
-  //                   style: TextStyle(fontSize: 12),
-  //                 ),
-  //                 Text(
-  //                   'Added by: ${item.addedBy}',
-  //                   style: TextStyle(fontSize: 12),
-  //                 ),
-  //               ],
-  //             ),
-  //           ],
-  //         ),
-  //       ),
-  //     ),
-  //   );
-  // }
-
-  Widget ListItem(item, BuildContext context) {
+  Widget ListItem(DreamListLocation location, BuildContext context) {
     return Align(
       alignment: Alignment.topCenter,
       child: Padding(
@@ -298,7 +237,7 @@ class ListViewContent extends StatelessWidget {
                   children: [
                     ClipRRect(
                       child: Text(
-                        item.title,
+                        location.name,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
                           fontSize: 20,
@@ -308,7 +247,7 @@ class ListViewContent extends StatelessWidget {
                     ),
                     ClipRRect(
                       child: Text(
-                        item.location,
+                        location.locationName,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
                           fontSize: 14,
@@ -316,47 +255,12 @@ class ListViewContent extends StatelessWidget {
                         ),
                       ),
                     ),
-                    // ClipRect(
-                    //   child: Row(
-                    //     children: [
-                    //       // ClipRect(
-                    //       //   child:
-                    //       Flexible(
-                    //         flex: 3,
-                    //         child: Text(
-                    //           item.title,
-                    //           overflow: TextOverflow.ellipsis,
-                    //           style: TextStyle(
-                    //             fontSize: 20,
-                    //             fontWeight: FontWeight.w500,
-                    //           ),
-                    //         ),
-                    //       ),
-                    //       // ),
-                    //       // ClipRect(
-                    //       // child:
-                    //       Flexible(
-                    //         flex: 1,
-                    //         child: Text(
-                    //           item.location,
-                    //           overflow: TextOverflow.ellipsis,
-                    //           style: TextStyle(
-                    //             fontSize: 14,
-                    //             color: Colors.grey,
-                    //           ),
-                    //         ),
-
-                    //         // ),
-                    //       ),
-                    //     ],
-                    //   ),
-                    // ),
                     Text(
-                      'Added on: ${item.dateAdded}',
+                      'Added on: ${location.addedOn}',
                       style: TextStyle(fontSize: 12),
                     ),
                     Text(
-                      'Added by: ${item.addedBy}',
+                      'Added by: ${location.addedBy}',
                       style: TextStyle(fontSize: 12),
                     ),
                   ],
@@ -377,10 +281,10 @@ class ListViewContent extends StatelessWidget {
           builder: (context, viewModel, child) {
             return ListView.builder(
               padding: EdgeInsets.only(bottom: 10),
-              itemCount: viewModel.items.length,
+              itemCount: viewModel.locations.length,
               itemBuilder: (context, index) {
-                final item = viewModel.items[index];
-                return ListItem(item, context);
+                final location = viewModel.locations[index];
+                return ListItem(location, context);
               },
             );
           },
@@ -618,10 +522,10 @@ class BucketListListView extends StatelessWidget {
           builder: (context, viewModel, child) {
             return ListView.builder(
               padding: EdgeInsets.only(bottom: 10),
-              itemCount: viewModel.items.length,
+              itemCount: viewModel.locations.length,
               itemBuilder: (context, index) {
-                final item = viewModel.items[index];
-                return ListItem(item, context);
+                final location = viewModel.locations[index];
+                return ListItem(location, context);
               },
             );
           },
@@ -630,7 +534,7 @@ class BucketListListView extends StatelessWidget {
     );
   }
 
-  Widget ListItem(item, BuildContext context) {
+  Widget ListItem(DreamListLocation location, BuildContext context) {
     return Align(
       alignment: Alignment.topCenter,
       child: Padding(
@@ -662,7 +566,7 @@ class BucketListListView extends StatelessWidget {
                   children: [
                     ClipRRect(
                       child: Text(
-                        item.title,
+                        location.name,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
                           fontSize: 20,
@@ -672,7 +576,7 @@ class BucketListListView extends StatelessWidget {
                     ),
                     ClipRRect(
                       child: Text(
-                        item.location,
+                        location.locationName,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
                           fontSize: 14,
@@ -681,11 +585,11 @@ class BucketListListView extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      'Added on: ${item.dateAdded}',
+                      'Added on: ${location.addedOn}',
                       style: TextStyle(fontSize: 12),
                     ),
                     Text(
-                      'Added by: ${item.addedBy}',
+                      'Added by: ${location.addedBy}',
                       style: TextStyle(fontSize: 12),
                     ),
                   ],

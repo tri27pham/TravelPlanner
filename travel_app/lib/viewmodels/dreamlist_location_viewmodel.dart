@@ -19,6 +19,8 @@ class DreamListLocationViewModel extends ChangeNotifier {
 
   bool get locationSelected => _locationSelected;
 
+  final dio = Dio();
+
   set locationSelected(bool value) {
     if (_locationSelected != value) {
       _locationSelected = value;
@@ -41,7 +43,9 @@ class DreamListLocationViewModel extends ChangeNotifier {
       description: 'description',
       rating: 0,
       numReviews: 0,
-      photoRefs: []);
+      photoRefs: [],
+      addedBy: '',
+      addedOn: '');
 
   DreamListLocationViewModel() {
     textEditingController.addListener(onModify);
@@ -57,16 +61,36 @@ class DreamListLocationViewModel extends ChangeNotifier {
     Navigator.pop(context);
   }
 
+  Future<List<String>> getPhotoUris(DreamListLocation location) async {
+    List<String> photoUris = [];
+    final String apiKey = 'AIzaSyC3Qfm0kEEILIuqvgu21OnlhSkWoBiyVNQ';
+    // for (String photoRef in location.photoRefs) {
+    final photoRef = location.photoRefs.first;
+    final uriRequest =
+        "https://places.googleapis.com/v1/$photoRef/media?key=$apiKey&maxHeightPx=400";
+    try {
+      // Make the request and follow the redirect
+      final response = await dio.get(uriRequest);
+      log(response.data.runtimeType.toString());
+      // photoUris.add(response.data);
+    } catch (e) {
+      log('Error fetching photo URI: $e');
+    }
+    // }
+    return [];
+  }
+
   Future<DreamListLocation> getDreamlistLocationInfo(String placeId) async {
     final String apiKey = 'AIzaSyC3Qfm0kEEILIuqvgu21OnlhSkWoBiyVNQ';
     final String placeImgRequest =
         'https://places.googleapis.com/v1/places/$placeId?fields=id,displayName,editorial_summary,location,formattedAddress,userRatingCount,photos,rating&key=$apiKey';
-    final dio = Dio();
 
     try {
-      final response = await dio.get(placeImgRequest);
+      final locationResponse = await dio.get(placeImgRequest);
+
       DreamListLocation dreamlistLocation =
-          DreamListLocation.fromJson(response.data);
+          DreamListLocation.fromJson(locationResponse.data);
+
       return dreamlistLocation;
     } on DioException catch (e) {
       log('DioException: ${e.message}');
@@ -88,7 +112,9 @@ class DreamListLocationViewModel extends ChangeNotifier {
         description: 'description',
         rating: 0,
         numReviews: 0,
-        photoRefs: []);
+        photoRefs: [],
+        addedOn: '',
+        addedBy: '');
   }
 
   void onModify() {

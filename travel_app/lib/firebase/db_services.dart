@@ -1,11 +1,12 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../models/AppState.dart';
 import 'package:provider/provider.dart';
 import 'dart:developer';
 import '../models/profile_model.dart';
-import '../models/profile_model.dart';
 import '../models/dreamlist_location.dart';
+import 'package:intl/intl.dart';
 
 class DbService {
   FirebaseFirestore firestore = FirebaseFirestore.instance;
@@ -110,6 +111,67 @@ class DbService {
     }
   }
 
+  String formatTimestamp(Timestamp timestamp) {
+    DateTime dateTime = timestamp.toDate(); // Convert Timestamp to DateTime
+    String formattedDate =
+        DateFormat('dd/MM/yy').format(dateTime); // Format DateTime to String
+    return formattedDate;
+  }
+
+  Future<List<DreamListLocation>> loadDreamlistFromDb(
+      BuildContext context) async {
+    final appState = Provider.of<AppState>(context, listen: false);
+
+    List<DreamListLocation> locations = [];
+
+    try {
+      CollectionReference dreamlistCollection = firestore
+          .collection('accounts')
+          .doc(appState.account!.uid)
+          .collection('dreamlist');
+
+      QuerySnapshot querySnapshot = await dreamlistCollection.get();
+
+      querySnapshot.docs.forEach((doc) async {
+        String id = doc.id;
+        String name = doc['name'];
+        String locationName = doc['locationName'];
+        LatLng locationCoordinates = LatLng(doc['latitude'], doc['longitude']);
+        String description = doc['description'];
+        double rating = doc['rating'];
+        int numReviews = doc['numReviews'];
+        String addedOn = formatTimestamp(doc['addedOn']);
+        String addedBy = doc['addedBy'];
+
+        QuerySnapshot querySnapshotPhotos =
+            await dreamlistCollection.doc(id).collection('photos').get();
+
+        List<String> photoRefs = [];
+
+        querySnapshotPhotos.docs.forEach((doc) {
+          photoRefs.add(doc['photoRef']);
+        });
+
+        locations.add(DreamListLocation(
+            id: id,
+            name: name,
+            locationName: locationName,
+            locationCoordinates: locationCoordinates,
+            description: description,
+            rating: rating,
+            numReviews: numReviews,
+            photoRefs: photoRefs,
+            addedOn: addedOn,
+            addedBy: addedBy));
+      });
+      log('length ${locations.length.toString()}');
+      return locations;
+    } catch (e) {
+      log("Error fetching locations: $e");
+      return [];
+    }
+  }
+
   Future<void> addBucketListLocation(
       BuildContext context, DreamListLocation location) async {
     final appState = Provider.of<AppState>(context, listen: false);
@@ -139,6 +201,16 @@ class DbService {
         DocumentReference docRef = collectionRef.doc(locationID);
 
         await docRef.set(locationData);
+
+        CollectionReference postsSubcollection =
+            collectionRef.doc(locationID).collection('photos');
+
+        // Loop through the list of strings and add each as a document
+        for (String photoRef in location.photoRefs) {
+          await postsSubcollection.add({
+            'photoRef': photoRef,
+          });
+        }
       } catch (e) {
         log("Error adding location: $e");
       }

@@ -14,16 +14,17 @@ class DreamListLocation {
   String? addedOn;
   String? addedBy;
 
-  DreamListLocation({
-    required this.id,
-    required this.name,
-    required this.locationName,
-    required this.locationCoordinates,
-    required this.description,
-    required this.rating,
-    required this.numReviews,
-    required this.photoRefs,
-  });
+  DreamListLocation(
+      {required this.id,
+      required this.name,
+      required this.locationName,
+      required this.locationCoordinates,
+      required this.description,
+      required this.rating,
+      required this.numReviews,
+      required this.photoRefs,
+      required this.addedOn,
+      required this.addedBy});
 
   displayInfo() {
     log(id);
@@ -47,41 +48,46 @@ class DreamListLocation {
       }
     }
     return DreamListLocation(
-      id: json.containsKey('id') ? json['id'] : 'no id',
-      name: json.containsKey('displayName') &&
-              json['displayName'].containsKey('text') &&
-              json['displayName']['text'] != null
-          ? json['displayName']['text']
-          : 'no name',
-      locationName: json.containsKey('formattedAddress') &&
-              json['formattedAddress'] != null
-          ? json['formattedAddress']
-          : 'no location',
-      locationCoordinates: LatLng(
-        json.containsKey('location') &&
-                json['location'].containsKey('latitude') &&
-                json['location']['latitude'] != null
-            ? json['location']['latitude']
+        id: json.containsKey('id') ? json['id'] : 'no id',
+        name: json.containsKey('displayName') &&
+                json['displayName'].containsKey('text') &&
+                json['displayName']['text'] != null
+            ? json['displayName']['text']
+            : 'no name',
+        locationName: json.containsKey('formattedAddress') &&
+                json['formattedAddress'] != null
+            ? json['formattedAddress']
+            : 'no location',
+        locationCoordinates: LatLng(
+          json.containsKey('location') &&
+                  json['location'].containsKey('latitude') &&
+                  json['location']['latitude'] != null
+              ? json['location']['latitude']
+              : 0.0,
+          json.containsKey('location') &&
+                  json['location'].containsKey('longitude') &&
+                  json['location']['longitude'] != null
+              ? json['location']['longitude']
+              : 0.0,
+        ),
+        description: json.containsKey('editorialSummary') &&
+                json['editorialSummary'].containsKey('text') &&
+                json['editorialSummary']['text'] != null
+            ? json['editorialSummary']['text']
+            : 'no description',
+        rating: json.containsKey('rating') && json['rating'] != null
+            ? json['rating'].toDouble()
             : 0.0,
-        json.containsKey('location') &&
-                json['location'].containsKey('longitude') &&
-                json['location']['longitude'] != null
-            ? json['location']['longitude']
-            : 0.0,
-      ),
-      description: json.containsKey('editorialSummary') &&
-              json['editorialSummary'].containsKey('text') &&
-              json['editorialSummary']['text'] != null
-          ? json['editorialSummary']['text']
-          : 'no description',
-      rating: json.containsKey('rating') && json['rating'] != null
-          ? json['rating'].toDouble()
-          : 0.0,
-      numReviews:
-          json.containsKey('userRatingCount') && json['userRatingCount'] != null
-              ? json['userRatingCount']
-              : 0,
-      photoRefs: photoRefs,
-    );
+        numReviews: json.containsKey('userRatingCount') &&
+                json['userRatingCount'] != null
+            ? json['userRatingCount']
+            : 0,
+        photoRefs: photoRefs,
+        addedOn: json.containsKey('addedOn') && json['addedOn'] != null
+            ? json['addedOn'].toString()
+            : '',
+        addedBy: json.containsKey('addedBy') && json['addedBy'] != null
+            ? json['addedBy']
+            : '');
   }
 }

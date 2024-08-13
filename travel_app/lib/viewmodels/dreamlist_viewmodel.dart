@@ -2,32 +2,40 @@ import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:travel_app/models/dreamlist_location.dart';
 import 'dart:async';
-import 'package:uuid/uuid.dart';
-import 'dart:convert';
-import 'package:http/http.dart' as http;
-import '../models/predicted_dreamlist_place_model.dart';
-import '../models/list_item.dart'; // Import the model
-import 'dart:convert';
-import 'dart:async';
-import 'package:flutter/material.dart';
+import '../models/list_item.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:http/http.dart' as http;
-import 'package:uuid/uuid.dart';
-import 'package:geocoding/geocoding.dart';
-import '../models/predicted_route_place_model.dart';
-import 'package:dio/dio.dart';
+import '../firebase/db_services.dart';
 import 'dart:developer';
 
 class DreamListViewModel extends ChangeNotifier {
-  int _page = 1; // Default page
+  int _page = 1;
 
   int get page => _page;
+
+  bool locationsLoaded = false;
+  List<DreamListLocation> locations = [];
 
   void setPage(int newPage) {
     if (newPage != _page) {
       _page = newPage;
-      notifyListeners(); // Notify listeners about the change
+      notifyListeners();
+    }
+  }
+
+  final db_service = DbService();
+
+  Future<void> loadLocations(BuildContext context) async {
+    if (locationsLoaded) {
+      return;
+    }
+    try {
+      locations = await db_service.loadDreamlistFromDb(context);
+      locationsLoaded = true;
+      log('Locations loaded successfully.');
+      log(locations.length.toString());
+      notifyListeners();
+    } catch (e) {
+      log('Error loading locations: $e');
     }
   }
 
@@ -37,63 +45,14 @@ class DreamListViewModel extends ChangeNotifier {
   }
 
   final List<Marker> myMarker = [];
+
   final Completer<GoogleMapController> _mapController = Completer();
   static const CameraPosition initPos =
       CameraPosition(target: LatLng(51.5131, 0.1174), zoom: 10);
 
-  List<ListItem> items = [
-    ListItem(
-      title: 'River Stour',
-      location: 'Canterbury, England',
-      dateAdded: '07/10/24',
-      addedBy: 'Mum',
-    ),
-    ListItem(
-      title: 'River Stour',
-      location: 'Canterbury, England',
-      dateAdded: '07/10/24',
-      addedBy: 'Mum',
-    ),
-    ListItem(
-      title: 'River Stour',
-      location: 'Canterbury, England',
-      dateAdded: '07/10/24',
-      addedBy: 'Mum',
-    ),
-    ListItem(
-      title: 'River Stour',
-      location: 'Canterbury, England',
-      dateAdded: '07/10/24',
-      addedBy: 'Mum',
-    ),
-    ListItem(
-      title: 'River Stour',
-      location: 'Canterbury, England',
-      dateAdded: '07/10/24',
-      addedBy: 'Mum',
-    ),
-    ListItem(
-      title: 'River Stour',
-      location: 'Canterbury, England',
-      dateAdded: '07/10/24',
-      addedBy: 'Mum',
-    ),
-    ListItem(
-      title: 'River Stour',
-      location: 'Canterbury, England',
-      dateAdded: '07/10/24',
-      addedBy: 'Mum',
-    ),
-    ListItem(
-      title: 'River Stour',
-      location: 'Canterbury, England',
-      dateAdded: '07/10/24',
-      addedBy: 'Mum',
-    ),
-  ];
-
   void disposeController() {
     _mapController.future.then((controller) => controller.dispose());
+    locationsLoaded = false;
     super.dispose();
   }
 
