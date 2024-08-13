@@ -7,6 +7,8 @@ import 'dart:developer';
 import '../models/profile_model.dart';
 import '../models/dreamlist_location.dart';
 import 'package:intl/intl.dart';
+import 'package:dio/dio.dart';
+import 'dart:typed_data';
 
 class DbService {
   FirebaseFirestore firestore = FirebaseFirestore.instance;

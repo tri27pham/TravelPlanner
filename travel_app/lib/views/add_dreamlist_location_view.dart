@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:travel_app/models/dreamlist_location.dart';
 import '../viewmodels/dreamlist_location_viewmodel.dart';
-
+import 'dart:typed_data';
 import 'package:geocoding/geocoding.dart';
 import 'dart:developer';
 
@@ -159,7 +159,30 @@ class AddDreamlistLocation extends StatelessWidget {
                                     child: Container(
                                       width: 150,
                                       height: 150,
-                                      color: Colors.amber,
+                                      // Use FutureBuilder to wait for the image data
+                                      child: FutureBuilder(
+                                        future: viewModel.getImages(),
+                                        builder: (context, snapshot) {
+                                          if (snapshot.connectionState ==
+                                              ConnectionState.waiting) {
+                                            // While waiting for the image to load, show a loading indicator
+                                            return CircularProgressIndicator();
+                                          } else if (snapshot.hasError ||
+                                              !snapshot.hasData) {
+                                            // If there's an error or no data, show a placeholder or error image
+                                            return Container(
+                                              color: Colors.grey[300],
+                                              child: Center(
+                                                child: Icon(Icons.error,
+                                                    color: Colors.red),
+                                              ),
+                                            );
+                                          } else {
+                                            // If the image data is loaded, display the image
+                                            return Image.memory(snapshot.data!);
+                                          }
+                                        },
+                                      ),
                                     ),
                                   ),
                                   Padding(

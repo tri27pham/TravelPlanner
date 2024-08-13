@@ -58,12 +58,7 @@ class DreamListViewModel extends ChangeNotifier {
     return await Geolocator.getCurrentPosition();
   }
 
-  final List<Marker> markers = [
-    // Marker(
-    //     markerId: MarkerId('test'),
-    //     position: LatLng(51.510357, -0.116773),
-    //     icon: BitmapDescriptor.defaultMarker)
-  ];
+  final List<Marker> markers = [];
 
   final Completer<GoogleMapController> _mapController = Completer();
   static const CameraPosition initPos =

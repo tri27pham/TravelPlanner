@@ -1,3 +1,5 @@
+import 'dart:ffi';
+
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:travel_app/models/dreamlist_location.dart';
@@ -9,6 +11,8 @@ import '../models/predicted_dreamlist_place_model.dart';
 import 'package:dio/dio.dart';
 import 'dart:developer';
 import '../firebase/db_services.dart';
+import 'dart:typed_data';
+import 'package:http/http.dart' as http;
 
 class DreamListLocationViewModel extends ChangeNotifier {
   final DbService db_service = DbService();
@@ -51,6 +55,28 @@ class DreamListLocationViewModel extends ChangeNotifier {
     textEditingController.addListener(onModify);
   }
 
+  Uint8List image = Uint8List(0);
+
+  Future<Uint8List> getImages() async {
+    // List<Uint8List> photosData = [];
+    final String apiKey = 'AIzaSyC3Qfm0kEEILIuqvgu21OnlhSkWoBiyVNQ';
+    // for (String photoRef in location.photoRefs) {
+    String photoRef = selectedLocation.photoRefs.first;
+    final uriRequest =
+        "https://places.googleapis.com/v1/$photoRef/media?key=$apiKey&maxHeightPx=400";
+    try {
+      final response = await http.get(Uri.parse(uriRequest));
+      Uint8List imageData = response.bodyBytes;
+      return imageData;
+      // image = imageData;
+      // photosData.add(imageData);
+    } catch (e) {
+      log('Error fetching photo URI: $e');
+    }
+    // }
+    return Uint8List(0);
+  }
+
   void selectLocation(DreamListLocation listLocation) {
     selectedLocation = listLocation;
     locationSelected = true;
@@ -59,25 +85,6 @@ class DreamListLocationViewModel extends ChangeNotifier {
   Future<void> addLocationToDb(BuildContext context) async {
     await db_service.addBucketListLocation(context, selectedLocation);
     Navigator.pop(context);
-  }
-
-  Future<List<String>> getPhotoUris(DreamListLocation location) async {
-    List<String> photoUris = [];
-    final String apiKey = 'AIzaSyC3Qfm0kEEILIuqvgu21OnlhSkWoBiyVNQ';
-    // for (String photoRef in location.photoRefs) {
-    final photoRef = location.photoRefs.first;
-    final uriRequest =
-        "https://places.googleapis.com/v1/$photoRef/media?key=$apiKey&maxHeightPx=400";
-    try {
-      // Make the request and follow the redirect
-      final response = await dio.get(uriRequest);
-      log(response.data.runtimeType.toString());
-      // photoUris.add(response.data);
-    } catch (e) {
-      log('Error fetching photo URI: $e');
-    }
-    // }
-    return [];
   }
 
   Future<DreamListLocation> getDreamlistLocationInfo(String placeId) async {
