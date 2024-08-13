@@ -151,16 +151,40 @@ class AddDreamlistLocation extends StatelessWidget {
                             ),
                           ),
                           Expanded(
-                            child: Column(
-                              children: [
-                                Text(viewModel.selectedLocation.name),
-                                Text(viewModel.selectedLocation.locationName),
-                                Text(viewModel.selectedLocation.rating
-                                    .toString()),
-                                Text(viewModel.selectedLocation.numReviews
-                                    .toString()),
-                                Text(viewModel.selectedLocation.description),
-                              ],
+                            child: Center(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Center(
+                                    child: Container(
+                                      width: 150,
+                                      height: 150,
+                                      color: Colors.amber,
+                                    ),
+                                  ),
+                                  Padding(
+                                      padding:
+                                          EdgeInsets.fromLTRB(30, 10, 30, 0),
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            viewModel.selectedLocation.name,
+                                            style: TextStyle(
+                                                fontSize: 30,
+                                                fontWeight: FontWeight.bold),
+                                          ),
+                                          Text(viewModel
+                                              .selectedLocation.locationName),
+                                          Text(
+                                              "${viewModel.selectedLocation.rating.toString()} (${viewModel.selectedLocation.numReviews.toString()})"),
+                                          Text(viewModel
+                                              .selectedLocation.description),
+                                        ],
+                                      )),
+                                ],
+                              ),
                             ),
                           ),
                           Padding(
