@@ -10,7 +10,6 @@ class DreamListLocation {
   final double rating;
   final int numReviews;
   List<String> photoRefs = [];
-  List<String> photoURIs = [];
   String? addedOn;
   String? addedBy;
 

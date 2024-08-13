@@ -9,6 +9,7 @@ import '../models/dreamlist_location.dart';
 import 'package:intl/intl.dart';
 import 'package:dio/dio.dart';
 import 'dart:typed_data';
+import 'dart:convert';
 
 class DbService {
   FirebaseFirestore firestore = FirebaseFirestore.instance;
@@ -151,7 +152,7 @@ class DbService {
         List<String> photoRefs = [];
 
         for (var photoDoc in querySnapshotPhotos.docs) {
-          photoRefs.add(photoDoc['photoRef']);
+          photoRefs.add(photoDoc['imageData']);
         }
 
         locations.add(DreamListLocation(
@@ -174,8 +175,8 @@ class DbService {
     }
   }
 
-  Future<void> addBucketListLocation(
-      BuildContext context, DreamListLocation location) async {
+  Future<void> addBucketListLocation(BuildContext context,
+      DreamListLocation location, List<Uint8List> images) async {
     final appState = Provider.of<AppState>(context, listen: false);
 
     if (appState.account != null && appState.account!.email.isNotEmpty) {
@@ -208,9 +209,9 @@ class DbService {
             collectionRef.doc(locationID).collection('photos');
 
         // Loop through the list of strings and add each as a document
-        for (String photoRef in location.photoRefs) {
+        for (Uint8List image in images) {
           await postsSubcollection.add({
-            'photoRef': photoRef,
+            'imageData': base64Encode(image),
           });
         }
       } catch (e) {

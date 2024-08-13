@@ -55,7 +55,7 @@ class DreamListLocationViewModel extends ChangeNotifier {
     textEditingController.addListener(onModify);
   }
 
-  Uint8List image = Uint8List(0);
+  List<Uint8List> selectedLocationImages = [Uint8List(0)];
 
   Future<List<Uint8List>> getImages() async {
     List<Uint8List> photosData = [];
@@ -71,6 +71,7 @@ class DreamListLocationViewModel extends ChangeNotifier {
         log('Error fetching photo URI: $e');
       }
     }
+    selectedLocationImages = photosData;
     return photosData;
   }
 
@@ -80,7 +81,8 @@ class DreamListLocationViewModel extends ChangeNotifier {
   }
 
   Future<void> addLocationToDb(BuildContext context) async {
-    await db_service.addBucketListLocation(context, selectedLocation);
+    await db_service.addBucketListLocation(
+        context, selectedLocation, selectedLocationImages);
     Navigator.pop(context);
   }
 
