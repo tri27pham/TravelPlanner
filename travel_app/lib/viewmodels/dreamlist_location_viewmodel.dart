@@ -57,24 +57,21 @@ class DreamListLocationViewModel extends ChangeNotifier {
 
   Uint8List image = Uint8List(0);
 
-  Future<Uint8List> getImages() async {
-    // List<Uint8List> photosData = [];
+  Future<List<Uint8List>> getImages() async {
+    List<Uint8List> photosData = [];
     final String apiKey = 'AIzaSyC3Qfm0kEEILIuqvgu21OnlhSkWoBiyVNQ';
-    // for (String photoRef in location.photoRefs) {
-    String photoRef = selectedLocation.photoRefs.first;
-    final uriRequest =
-        "https://places.googleapis.com/v1/$photoRef/media?key=$apiKey&maxHeightPx=400";
-    try {
-      final response = await http.get(Uri.parse(uriRequest));
-      Uint8List imageData = response.bodyBytes;
-      return imageData;
-      // image = imageData;
-      // photosData.add(imageData);
-    } catch (e) {
-      log('Error fetching photo URI: $e');
+    for (String photoRef in selectedLocation.photoRefs) {
+      final uriRequest =
+          "https://places.googleapis.com/v1/$photoRef/media?key=$apiKey&maxHeightPx=400";
+      try {
+        final response = await http.get(Uri.parse(uriRequest));
+        Uint8List imageData = response.bodyBytes;
+        photosData.add(imageData);
+      } catch (e) {
+        log('Error fetching photo URI: $e');
+      }
     }
-    // }
-    return Uint8List(0);
+    return photosData;
   }
 
   void selectLocation(DreamListLocation listLocation) {

@@ -178,8 +178,35 @@ class AddDreamlistLocation extends StatelessWidget {
                                               ),
                                             );
                                           } else {
-                                            // If the image data is loaded, display the image
-                                            return Image.memory(snapshot.data!);
+                                            List<Uint8List> images =
+                                                snapshot.data!;
+                                            return SingleChildScrollView(
+                                              scrollDirection: Axis.horizontal,
+                                              child: Row(
+                                                children: List.generate(
+                                                    images.length, (index) {
+                                                  return Container(
+                                                    margin: EdgeInsets.all(8.0),
+                                                    width:
+                                                        100, // Set a fixed width for each container
+                                                    height:
+                                                        100, // Set a fixed height for each container
+                                                    decoration: BoxDecoration(
+                                                      color: Colors.grey[
+                                                          300], // Background color
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              8.0), // Rounded corners
+                                                    ),
+                                                    child: Image.memory(
+                                                      images[index],
+                                                      fit: BoxFit
+                                                          .cover, // Adjusts image within the container
+                                                    ),
+                                                  );
+                                                }),
+                                              ),
+                                            );
                                           }
                                         },
                                       ),
