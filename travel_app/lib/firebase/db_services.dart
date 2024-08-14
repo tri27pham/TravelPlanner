@@ -1,9 +1,15 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../models/AppState.dart';
 import 'package:provider/provider.dart';
 import 'dart:developer';
 import '../models/profile_model.dart';
+import '../models/dreamlist_location.dart';
+import 'package:intl/intl.dart';
+import 'package:dio/dio.dart';
+import 'dart:typed_data';
+import 'dart:convert';
 
 class DbService {
   FirebaseFirestore firestore = FirebaseFirestore.instance;
@@ -105,6 +111,115 @@ class DbService {
     } catch (e) {
       log("Error fetching profiles: $e");
       return [];
+    }
+  }
+
+  String formatTimestamp(Timestamp timestamp) {
+    DateTime dateTime = timestamp.toDate(); // Convert Timestamp to DateTime
+    String formattedDate =
+        DateFormat('dd/MM/yy').format(dateTime); // Format DateTime to String
+    return formattedDate;
+  }
+
+  Future<List<DreamListLocation>> loadDreamlistFromDb(
+      BuildContext context) async {
+    final appState = Provider.of<AppState>(context, listen: false);
+
+    List<DreamListLocation> locations = [];
+
+    try {
+      CollectionReference dreamlistCollection = firestore
+          .collection('accounts')
+          .doc(appState.account!.uid)
+          .collection('dreamlist');
+
+      QuerySnapshot querySnapshot = await dreamlistCollection.get();
+
+      for (var doc in querySnapshot.docs) {
+        String id = doc.id;
+        String name = doc['name'];
+        String locationName = doc['locationName'];
+        LatLng locationCoordinates = LatLng(doc['latitude'], doc['longitude']);
+        String description = doc['description'];
+        double rating = doc['rating'];
+        int numReviews = doc['numReviews'];
+        String addedOn = formatTimestamp(doc['addedOn']);
+        String addedBy = doc['addedBy'];
+
+        QuerySnapshot querySnapshotPhotos =
+            await dreamlistCollection.doc(id).collection('photos').get();
+
+        List<Uint8List> imageDatas = [];
+
+        for (var photoDoc in querySnapshotPhotos.docs) {
+          imageDatas.add(base64Decode(photoDoc['imageData']));
+        }
+
+        locations.add(DreamListLocation(
+            id: id,
+            name: name,
+            locationName: locationName,
+            locationCoordinates: locationCoordinates,
+            description: description,
+            rating: rating,
+            numReviews: numReviews,
+            imageDatas: imageDatas,
+            photoRefs: [],
+            addedOn: addedOn,
+            addedBy: addedBy));
+      }
+      log('length ${locations.length.toString()}');
+      return locations;
+    } catch (e) {
+      log("Error fetching locations: $e");
+      return [];
+    }
+  }
+
+  Future<void> addBucketListLocation(BuildContext context,
+      DreamListLocation location, List<Uint8List> images) async {
+    final appState = Provider.of<AppState>(context, listen: false);
+
+    if (appState.account != null && appState.account!.email.isNotEmpty) {
+      String uid = appState.account!.uid;
+
+      try {
+        Map<String, dynamic> locationData = {
+          "id": location.id,
+          "name": location.name,
+          "locationName": location.locationName,
+          "latitude": location.locationCoordinates.latitude,
+          "longitude": location.locationCoordinates.longitude,
+          "description": location.description,
+          "rating": location.rating,
+          "numReviews": location.numReviews,
+          "addedOn": DateTime.now(),
+          "addedBy": appState.profile!.name,
+        };
+
+        CollectionReference collectionRef =
+            firestore.collection('accounts').doc(uid).collection('dreamlist');
+
+        String locationID = collectionRef.doc().id;
+
+        DocumentReference docRef = collectionRef.doc(locationID);
+
+        await docRef.set(locationData);
+
+        CollectionReference postsSubcollection =
+            collectionRef.doc(locationID).collection('photos');
+
+        // Loop through the list of strings and add each as a document
+        for (Uint8List image in images) {
+          await postsSubcollection.add({
+            'imageData': base64Encode(image),
+          });
+        }
+      } catch (e) {
+        log("Error adding location: $e");
+      }
+    } else {
+      log("Account is null or email is empty");
     }
   }
 }

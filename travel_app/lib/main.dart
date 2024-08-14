@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:travel_app/viewmodels/home_viewmodel.dart';
 import 'package:travel_app/views/home_view.dart';
 import 'views/login_view.dart';
-import 'views/welcome_page_view.dart'; // Ensure this import exists
+import 'views/welcome_page_view.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:travel_app/viewmodels/welcome_viewmodel.dart';
