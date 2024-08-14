@@ -103,14 +103,31 @@ class RoutePlanner extends StatelessWidget {
   }
 
   Widget CreateRouteInitialWidget(BuildContext context) {
-    final viewModel = Provider.of<RoutePlannerViewModel>(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        CreateRouteTitleAndButtonWidget(viewModel),
-        SearchBarWidget(viewModel, context),
-      ],
-    );
+    return Consumer<RoutePlannerViewModel>(
+        builder: (context, viewModel, child) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          CreateRouteTitleAndButtonWidget(viewModel),
+          viewModel.destinationSelected
+              ? RouteWidget(context)
+              : SearchBarWidget(viewModel, context)
+        ],
+      );
+    });
+  }
+
+  Widget RouteWidget(BuildContext context) {
+    return Consumer<RoutePlannerViewModel>(
+        builder: (context, viewModel, child) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(viewModel.destination.name),
+          Text(viewModel.destination.coordinates.toString())
+        ],
+      );
+    });
   }
 
   Widget CreateRouteTitleAndButtonWidget(RoutePlannerViewModel viewModel) {

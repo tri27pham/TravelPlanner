@@ -32,8 +32,10 @@ class RoutePlannerViewModel extends ChangeNotifier {
   bool _isEditingStartLocation = false;
   bool _isEditingEndLocation = false;
 
-  bool showStart = true;
+  bool showStart = true; //get rid of this shit
   bool showEnd = true;
+
+  bool destinationSelected = false;
 
   List<PredictedRoutePlace> places = [];
 
@@ -69,6 +71,8 @@ class RoutePlannerViewModel extends ChangeNotifier {
       RoutePlace routePlace =
           RoutePlace.fromJson(placeId, locationResponse.data);
 
+      destinationSelected = true;
+      notifyListeners();
       return routePlace;
     } on DioException catch (e) {
       log('DioException: ${e.message}');
