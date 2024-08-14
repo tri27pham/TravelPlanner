@@ -152,7 +152,7 @@ class DbService {
         List<String> photoRefs = [];
 
         for (var photoDoc in querySnapshotPhotos.docs) {
-          photoRefs.add(photoDoc['imageData']);
+          photoRefs.add(photoDoc['photoRef']);
         }
 
         locations.add(DreamListLocation(
