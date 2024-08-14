@@ -9,6 +9,9 @@ import 'package:http/http.dart' as http;
 import 'package:uuid/uuid.dart';
 import 'package:geocoding/geocoding.dart';
 import '../models/predicted_route_place_model.dart';
+import '../models/route_place.dart';
+import 'package:dio/dio.dart';
+import 'dart:developer';
 
 class RoutePlannerViewModel extends ChangeNotifier {
   final Completer<GoogleMapController> _mapController = Completer();
@@ -34,6 +37,11 @@ class RoutePlannerViewModel extends ChangeNotifier {
 
   List<PredictedRoutePlace> places = [];
 
+  RoutePlace start =
+      RoutePlace(placeId: '', name: '', coordinates: LatLng(0, 0));
+  RoutePlace destination =
+      RoutePlace(placeId: '', name: '', coordinates: LatLng(0, 0));
+
   static const CameraPosition initPos =
       CameraPosition(target: LatLng(51.5131, 0.1174), zoom: 14);
   final List<Marker> myMarker = [];
@@ -41,14 +49,40 @@ class RoutePlannerViewModel extends ChangeNotifier {
 
   double containerHeight = 250;
 
-  bool createRoute = false;
-
   RoutePlannerViewModel() {
     textEditingController.addListener(onModify);
     mapSearchFocusNode.addListener(onFocusChange);
     startLocationFocusNode.addListener(onFocusChange);
     endLocationFocusNode.addListener(onFocusChange);
     packData();
+  }
+
+  Future<RoutePlace> getRoutePlaceInfo(String placeId) async {
+    final dio = Dio();
+    final String apiKey = 'AIzaSyC3Qfm0kEEILIuqvgu21OnlhSkWoBiyVNQ';
+    final String placeImgRequest =
+        'https://places.googleapis.com/v1/places/$placeId?fields=id,displayName,location&key=$apiKey';
+
+    try {
+      final locationResponse = await dio.get(placeImgRequest);
+
+      RoutePlace routePlace =
+          RoutePlace.fromJson(placeId, locationResponse.data);
+
+      return routePlace;
+    } on DioException catch (e) {
+      log('DioException: ${e.message}');
+      if (e.response != null) {
+        log('Error response: ${e.response?.statusCode} ${e.response?.statusMessage}');
+        log('Response data: ${e.response?.data}');
+      } else {
+        log('Error request: ${e.message}');
+      }
+    } catch (e) {
+      log('General error: $e');
+    }
+
+    return RoutePlace(placeId: 'id', name: '', coordinates: LatLng(0, 0));
   }
 
   Future<Position> getUserLocation() async {
@@ -105,7 +139,6 @@ class RoutePlannerViewModel extends ChangeNotifier {
   }
 
   void updateContainerHeight() {
-    print('test');
     if (_isEditingSearchLocation ||
         _isEditingStartLocation ||
         _isEditingEndLocation) {
@@ -130,7 +163,6 @@ class RoutePlannerViewModel extends ChangeNotifier {
   }
 
   void onFocusChange() {
-    print('test focus');
     _isEditingSearchLocation = mapSearchFocusNode.hasFocus;
     _isEditingStartLocation = startLocationFocusNode.hasFocus;
     _isEditingEndLocation = endLocationFocusNode.hasFocus;

@@ -4,7 +4,10 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geocoding/geocoding.dart';
 
 import 'package:provider/provider.dart';
+import 'package:travel_app/models/predicted_route_place_model.dart';
 import '../../viewmodels/route_viewmodel.dart';
+import '../models/route_place.dart';
+import 'dart:developer';
 
 class RoutePlanner extends StatelessWidget {
   const RoutePlanner({super.key});
@@ -65,10 +68,10 @@ class RoutePlanner extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          viewModel.createRoute
-                              ? CreateRouteLocationSearchWidget(
-                                  viewModel, context)
-                              : CreateRouteInitialWidget(viewModel, context),
+                          // viewModel.createRoute
+                          // ?
+                          // CreateRouteLocationSearchWidget(viewModel, context)
+                          CreateRouteInitialWidget(context),
                         ],
                       ),
                     ),
@@ -87,19 +90,22 @@ class RoutePlanner extends StatelessWidget {
     return Column(
       children: [
         CreateRouteTitleAndButtonWidget(viewModel),
-        viewModel.showStart
-            ? StartLocationSearchBarWidget(viewModel, context)
-            : Container(),
-        viewModel.showEnd
-            ? EndLocationSearchBarWidget(viewModel, context)
-            : Container(),
+        StartLocationSearchBarWidget(viewModel, context),
+        EndLocationSearchBarWidget(viewModel, context)
+        // viewModel.showStart
+        //     ? StartLocationSearchBarWidget(viewModel, context)
+        //     : Container(),
+        // viewModel.showEnd
+        //     ? EndLocationSearchBarWidget(viewModel, context)
+        //     : Container(),
       ],
     );
   }
 
-  Widget CreateRouteInitialWidget(
-      RoutePlannerViewModel viewModel, BuildContext context) {
+  Widget CreateRouteInitialWidget(BuildContext context) {
+    final viewModel = Provider.of<RoutePlannerViewModel>(context);
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         CreateRouteTitleAndButtonWidget(viewModel),
         SearchBarWidget(viewModel, context),
@@ -109,46 +115,26 @@ class RoutePlanner extends StatelessWidget {
 
   Widget CreateRouteTitleAndButtonWidget(RoutePlannerViewModel viewModel) {
     return Padding(
-      padding: EdgeInsets.fromLTRB(0, 20, 0, 10),
+      padding: EdgeInsets.fromLTRB(0, 20, 0, 0),
       child: Padding(
         padding: EdgeInsets.fromLTRB(20, 0, 20, 0),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
               'Create a route',
               style: TextStyle(fontSize: 35, fontWeight: FontWeight.w500),
             ),
-            Container(
-              height: 45,
-              width: 70,
-              child: viewModel.createRoute
-                  ? ElevatedButton(
-                      onPressed: () {
-                        viewModel.textEditingController.text = '';
-                        viewModel.createRoute = false;
-                        viewModel.notifyListeners();
-                      },
-                      child: Icon(Icons.arrow_back_sharp),
-                      style: ElevatedButton.styleFrom(
-                        primary: Colors.grey[900],
-                        onPrimary: Colors.white,
-                        padding: EdgeInsets.zero,
-                        minimumSize: Size(50, 40),
-                      ),
-                    )
-                  : ElevatedButton(
-                      onPressed: () {
-                        viewModel.createRoute = true;
-                        viewModel.notifyListeners();
-                      },
-                      child: Icon(Icons.add, color: Colors.white, size: 35),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Color.fromARGB(255, 78, 199, 82),
-                        padding: EdgeInsets.zero,
-                      ),
-                    ),
-            ),
+            // Container(
+            //   height: 45,
+            //   width: 70,
+            //   decoration: BoxDecoration(
+            //     color: Color.fromARGB(255, 78, 199, 82),
+            //     borderRadius: BorderRadius.circular(30),
+            //   ),
+            //   child: Icon(Icons.add, color: Colors.white, size: 35),
+            // ),
           ],
         ),
       ),
@@ -247,10 +233,11 @@ class RoutePlanner extends StatelessWidget {
                     width: MediaQuery.of(context).size.width,
                     child: ListTile(
                       onTap: () async {
-                        List<Location> locations = await locationFromAddress(
-                            viewModel.places[index].description);
-                        print(locations.last.longitude);
-                        print(locations.last.latitude);
+                        PredictedRoutePlace place = viewModel.places[index];
+                        RoutePlace selectedPlace =
+                            await viewModel.getRoutePlaceInfo(place.placeId);
+                        viewModel.destination = selectedPlace;
+                        //change view
                       },
                       leading: Icon(Icons.location_on),
                       title: Text(
