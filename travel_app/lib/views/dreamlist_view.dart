@@ -226,7 +226,10 @@ class ListViewContent extends StatelessWidget {
                   height: 70,
                   width: 70,
                   decoration: BoxDecoration(
-                    color: Colors.blue,
+                    image: DecorationImage(
+                      image: MemoryImage(location.imageDatas.first),
+                      fit: BoxFit.cover, // Adjust the fit as needed
+                    ),
                     borderRadius: BorderRadius.circular(10),
                   ),
                 ),
@@ -556,7 +559,10 @@ class BucketListListView extends StatelessWidget {
                   height: 70,
                   width: 70,
                   decoration: BoxDecoration(
-                    color: Colors.blue,
+                    image: DecorationImage(
+                      image: MemoryImage(location.imageDatas.first),
+                      fit: BoxFit.cover, // Adjust the fit as needed
+                    ),
                     borderRadius: BorderRadius.circular(10),
                   ),
                 ),

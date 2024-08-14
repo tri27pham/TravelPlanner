@@ -47,6 +47,7 @@ class DreamListLocationViewModel extends ChangeNotifier {
       description: 'description',
       rating: 0,
       numReviews: 0,
+      imageDatas: [],
       photoRefs: [],
       addedBy: '',
       addedOn: '');
@@ -55,7 +56,7 @@ class DreamListLocationViewModel extends ChangeNotifier {
     textEditingController.addListener(onModify);
   }
 
-  List<Uint8List> selectedLocationImages = [Uint8List(0)];
+  List<Uint8List> selectedLocationImages = [];
 
   Future<List<Uint8List>> getImages() async {
     List<Uint8List> photosData = [];
@@ -118,6 +119,7 @@ class DreamListLocationViewModel extends ChangeNotifier {
         description: 'description',
         rating: 0,
         numReviews: 0,
+        imageDatas: [],
         photoRefs: [],
         addedOn: '',
         addedBy: '');

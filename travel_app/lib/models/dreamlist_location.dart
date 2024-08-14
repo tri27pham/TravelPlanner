@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'dart:developer';
 
@@ -9,6 +11,7 @@ class DreamListLocation {
   final String description;
   final double rating;
   final int numReviews;
+  List<Uint8List> imageDatas = [];
   List<String> photoRefs = [];
   String? addedOn;
   String? addedBy;
@@ -21,6 +24,7 @@ class DreamListLocation {
       required this.description,
       required this.rating,
       required this.numReviews,
+      required this.imageDatas,
       required this.photoRefs,
       required this.addedOn,
       required this.addedBy});
@@ -81,6 +85,7 @@ class DreamListLocation {
                 json['userRatingCount'] != null
             ? json['userRatingCount']
             : 0,
+        imageDatas: [],
         photoRefs: photoRefs,
         addedOn: json.containsKey('addedOn') && json['addedOn'] != null
             ? json['addedOn'].toString()
