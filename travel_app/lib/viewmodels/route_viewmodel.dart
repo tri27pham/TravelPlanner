@@ -23,6 +23,8 @@ class RoutePlannerViewModel extends ChangeNotifier {
   final TextEditingController textEditingController = TextEditingController();
   final TextEditingController startLocationTextEditingController =
       TextEditingController();
+  final TextEditingController endLocationTextEditingController =
+      TextEditingController();
 
   final FocusNode mapSearchFocusNode = FocusNode();
   final FocusNode startLocationFocusNode = FocusNode();
@@ -38,6 +40,8 @@ class RoutePlannerViewModel extends ChangeNotifier {
   bool destinationSelected = false;
 
   List<PredictedRoutePlace> places = [];
+  List<PredictedRoutePlace> startPlaces = [];
+  List<PredictedRoutePlace> endPlaces = [];
 
   RoutePlace start =
       RoutePlace(placeId: '', name: '', coordinates: LatLng(0, 0));
@@ -52,7 +56,9 @@ class RoutePlannerViewModel extends ChangeNotifier {
   double containerHeight = 250;
 
   RoutePlannerViewModel() {
-    textEditingController.addListener(onModify);
+    textEditingController.addListener(onMainSearchModify);
+    startLocationTextEditingController.addListener(onStartSearchModify);
+    endLocationTextEditingController.addListener(onEndSearchModify);
     mapSearchFocusNode.addListener(onFocusChange);
     startLocationFocusNode.addListener(onFocusChange);
     endLocationFocusNode.addListener(onFocusChange);
@@ -112,7 +118,8 @@ class RoutePlannerViewModel extends ChangeNotifier {
     });
   }
 
-  void makeSuggestion(String input) async {
+  Future<List<PredictedRoutePlace>> makeSuggestion(String input) async {
+    log(input);
     String apiKey = 'AIzaSyC3Qfm0kEEILIuqvgu21OnlhSkWoBiyVNQ';
     String url = 'https://maps.googleapis.com/maps/api/place/autocomplete/json';
     String request = '$url?input=$input&key=$apiKey&sessiontoken=$sessionToken';
@@ -121,25 +128,54 @@ class RoutePlannerViewModel extends ChangeNotifier {
 
     if (response.statusCode == 200) {
       var responseData = jsonDecode(response.body);
-      places = (responseData['predictions'] as List)
-          .map((e) => PredictedRoutePlace.fromJson(e))
-          .toList();
-      notifyListeners();
+      List<PredictedRoutePlace> predicatedPlaces =
+          (responseData['predictions'] as List)
+              .map((e) => PredictedRoutePlace.fromJson(e))
+              .toList();
+      return predicatedPlaces;
     } else {
       throw Exception('FAILED');
     }
   }
 
-  void onModify() {
+  void onMainSearchModify() async {
     if (textEditingController.text.isEmpty) {
       places.clear();
       notifyListeners();
       return;
     }
+    places = await makeSuggestion(textEditingController.text);
+    notifyListeners();
+
     if (sessionToken == null) {
       sessionToken = uuid.v4();
     }
-    makeSuggestion(textEditingController.text);
+  }
+
+  void onStartSearchModify() async {
+    if (startLocationTextEditingController.text.isEmpty) {
+      startPlaces.clear();
+      notifyListeners();
+      return;
+    }
+    startPlaces = await makeSuggestion(startLocationTextEditingController.text);
+    notifyListeners();
+    if (sessionToken == null) {
+      sessionToken = uuid.v4();
+    }
+  }
+
+  void onEndSearchModify() async {
+    if (endLocationTextEditingController.text.isEmpty) {
+      endPlaces.clear();
+      notifyListeners();
+      return;
+    }
+    endPlaces = await makeSuggestion(endLocationTextEditingController.text);
+    notifyListeners();
+    if (sessionToken == null) {
+      sessionToken = uuid.v4();
+    }
   }
 
   void updateContainerHeight() {
@@ -169,9 +205,23 @@ class RoutePlannerViewModel extends ChangeNotifier {
   void onFocusChange() {
     _isEditingSearchLocation = mapSearchFocusNode.hasFocus;
     _isEditingStartLocation = startLocationFocusNode.hasFocus;
+    if (_isEditingStartLocation) {
+      endLocationTextEditingController.text = '';
+    }
     _isEditingEndLocation = endLocationFocusNode.hasFocus;
+    if (_isEditingEndLocation) {
+      startLocationTextEditingController.text = '';
+    }
     updateContainerHeight();
     updateStartEndSearch();
+  }
+
+  void resetControllersAndFocus() {
+    textEditingController.text = '';
+    startLocationTextEditingController.text = '';
+    endLocationTextEditingController.text = '';
+    destinationSelected = false;
+    notifyListeners();
   }
 
   @override
