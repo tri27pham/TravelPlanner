@@ -244,8 +244,8 @@ class RoutePlanner extends StatelessWidget {
                         PredictedRoutePlace place = viewModel.places[index];
                         RoutePlace selectedPlace =
                             await viewModel.getRoutePlaceInfo(place.placeId);
-                        viewModel.destination = selectedPlace;
-                        viewModel.textEditingController.text = '';
+                        viewModel.setInitialDestination(selectedPlace);
+                        log('test');
                         //change view
                       },
                       leading: Icon(Icons.location_on),

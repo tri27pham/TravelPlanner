@@ -138,6 +138,14 @@ class RoutePlannerViewModel extends ChangeNotifier {
     }
   }
 
+  void setInitialDestination(RoutePlace selectedPlace) {
+    destination = selectedPlace;
+    textEditingController.text = '';
+    endLocationTextEditingController.text = destination.name;
+    log(endLocationTextEditingController.text);
+    notifyListeners();
+  }
+
   void onMainSearchModify() async {
     if (textEditingController.text.isEmpty) {
       places.clear();
