@@ -37,6 +37,7 @@ class RoutePlannerViewModel extends ChangeNotifier {
   bool showStart = true; //get rid of this shit
   bool showEnd = true;
 
+  bool startSelected = false;
   bool destinationSelected = false;
 
   List<PredictedRoutePlace> places = [];
@@ -138,11 +139,24 @@ class RoutePlannerViewModel extends ChangeNotifier {
     }
   }
 
+  void setStart(RoutePlace selectedPlace) {
+    start = selectedPlace;
+    startLocationTextEditingController.text = start.name;
+    startLocationFocusNode.unfocus();
+    notifyListeners();
+  }
+
+  void setDestination(RoutePlace selectedPlace) {
+    destination = selectedPlace;
+    endLocationTextEditingController.text = destination.name;
+    endLocationFocusNode.unfocus();
+    notifyListeners();
+  }
+
   void setInitialDestination(RoutePlace selectedPlace) {
     destination = selectedPlace;
     textEditingController.text = '';
     endLocationTextEditingController.text = destination.name;
-    log(endLocationTextEditingController.text);
     notifyListeners();
   }
 
@@ -187,47 +201,24 @@ class RoutePlannerViewModel extends ChangeNotifier {
   }
 
   void updateContainerHeight() {
-    if (_isEditingSearchLocation ||
-        _isEditingStartLocation ||
-        _isEditingEndLocation) {
+    if (mapSearchFocusNode.hasFocus ||
+        startLocationFocusNode.hasFocus ||
+        endLocationFocusNode.hasFocus) {
       containerHeight = 450;
     } else {
-      containerHeight = 250;
-    }
-    notifyListeners();
-  }
-
-  void updateStartEndSearch() {
-    if (_isEditingStartLocation) {
-      showEnd = false;
-    } else if (_isEditingEndLocation) {
-      showStart = false;
-    }
-    if (!_isEditingStartLocation && !_isEditingEndLocation) {
-      showStart = true;
-      showEnd = true;
+      containerHeight = 350;
     }
     notifyListeners();
   }
 
   void onFocusChange() {
-    _isEditingSearchLocation = mapSearchFocusNode.hasFocus;
-    _isEditingStartLocation = startLocationFocusNode.hasFocus;
-    if (_isEditingStartLocation) {
-      endLocationTextEditingController.text = '';
-    }
-    _isEditingEndLocation = endLocationFocusNode.hasFocus;
-    if (_isEditingEndLocation) {
-      startLocationTextEditingController.text = '';
-    }
+    log('test');
     updateContainerHeight();
-    updateStartEndSearch();
   }
 
   void resetControllersAndFocus() {
-    textEditingController.text = '';
-    startLocationTextEditingController.text = '';
-    endLocationTextEditingController.text = '';
+    startLocationFocusNode.unfocus();
+    endLocationFocusNode.unfocus();
     destinationSelected = false;
     notifyListeners();
   }

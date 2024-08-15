@@ -36,7 +36,7 @@ class RoutePlanner extends StatelessWidget {
           builder: (context, viewModel, child) {
             return GestureDetector(
               onTap: () {
-                FocusScope.of(context).unfocus();
+                // FocusScope.of(context).unfocus();
                 viewModel.resetControllersAndFocus();
               },
               child: Stack(
@@ -223,6 +223,7 @@ class RoutePlanner extends StatelessWidget {
             AnimatedContainer(
               duration: Duration(milliseconds: 200),
               height: viewModel.textEditingController.text.isNotEmpty
+                  // viewModel.mapSearchFocusNode.hasFocus
                   ? viewModel.containerHeight / 1.75
                   : 0,
               width: MediaQuery.of(context).size.width * 0.85,
@@ -245,8 +246,6 @@ class RoutePlanner extends StatelessWidget {
                         RoutePlace selectedPlace =
                             await viewModel.getRoutePlaceInfo(place.placeId);
                         viewModel.setInitialDestination(selectedPlace);
-                        log('test');
-                        //change view
                       },
                       leading: Icon(Icons.location_on),
                       title: Text(
@@ -347,7 +346,8 @@ class RoutePlanner extends StatelessWidget {
               child: AnimatedContainer(
                 duration: Duration(milliseconds: 200),
                 height:
-                    viewModel.startLocationTextEditingController.text.isNotEmpty
+                    // viewModel.startLocationTextEditingController.text.isNotEmpty
+                    viewModel.startLocationFocusNode.hasFocus
                         ? viewModel.containerHeight / 1.75
                         : 0,
                 width: 350,
@@ -366,10 +366,15 @@ class RoutePlanner extends StatelessWidget {
                       width: MediaQuery.of(context).size.width,
                       child: ListTile(
                         onTap: () async {
-                          List<Location> locations = await locationFromAddress(
-                              viewModel.startPlaces[index].description);
-                          print(locations.last.longitude);
-                          print(locations.last.latitude);
+                          // List<Location> locations = await locationFromAddress(
+                          //     viewModel.startPlaces[index].description);
+                          // viewModel.start = viewModel.startPlaces[index];
+                          // viewModel.startLocationTextEditingController.text =
+                          PredictedRoutePlace place =
+                              viewModel.startPlaces[index];
+                          RoutePlace selectedPlace =
+                              await viewModel.getRoutePlaceInfo(place.placeId);
+                          viewModel.setStart(selectedPlace);
                         },
                         leading: Icon(Icons.location_on),
                         title: Text(
@@ -467,9 +472,11 @@ class RoutePlanner extends StatelessWidget {
             ),
             AnimatedContainer(
               duration: Duration(milliseconds: 200),
-              height: viewModel.endLocationTextEditingController.text.isNotEmpty
-                  ? viewModel.containerHeight / 1.75
-                  : 0,
+              height:
+                  // viewModel.endLocationTextEditingController.text.isNotEmpty
+                  viewModel.endLocationFocusNode.hasFocus
+                      ? viewModel.containerHeight / 1.75
+                      : 0,
               width: 350,
               padding: EdgeInsets.fromLTRB(5, 0, 5, 20),
               decoration: BoxDecoration(
@@ -486,10 +493,10 @@ class RoutePlanner extends StatelessWidget {
                     width: MediaQuery.of(context).size.width,
                     child: ListTile(
                       onTap: () async {
-                        List<Location> locations = await locationFromAddress(
-                            viewModel.endPlaces[index].description);
-                        print(locations.last.longitude);
-                        print(locations.last.latitude);
+                        PredictedRoutePlace place = viewModel.endPlaces[index];
+                        RoutePlace selectedPlace =
+                            await viewModel.getRoutePlaceInfo(place.placeId);
+                        viewModel.setDestination(selectedPlace);
                       },
                       leading: Icon(Icons.location_on),
                       title: Text(
