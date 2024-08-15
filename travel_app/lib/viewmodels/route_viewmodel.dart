@@ -30,6 +30,8 @@ class RoutePlannerViewModel extends ChangeNotifier {
   final FocusNode startLocationFocusNode = FocusNode();
   final FocusNode endLocationFocusNode = FocusNode();
 
+  String apiKey = 'AIzaSyC3Qfm0kEEILIuqvgu21OnlhSkWoBiyVNQ';
+
   bool _isEditingSearchLocation = false;
   bool _isEditingStartLocation = false;
   bool _isEditingEndLocation = false;
@@ -51,7 +53,10 @@ class RoutePlannerViewModel extends ChangeNotifier {
 
   static const CameraPosition initPos =
       CameraPosition(target: LatLng(51.5131, 0.1174), zoom: 14);
-  final List<Marker> myMarker = [];
+
+  Marker? originMarker;
+  Marker? destinationMarker;
+
   bool _isDisposed = false;
 
   double containerHeight = 320;
@@ -64,6 +69,78 @@ class RoutePlannerViewModel extends ChangeNotifier {
     startLocationFocusNode.addListener(onFocusChange);
     endLocationFocusNode.addListener(onFocusChange);
     packData();
+  }
+
+  List<Marker> get myMarker {
+    List<Marker> markers = [];
+    if (originMarker != null) {
+      markers.add(originMarker!);
+    }
+    if (destinationMarker != null) {
+      markers.add(destinationMarker!);
+    }
+    return markers;
+  }
+
+  void setOriginMarker() {
+    originMarker =
+        Marker(markerId: MarkerId(start.placeId), position: start.coordinates);
+  }
+
+  void setDestinationtMarker() {
+    destinationMarker = Marker(
+        markerId: MarkerId(destination.placeId),
+        position: destination.coordinates);
+  }
+
+  Future<void> getRoute() async {
+    final request = {
+      'url': Uri.parse(
+          'https://routes.googleapis.com/directions/v2:computeRoutes'),
+      'headers': {
+        'Authorization': apiKey,
+        'Content-Type': 'application/json',
+        'X-Goog-FieldMask':
+            'routes.duration,routes.distanceMeters,routes.polyline.encodedPolyline',
+      },
+      'body': jsonEncode({
+        "origin": {
+          "location": {
+            "latLng": {
+              "latitude": start.coordinates.latitude,
+              "longitude": start.coordinates.longitude
+            }
+          }
+        },
+        "destination": {
+          "location": {
+            "latLng": {
+              "latitude": destination.coordinates.latitude,
+              "longitude": destination.coordinates.longitude
+            }
+          }
+        },
+        "travelMode": "DRIVE"
+      }),
+    };
+
+    try {
+      final response = await http.post(
+        request['url'] as Uri,
+        headers: request['headers'] as Map<String, String>,
+        body: request['body'] as String,
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        // Handle the response data (e.g., show the route on a map)
+        log(data);
+      } else {
+        log('Request failed with status: ${response.statusCode}.');
+      }
+    } catch (e) {
+      log('Error making request: $e');
+    }
   }
 
   Future<RoutePlace> getRoutePlaceInfo(String placeId) async {
@@ -104,13 +181,13 @@ class RoutePlannerViewModel extends ChangeNotifier {
   void packData() {
     getUserLocation().then((value) async {
       if (_isDisposed) return;
-      myMarker.add(Marker(
-        markerId: const MarkerId('CurrentLocation'),
-        position: LatLng(value.latitude, value.longitude),
-        infoWindow: const InfoWindow(title: 'CurrentLocation'),
-      ));
+      // myMarker.add(Marker(
+      //   markerId: const MarkerId('CurrentLocation'),
+      //   position: LatLng(value.latitude, value.longitude),
+      //   infoWindow: const InfoWindow(title: 'CurrentLocation'),
+      // ));
       CameraPosition cameraPosition = CameraPosition(
-          target: LatLng(value.latitude, value.longitude), zoom: 14);
+          target: LatLng(value.latitude, value.longitude), zoom: 11);
       final GoogleMapController controller = await _mapController.future;
       if (_isDisposed) return;
       controller.animateCamera(CameraUpdate.newCameraPosition(cameraPosition));
@@ -121,7 +198,7 @@ class RoutePlannerViewModel extends ChangeNotifier {
 
   Future<List<PredictedRoutePlace>> makeSuggestion(String input) async {
     log(input);
-    String apiKey = 'AIzaSyC3Qfm0kEEILIuqvgu21OnlhSkWoBiyVNQ';
+
     String url = 'https://maps.googleapis.com/maps/api/place/autocomplete/json';
     String request = '$url?input=$input&key=$apiKey&sessiontoken=$sessionToken';
 
@@ -143,6 +220,7 @@ class RoutePlannerViewModel extends ChangeNotifier {
     start = selectedPlace;
     startLocationTextEditingController.text = start.name;
     startSelected = true;
+    setOriginMarker();
     startLocationFocusNode.unfocus();
     notifyListeners();
   }
@@ -151,6 +229,7 @@ class RoutePlannerViewModel extends ChangeNotifier {
     destination = selectedPlace;
     endLocationTextEditingController.text = destination.name;
     destinationSelected = true;
+    setDestinationtMarker();
     endLocationFocusNode.unfocus();
     notifyListeners();
   }
@@ -159,6 +238,7 @@ class RoutePlannerViewModel extends ChangeNotifier {
     destination = selectedPlace;
     textEditingController.text = '';
     endLocationTextEditingController.text = destination.name;
+    setDestinationtMarker();
     notifyListeners();
   }
 

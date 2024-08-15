@@ -123,7 +123,9 @@ class RoutePlanner extends StatelessWidget {
                   decoration:
                       BoxDecoration(borderRadius: BorderRadius.circular(25)),
                   child: ElevatedButton(
-                    onPressed: () {},
+                    onPressed: () {
+                      viewModel.getRoute();
+                    },
                     child: Text('Calculate route'),
                     style: ElevatedButton.styleFrom(
                         elevation: 0,
