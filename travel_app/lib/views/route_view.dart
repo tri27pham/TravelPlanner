@@ -114,6 +114,24 @@ class RoutePlanner extends StatelessWidget {
       return Expanded(
         child: Stack(
           children: [
+            if (viewModel.startSelected && viewModel.destinationSelected)
+              Positioned(
+                bottom: 90,
+                left: 20,
+                child: Container(
+                  width: 350,
+                  decoration:
+                      BoxDecoration(borderRadius: BorderRadius.circular(25)),
+                  child: ElevatedButton(
+                    onPressed: () {},
+                    child: Text('Calculate route'),
+                    style: ElevatedButton.styleFrom(
+                        elevation: 0,
+                        primary: Colors.green,
+                        foregroundColor: Colors.white),
+                  ),
+                ),
+              ),
             Positioned(
               top: 55,
               left: 20,

@@ -54,7 +54,7 @@ class RoutePlannerViewModel extends ChangeNotifier {
   final List<Marker> myMarker = [];
   bool _isDisposed = false;
 
-  double containerHeight = 250;
+  double containerHeight = 320;
 
   RoutePlannerViewModel() {
     textEditingController.addListener(onMainSearchModify);
@@ -142,6 +142,7 @@ class RoutePlannerViewModel extends ChangeNotifier {
   void setStart(RoutePlace selectedPlace) {
     start = selectedPlace;
     startLocationTextEditingController.text = start.name;
+    startSelected = true;
     startLocationFocusNode.unfocus();
     notifyListeners();
   }
@@ -149,6 +150,7 @@ class RoutePlannerViewModel extends ChangeNotifier {
   void setDestination(RoutePlace selectedPlace) {
     destination = selectedPlace;
     endLocationTextEditingController.text = destination.name;
+    destinationSelected = true;
     endLocationFocusNode.unfocus();
     notifyListeners();
   }
@@ -206,7 +208,7 @@ class RoutePlannerViewModel extends ChangeNotifier {
         endLocationFocusNode.hasFocus) {
       containerHeight = 450;
     } else {
-      containerHeight = 350;
+      containerHeight = 320;
     }
     notifyListeners();
   }
