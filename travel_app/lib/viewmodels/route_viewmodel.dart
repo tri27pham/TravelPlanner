@@ -46,6 +46,8 @@ class RoutePlannerViewModel extends ChangeNotifier {
   List<PredictedRoutePlace> startPlaces = [];
   List<PredictedRoutePlace> endPlaces = [];
 
+  Set<Polyline> polyines = {};
+
   RoutePlace start =
       RoutePlace(placeId: '', name: '', coordinates: LatLng(0, 0));
   RoutePlace destination =
@@ -98,7 +100,7 @@ class RoutePlannerViewModel extends ChangeNotifier {
       'url': Uri.parse(
           'https://routes.googleapis.com/directions/v2:computeRoutes'),
       'headers': {
-        'Authorization': apiKey,
+        'X-Goog-Api-Key': apiKey,
         'Content-Type': 'application/json',
         'X-Goog-FieldMask':
             'routes.duration,routes.distanceMeters,routes.polyline.encodedPolyline',
@@ -133,14 +135,64 @@ class RoutePlannerViewModel extends ChangeNotifier {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        // Handle the response data (e.g., show the route on a map)
-        log(data);
+
+        Map<String, dynamic> route = data['routes'][0]; // Get the first route
+        int distanceMeters = route['distanceMeters'];
+        String duration = route['duration'];
+        String encodedPolyline = route['polyline']['encodedPolyline'];
+
+        List<LatLng> decodedPolyline = decodePolyline(encodedPolyline);
+
+        polyines.clear();
+        polyines.add(Polyline(
+          polylineId: PolylineId('route'),
+          points: decodedPolyline,
+          color: Colors.blue,
+          width: 5,
+        ));
+
+        notifyListeners();
+
+        log(encodedPolyline);
+
+        // log(data.toString());
       } else {
-        log('Request failed with status: ${response.statusCode}.');
+        log('Request failed with status: ${response.statusCode}, response: ${response.body}');
       }
     } catch (e) {
       log('Error making request: $e');
     }
+  }
+
+  List<LatLng> decodePolyline(String encoded) {
+    List<LatLng> points = [];
+    int index = 0, len = encoded.length;
+    int lat = 0, lng = 0;
+
+    while (index < len) {
+      int b, shift = 0, result = 0;
+      do {
+        b = encoded.codeUnitAt(index++) - 63;
+        result |= (b & 0x1f) << shift;
+        shift += 5;
+      } while (b >= 0x20);
+      int dlat = ((result & 1) != 0 ? ~(result >> 1) : (result >> 1));
+      lat += dlat;
+
+      shift = 0;
+      result = 0;
+      do {
+        b = encoded.codeUnitAt(index++) - 63;
+        result |= (b & 0x1f) << shift;
+        shift += 5;
+      } while (b >= 0x20);
+      int dlng = ((result & 1) != 0 ? ~(result >> 1) : (result >> 1));
+      lng += dlng;
+
+      points.add(LatLng(lat / 1E5, lng / 1E5));
+    }
+
+    return points;
   }
 
   Future<RoutePlace> getRoutePlaceInfo(String placeId) async {

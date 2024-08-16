@@ -45,6 +45,7 @@ class RoutePlanner extends StatelessWidget {
                     initialCameraPosition: RoutePlannerViewModel.initPos,
                     mapType: MapType.normal,
                     markers: Set<Marker>.of(viewModel.myMarker),
+                    polylines: viewModel.polyines,
                     onMapCreated: (GoogleMapController controller) {
                       viewModel.mapController.complete(controller);
                     },
