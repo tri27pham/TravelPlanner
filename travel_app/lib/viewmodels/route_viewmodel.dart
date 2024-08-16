@@ -9,6 +9,9 @@ import 'package:http/http.dart' as http;
 import 'package:uuid/uuid.dart';
 import 'package:geocoding/geocoding.dart';
 import '../models/predicted_route_place_model.dart';
+import '../models/route_place.dart';
+import 'package:dio/dio.dart';
+import 'dart:developer';
 
 class RoutePlannerViewModel extends ChangeNotifier {
   final Completer<GoogleMapController> _mapController = Completer();
@@ -20,35 +23,154 @@ class RoutePlannerViewModel extends ChangeNotifier {
   final TextEditingController textEditingController = TextEditingController();
   final TextEditingController startLocationTextEditingController =
       TextEditingController();
+  final TextEditingController endLocationTextEditingController =
+      TextEditingController();
 
   final FocusNode mapSearchFocusNode = FocusNode();
   final FocusNode startLocationFocusNode = FocusNode();
   final FocusNode endLocationFocusNode = FocusNode();
 
+  String apiKey = 'AIzaSyC3Qfm0kEEILIuqvgu21OnlhSkWoBiyVNQ';
+
   bool _isEditingSearchLocation = false;
   bool _isEditingStartLocation = false;
   bool _isEditingEndLocation = false;
 
-  bool showStart = true;
+  bool showStart = true; //get rid of this shit
   bool showEnd = true;
 
+  bool startSelected = false;
+  bool destinationSelected = false;
+
   List<PredictedRoutePlace> places = [];
+  List<PredictedRoutePlace> startPlaces = [];
+  List<PredictedRoutePlace> endPlaces = [];
+
+  RoutePlace start =
+      RoutePlace(placeId: '', name: '', coordinates: LatLng(0, 0));
+  RoutePlace destination =
+      RoutePlace(placeId: '', name: '', coordinates: LatLng(0, 0));
 
   static const CameraPosition initPos =
       CameraPosition(target: LatLng(51.5131, 0.1174), zoom: 14);
-  final List<Marker> myMarker = [];
+
+  Marker? originMarker;
+  Marker? destinationMarker;
+
   bool _isDisposed = false;
 
-  double containerHeight = 250;
-
-  bool createRoute = false;
+  double containerHeight = 320;
 
   RoutePlannerViewModel() {
-    textEditingController.addListener(onModify);
+    textEditingController.addListener(onMainSearchModify);
+    startLocationTextEditingController.addListener(onStartSearchModify);
+    endLocationTextEditingController.addListener(onEndSearchModify);
     mapSearchFocusNode.addListener(onFocusChange);
     startLocationFocusNode.addListener(onFocusChange);
     endLocationFocusNode.addListener(onFocusChange);
     packData();
+  }
+
+  List<Marker> get myMarker {
+    List<Marker> markers = [];
+    if (originMarker != null) {
+      markers.add(originMarker!);
+    }
+    if (destinationMarker != null) {
+      markers.add(destinationMarker!);
+    }
+    return markers;
+  }
+
+  void setOriginMarker() {
+    originMarker =
+        Marker(markerId: MarkerId(start.placeId), position: start.coordinates);
+  }
+
+  void setDestinationtMarker() {
+    destinationMarker = Marker(
+        markerId: MarkerId(destination.placeId),
+        position: destination.coordinates);
+  }
+
+  Future<void> getRoute() async {
+    final request = {
+      'url': Uri.parse(
+          'https://routes.googleapis.com/directions/v2:computeRoutes'),
+      'headers': {
+        'Authorization': apiKey,
+        'Content-Type': 'application/json',
+        'X-Goog-FieldMask':
+            'routes.duration,routes.distanceMeters,routes.polyline.encodedPolyline',
+      },
+      'body': jsonEncode({
+        "origin": {
+          "location": {
+            "latLng": {
+              "latitude": start.coordinates.latitude,
+              "longitude": start.coordinates.longitude
+            }
+          }
+        },
+        "destination": {
+          "location": {
+            "latLng": {
+              "latitude": destination.coordinates.latitude,
+              "longitude": destination.coordinates.longitude
+            }
+          }
+        },
+        "travelMode": "DRIVE"
+      }),
+    };
+
+    try {
+      final response = await http.post(
+        request['url'] as Uri,
+        headers: request['headers'] as Map<String, String>,
+        body: request['body'] as String,
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        // Handle the response data (e.g., show the route on a map)
+        log(data);
+      } else {
+        log('Request failed with status: ${response.statusCode}.');
+      }
+    } catch (e) {
+      log('Error making request: $e');
+    }
+  }
+
+  Future<RoutePlace> getRoutePlaceInfo(String placeId) async {
+    final dio = Dio();
+    final String apiKey = 'AIzaSyC3Qfm0kEEILIuqvgu21OnlhSkWoBiyVNQ';
+    final String placeImgRequest =
+        'https://places.googleapis.com/v1/places/$placeId?fields=id,displayName,location&key=$apiKey';
+
+    try {
+      final locationResponse = await dio.get(placeImgRequest);
+
+      RoutePlace routePlace =
+          RoutePlace.fromJson(placeId, locationResponse.data);
+
+      destinationSelected = true;
+      notifyListeners();
+      return routePlace;
+    } on DioException catch (e) {
+      log('DioException: ${e.message}');
+      if (e.response != null) {
+        log('Error response: ${e.response?.statusCode} ${e.response?.statusMessage}');
+        log('Response data: ${e.response?.data}');
+      } else {
+        log('Error request: ${e.message}');
+      }
+    } catch (e) {
+      log('General error: $e');
+    }
+
+    return RoutePlace(placeId: 'id', name: '', coordinates: LatLng(0, 0));
   }
 
   Future<Position> getUserLocation() async {
@@ -59,13 +181,13 @@ class RoutePlannerViewModel extends ChangeNotifier {
   void packData() {
     getUserLocation().then((value) async {
       if (_isDisposed) return;
-      myMarker.add(Marker(
-        markerId: const MarkerId('CurrentLocation'),
-        position: LatLng(value.latitude, value.longitude),
-        infoWindow: const InfoWindow(title: 'CurrentLocation'),
-      ));
+      // myMarker.add(Marker(
+      //   markerId: const MarkerId('CurrentLocation'),
+      //   position: LatLng(value.latitude, value.longitude),
+      //   infoWindow: const InfoWindow(title: 'CurrentLocation'),
+      // ));
       CameraPosition cameraPosition = CameraPosition(
-          target: LatLng(value.latitude, value.longitude), zoom: 14);
+          target: LatLng(value.latitude, value.longitude), zoom: 11);
       final GoogleMapController controller = await _mapController.future;
       if (_isDisposed) return;
       controller.animateCamera(CameraUpdate.newCameraPosition(cameraPosition));
@@ -74,8 +196,9 @@ class RoutePlannerViewModel extends ChangeNotifier {
     });
   }
 
-  void makeSuggestion(String input) async {
-    String apiKey = 'AIzaSyC3Qfm0kEEILIuqvgu21OnlhSkWoBiyVNQ';
+  Future<List<PredictedRoutePlace>> makeSuggestion(String input) async {
+    log(input);
+
     String url = 'https://maps.googleapis.com/maps/api/place/autocomplete/json';
     String request = '$url?input=$input&key=$apiKey&sessiontoken=$sessionToken';
 
@@ -83,59 +206,103 @@ class RoutePlannerViewModel extends ChangeNotifier {
 
     if (response.statusCode == 200) {
       var responseData = jsonDecode(response.body);
-      places = (responseData['predictions'] as List)
-          .map((e) => PredictedRoutePlace.fromJson(e))
-          .toList();
-      notifyListeners();
+      List<PredictedRoutePlace> predicatedPlaces =
+          (responseData['predictions'] as List)
+              .map((e) => PredictedRoutePlace.fromJson(e))
+              .toList();
+      return predicatedPlaces;
     } else {
       throw Exception('FAILED');
     }
   }
 
-  void onModify() {
+  void setStart(RoutePlace selectedPlace) {
+    start = selectedPlace;
+    startLocationTextEditingController.text = start.name;
+    startSelected = true;
+    setOriginMarker();
+    startLocationFocusNode.unfocus();
+    notifyListeners();
+  }
+
+  void setDestination(RoutePlace selectedPlace) {
+    destination = selectedPlace;
+    endLocationTextEditingController.text = destination.name;
+    destinationSelected = true;
+    setDestinationtMarker();
+    endLocationFocusNode.unfocus();
+    notifyListeners();
+  }
+
+  void setInitialDestination(RoutePlace selectedPlace) {
+    destination = selectedPlace;
+    textEditingController.text = '';
+    endLocationTextEditingController.text = destination.name;
+    setDestinationtMarker();
+    notifyListeners();
+  }
+
+  void onMainSearchModify() async {
     if (textEditingController.text.isEmpty) {
       places.clear();
       notifyListeners();
       return;
     }
+    places = await makeSuggestion(textEditingController.text);
+    notifyListeners();
+
     if (sessionToken == null) {
       sessionToken = uuid.v4();
     }
-    makeSuggestion(textEditingController.text);
+  }
+
+  void onStartSearchModify() async {
+    if (startLocationTextEditingController.text.isEmpty) {
+      startPlaces.clear();
+      notifyListeners();
+      return;
+    }
+    startPlaces = await makeSuggestion(startLocationTextEditingController.text);
+    notifyListeners();
+    if (sessionToken == null) {
+      sessionToken = uuid.v4();
+    }
+  }
+
+  void onEndSearchModify() async {
+    if (endLocationTextEditingController.text.isEmpty) {
+      endPlaces.clear();
+      notifyListeners();
+      return;
+    }
+    endPlaces = await makeSuggestion(endLocationTextEditingController.text);
+    notifyListeners();
+    if (sessionToken == null) {
+      sessionToken = uuid.v4();
+    }
   }
 
   void updateContainerHeight() {
-    print('test');
-    if (_isEditingSearchLocation ||
-        _isEditingStartLocation ||
-        _isEditingEndLocation) {
+    if (mapSearchFocusNode.hasFocus ||
+        startLocationFocusNode.hasFocus ||
+        endLocationFocusNode.hasFocus) {
       containerHeight = 450;
     } else {
-      containerHeight = 250;
-    }
-    notifyListeners();
-  }
-
-  void updateStartEndSearch() {
-    if (_isEditingStartLocation) {
-      showEnd = false;
-    } else if (_isEditingEndLocation) {
-      showStart = false;
-    }
-    if (!_isEditingStartLocation && !_isEditingEndLocation) {
-      showStart = true;
-      showEnd = true;
+      containerHeight = 320;
     }
     notifyListeners();
   }
 
   void onFocusChange() {
-    print('test focus');
-    _isEditingSearchLocation = mapSearchFocusNode.hasFocus;
-    _isEditingStartLocation = startLocationFocusNode.hasFocus;
-    _isEditingEndLocation = endLocationFocusNode.hasFocus;
+    log('test');
     updateContainerHeight();
-    updateStartEndSearch();
+  }
+
+  void resetControllersAndFocus() {
+    startLocationFocusNode.unfocus();
+    endLocationFocusNode.unfocus();
+    destinationSelected = false;
+    notifyListeners();
   }
 
   @override

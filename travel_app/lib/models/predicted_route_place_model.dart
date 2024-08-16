@@ -4,12 +4,13 @@ import 'package:http/http.dart' as http;
 import 'dart:developer';
 
 class PredictedRoutePlace {
+  final String placeId;
   final String description;
 
-  PredictedRoutePlace({required this.description});
+  PredictedRoutePlace({required this.placeId, required this.description});
 
   factory PredictedRoutePlace.fromJson(Map<String, dynamic> json) {
-    log(json.toString());
-    return PredictedRoutePlace(description: json['description']);
+    return PredictedRoutePlace(
+        placeId: json['place_id'], description: json['description']);
   }
 }
