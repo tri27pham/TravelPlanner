@@ -31,54 +31,107 @@ class RoutePlanner extends StatelessWidget {
             .addListener(() => viewModel.onFocusChange());
         return viewModel;
       },
-      child: Scaffold(
-        body: Consumer<RoutePlannerViewModel>(
-          builder: (context, viewModel, child) {
-            return GestureDetector(
-              onTap: () {
-                // FocusScope.of(context).unfocus();
-                viewModel.resetControllersAndFocus();
-              },
-              child: Stack(
-                children: [
-                  GoogleMap(
-                    initialCameraPosition: RoutePlannerViewModel.initPos,
-                    mapType: MapType.normal,
-                    markers: Set<Marker>.of(viewModel.myMarker),
-                    polylines: viewModel.polyines,
-                    onMapCreated: (GoogleMapController controller) {
-                      viewModel.mapController.complete(controller);
-                    },
-                  ),
-                  Align(
-                    alignment: Alignment.bottomCenter,
-                    child: AnimatedContainer(
-                      duration: Duration(milliseconds: 200),
-                      width: MediaQuery.of(context).size.width,
-                      height: viewModel.containerHeight,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.only(
-                          topLeft: Radius.circular(50.0),
-                          topRight: Radius.circular(50.0),
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black26,
-                            offset: Offset(0, -2),
-                            blurRadius: 1,
-                            spreadRadius: 0.5,
-                          ),
-                        ],
-                      ),
-                      child: CreateRouteInitialWidget(context),
-                    ),
+      child: Scaffold(body: Consumer<RoutePlannerViewModel>(
+        builder: (context, viewModel, child) {
+          final pageWidgets = {
+            1: createRouteWidget(context),
+            2: displayRouteWidget(context)
+          };
+          return pageWidgets[viewModel.page] ??
+              Center(
+                child: Text('Page not found'),
+              );
+          ;
+        },
+      )),
+    );
+  }
+
+  Widget displayRouteWidget(BuildContext context) {
+    final viewModel = Provider.of<RoutePlannerViewModel>(context);
+    return Stack(
+      children: [
+        GoogleMap(
+          initialCameraPosition: RoutePlannerViewModel.initPos,
+          mapType: MapType.normal,
+          markers: Set<Marker>.of(viewModel.myMarker),
+          polylines: viewModel.polyines,
+          onMapCreated: (GoogleMapController controller) {
+            if (!viewModel.mapController.isCompleted) {
+              viewModel.mapController.complete(controller);
+            }
+          },
+        ),
+        Align(
+          alignment: Alignment.topCenter,
+          child: AnimatedContainer(
+            duration: Duration(milliseconds: 200),
+            width: MediaQuery.of(context).size.width,
+            height: 240,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.only(
+                bottomLeft: Radius.circular(40.0),
+                bottomRight: Radius.circular(40.0),
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black26,
+                  offset: Offset(0, 1),
+                  blurRadius: 1,
+                  spreadRadius: 0.5,
+                ),
+              ],
+            ),
+            child: ViewRouteInitialWidget(context),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget createRouteWidget(BuildContext context) {
+    final viewModel = Provider.of<RoutePlannerViewModel>(context);
+    return GestureDetector(
+      onTap: () {
+        viewModel.resetControllersAndFocus();
+      },
+      child: Stack(
+        children: [
+          GoogleMap(
+            initialCameraPosition: RoutePlannerViewModel.initPos,
+            mapType: MapType.normal,
+            markers: Set<Marker>.of(viewModel.myMarker),
+            polylines: viewModel.polyines,
+            onMapCreated: (GoogleMapController controller) {
+              viewModel.mapController.complete(controller);
+            },
+          ),
+          Align(
+            alignment: Alignment.bottomCenter,
+            child: AnimatedContainer(
+              duration: Duration(milliseconds: 200),
+              width: MediaQuery.of(context).size.width,
+              height: viewModel.containerHeight,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(50.0),
+                  topRight: Radius.circular(50.0),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black26,
+                    offset: Offset(0, -2),
+                    blurRadius: 1,
+                    spreadRadius: 0.5,
                   ),
                 ],
               ),
-            );
-          },
-        ),
+              child: CreateRouteInitialWidget(context),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -109,6 +162,102 @@ class RoutePlanner extends StatelessWidget {
     });
   }
 
+  Widget ViewRouteInitialWidget(BuildContext context) {
+    return Consumer<RoutePlannerViewModel>(
+        builder: (context, viewModel, child) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          ViewRouteTitleWidget(viewModel),
+          OriginAndDestinationNamesWidget(context),
+          // viewModel.destinationSelected
+          //     ? RouteWidget(context)
+          //     : SearchBarWidget(viewModel, context)
+        ],
+      );
+    });
+  }
+
+  Widget OriginAndDestinationNamesWidget(BuildContext context) {
+    final viewModel = Provider.of<RoutePlannerViewModel>(context);
+    return Padding(
+        padding: EdgeInsets.fromLTRB(0, 0, 0, 0),
+        child: Column(
+          children: [
+            Padding(
+              padding: EdgeInsets.fromLTRB(0, 0, 0, 10),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    width: 350,
+                    height: 50,
+                    decoration: BoxDecoration(
+                      color: Color.fromARGB(255, 240, 240, 240),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: EdgeInsets.fromLTRB(30, 0, 0, 0),
+                          width: 65,
+                          child: Text('Start'),
+                        ),
+                        Expanded(
+                          child: Container(
+                            padding: EdgeInsets.fromLTRB(20, 0, 0, 0),
+                            child: Text(
+                              viewModel.start.name,
+                              style: TextStyle(
+                                  fontSize: 17, fontWeight: FontWeight.w500),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Padding(
+              padding: EdgeInsets.fromLTRB(0, 0, 0, 10),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    width: 350,
+                    height: 50,
+                    decoration: BoxDecoration(
+                      color: Color.fromARGB(255, 240, 240, 240),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: EdgeInsets.fromLTRB(30, 0, 0, 0),
+                          width: 65,
+                          child: Text('End'),
+                        ),
+                        Expanded(
+                          child: Container(
+                            padding: EdgeInsets.fromLTRB(20, 0, 0, 0),
+                            child: Text(
+                              viewModel.destination.name,
+                              style: TextStyle(
+                                  fontSize: 17, fontWeight: FontWeight.w500),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ));
+  }
+
   Widget RouteWidget(BuildContext context) {
     return Consumer<RoutePlannerViewModel>(
         builder: (context, viewModel, child) {
@@ -125,7 +274,8 @@ class RoutePlanner extends StatelessWidget {
                       BoxDecoration(borderRadius: BorderRadius.circular(25)),
                   child: ElevatedButton(
                     onPressed: () {
-                      viewModel.getRoute();
+                      // viewModel.getRoute();
+                      viewModel.togglePage();
                     },
                     child: Text('Calculate route'),
                     style: ElevatedButton.styleFrom(
@@ -165,6 +315,19 @@ class RoutePlanner extends StatelessWidget {
               style: TextStyle(fontSize: 35, fontWeight: FontWeight.w500),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget ViewRouteTitleWidget(RoutePlannerViewModel viewModel) {
+    return Padding(
+      padding: EdgeInsets.fromLTRB(20, 50, 0, 0),
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(20, 0, 20, 0),
+        child: Text(
+          'View route',
+          style: TextStyle(fontSize: 35, fontWeight: FontWeight.w500),
         ),
       ),
     );

@@ -63,6 +63,8 @@ class RoutePlannerViewModel extends ChangeNotifier {
 
   double containerHeight = 320;
 
+  int page = 1;
+
   RoutePlannerViewModel() {
     textEditingController.addListener(onMainSearchModify);
     startLocationTextEditingController.addListener(onStartSearchModify);
@@ -71,6 +73,15 @@ class RoutePlannerViewModel extends ChangeNotifier {
     startLocationFocusNode.addListener(onFocusChange);
     endLocationFocusNode.addListener(onFocusChange);
     packData();
+  }
+
+  void togglePage() {
+    if (page == 1) {
+      page = 2;
+    } else if (page == 2) {
+      page = 1;
+    }
+    notifyListeners();
   }
 
   List<Marker> get myMarker {
@@ -151,6 +162,8 @@ class RoutePlannerViewModel extends ChangeNotifier {
           width: 5,
         ));
 
+        _adjustCameraToBounds(decodedPolyline);
+
         notifyListeners();
 
         log(encodedPolyline);
@@ -228,6 +241,38 @@ class RoutePlannerViewModel extends ChangeNotifier {
   Future<Position> getUserLocation() async {
     await Geolocator.requestPermission();
     return await Geolocator.getCurrentPosition();
+  }
+
+  void _adjustCameraToBounds(List<LatLng> polylinePoints) async {
+    if (polylinePoints.isEmpty) return;
+
+    LatLngBounds bounds;
+    if (polylinePoints.length == 1) {
+      bounds = LatLngBounds(
+        southwest: polylinePoints.first,
+        northeast: polylinePoints.first,
+      );
+    } else {
+      double minLat = polylinePoints.first.latitude;
+      double maxLat = polylinePoints.first.latitude;
+      double minLng = polylinePoints.first.longitude;
+      double maxLng = polylinePoints.first.longitude;
+
+      for (LatLng point in polylinePoints) {
+        if (point.latitude < minLat) minLat = point.latitude;
+        if (point.latitude > maxLat) maxLat = point.latitude;
+        if (point.longitude < minLng) minLng = point.longitude;
+        if (point.longitude > maxLng) maxLng = point.longitude;
+      }
+
+      bounds = LatLngBounds(
+        southwest: LatLng(minLat, minLng),
+        northeast: LatLng(maxLat, maxLng),
+      );
+    }
+
+    final GoogleMapController controller = await mapController.future;
+    controller.animateCamera(CameraUpdate.newLatLngBounds(bounds, 50));
   }
 
   void packData() {
