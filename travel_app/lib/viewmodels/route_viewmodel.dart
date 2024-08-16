@@ -274,6 +274,9 @@ class RoutePlannerViewModel extends ChangeNotifier {
     startSelected = true;
     setOriginMarker();
     startLocationFocusNode.unfocus();
+    if (startSelected && destinationSelected) {
+      getRoute();
+    }
     notifyListeners();
   }
 
@@ -283,6 +286,9 @@ class RoutePlannerViewModel extends ChangeNotifier {
     destinationSelected = true;
     setDestinationtMarker();
     endLocationFocusNode.unfocus();
+    if (startSelected && destinationSelected) {
+      getRoute();
+    }
     notifyListeners();
   }
 
