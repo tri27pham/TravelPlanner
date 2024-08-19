@@ -10,8 +10,12 @@ import 'package:travel_app/viewmodels/welcome_viewmodel.dart';
 import 'package:travel_app/viewmodels/profile_viewmodel.dart';
 import 'package:travel_app/models/AppState.dart';
 import 'app.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 void main() async {
+  await dotenv.load(fileName: ".env");
+  // await dotenv.load();
+
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
   FirebaseFirestore.instance.settings = const Settings(

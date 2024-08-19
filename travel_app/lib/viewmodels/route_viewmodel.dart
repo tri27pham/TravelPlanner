@@ -6,16 +6,21 @@ import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:http/http.dart' as http;
+import 'package:travel_app/firebase/db_services.dart';
+import 'package:travel_app/models/dreamlist_location.dart';
 import 'package:uuid/uuid.dart';
 import 'package:geocoding/geocoding.dart';
 import '../models/predicted_route_place_model.dart';
 import '../models/route_place.dart';
 import 'package:dio/dio.dart';
 import 'dart:developer';
+import 'package:geolocator/geolocator.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class RoutePlannerViewModel extends ChangeNotifier {
   final Completer<GoogleMapController> _mapController = Completer();
   Completer<GoogleMapController> get mapController => _mapController;
+  String apiKey = dotenv.env['GOOGLE_MAPS_API_KEY'] ?? '';
 
   String sessionToken = "12345";
   var uuid = Uuid();
@@ -30,12 +35,6 @@ class RoutePlannerViewModel extends ChangeNotifier {
   final FocusNode startLocationFocusNode = FocusNode();
   final FocusNode endLocationFocusNode = FocusNode();
 
-  String apiKey = 'AIzaSyC3Qfm0kEEILIuqvgu21OnlhSkWoBiyVNQ';
-
-  bool _isEditingSearchLocation = false;
-  bool _isEditingStartLocation = false;
-  bool _isEditingEndLocation = false;
-
   bool showStart = true; //get rid of this shit
   bool showEnd = true;
 
@@ -46,7 +45,13 @@ class RoutePlannerViewModel extends ChangeNotifier {
   List<PredictedRoutePlace> startPlaces = [];
   List<PredictedRoutePlace> endPlaces = [];
 
+  List<DreamListLocation> dreamlistLocationsOnRoute = [];
+
   Set<Polyline> polyines = {};
+
+  Polyline? directPolyline;
+
+  List<LatLng> polylinePoints = [];
 
   RoutePlace start =
       RoutePlace(placeId: '', name: '', coordinates: LatLng(0, 0));
@@ -58,6 +63,8 @@ class RoutePlannerViewModel extends ChangeNotifier {
 
   Marker? originMarker;
   Marker? destinationMarker;
+
+  List<Marker> markers = [];
 
   bool _isDisposed = false;
 
@@ -84,8 +91,150 @@ class RoutePlannerViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> addNearbyBucketListLocations(BuildContext context) async {
+    DbService db_service = DbService();
+
+    List<DreamListLocation> locationsOnRoute = [];
+    double radius = 50000;
+    List<DreamListLocation> dreamlistLocations =
+        await db_service.loadDreamlistFromDb(context);
+
+    for (DreamListLocation location in dreamlistLocations) {
+      if (await isNearRoute(location, radius)) {
+        locationsOnRoute.add(location);
+      }
+    }
+
+    if (locationsOnRoute.isNotEmpty) {
+      var points = convertLocations(locationsOnRoute);
+      dreamlistLocationsOnRoute = locationsOnRoute;
+      addLocationsOnRouteMarker(locationsOnRoute);
+      await recalculateRoute(points);
+    }
+  }
+
+  void addLocationsOnRouteMarker(List<DreamListLocation> locations) {
+    log('markers: ${myMarker.length.toString()}');
+    log('locations: ${locations.length.toString()}');
+    markers.clear();
+    markers.add(originMarker!);
+    markers.add(destinationMarker!);
+    for (DreamListLocation location in locations) {
+      log('id: ${location.id}');
+      log('coords: ${location.locationCoordinates.toString()}');
+      myMarker.add(Marker(
+          markerId: MarkerId(location.id),
+          position: location.locationCoordinates));
+    }
+    log('markers: ${myMarker.length.toString()}');
+    notifyListeners();
+  }
+
+  List<Map<String, dynamic>> convertLocations(
+      List<DreamListLocation> locations) {
+    return locations
+        .map((location) => {
+              "location": {
+                "latLng": {
+                  "latitude": location.locationCoordinates.latitude,
+                  "longitude": location.locationCoordinates.longitude
+                }
+              }
+            })
+        .toList();
+  }
+
+  Future<void> recalculateRoute(
+      List<Map<String, dynamic>> locationsOnRoute) async {
+    final request = {
+      'url': Uri.parse(
+          'https://routes.googleapis.com/directions/v2:computeRoutes'),
+      'headers': {
+        'X-Goog-Api-Key': apiKey,
+        'Content-Type': 'application/json',
+        'X-Goog-FieldMask':
+            'routes.duration,routes.distanceMeters,routes.polyline.encodedPolyline',
+      },
+      'body': jsonEncode({
+        "origin": {
+          "location": {
+            "latLng": {
+              "latitude": start.coordinates.latitude,
+              "longitude": start.coordinates.longitude
+            }
+          }
+        },
+        "destination": {
+          "location": {
+            "latLng": {
+              "latitude": destination.coordinates.latitude,
+              "longitude": destination.coordinates.longitude
+            }
+          }
+        },
+        "intermediates": locationsOnRoute,
+        "travelMode": "DRIVE"
+      }),
+    };
+
+    try {
+      final response = await http.post(
+        request['url'] as Uri,
+        headers: request['headers'] as Map<String, String>,
+        body: request['body'] as String,
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+
+        Map<String, dynamic> route = data['routes'][0]; // Get the first route
+        int distanceMeters = route['distanceMeters'];
+        String duration = route['duration'];
+        String encodedPolyline = route['polyline']['encodedPolyline'];
+
+        List<LatLng> decodedPolyline = decodePolyline(encodedPolyline);
+        polylinePoints = decodedPolyline;
+
+        polyines.clear();
+        Polyline newPolyline = (Polyline(
+          polylineId: PolylineId('route'),
+          points: decodedPolyline,
+          color: Colors.blue,
+          width: 5,
+        ));
+        directPolyline = newPolyline;
+        polyines.add(newPolyline);
+
+        adjustCameraToBounds();
+
+        notifyListeners();
+      } else {
+        print(
+            'Request failed with status: ${response.statusCode}, response: ${response.body}');
+      }
+    } catch (e) {
+      print('Error making request: $e');
+    }
+  }
+
+  Future<bool> isNearRoute(DreamListLocation location, double radius) async {
+    for (LatLng point in polylinePoints) {
+      double distance = Geolocator.distanceBetween(
+        location.locationCoordinates.latitude,
+        location.locationCoordinates.longitude,
+        point.latitude,
+        point.longitude,
+      );
+      // log('${location.name}: ${distance}');
+      if (distance <= radius) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   List<Marker> get myMarker {
-    List<Marker> markers = [];
+    // List<Marker> markers = [];
     if (originMarker != null) {
       markers.add(originMarker!);
     }
@@ -153,28 +302,44 @@ class RoutePlannerViewModel extends ChangeNotifier {
         String encodedPolyline = route['polyline']['encodedPolyline'];
 
         List<LatLng> decodedPolyline = decodePolyline(encodedPolyline);
+        polylinePoints = decodedPolyline;
 
         polyines.clear();
-        polyines.add(Polyline(
+        Polyline newPolyline = (Polyline(
           polylineId: PolylineId('route'),
           points: decodedPolyline,
           color: Colors.blue,
           width: 5,
         ));
+        directPolyline = newPolyline;
+        polyines.add(newPolyline);
 
-        _adjustCameraToBounds(decodedPolyline);
+        adjustCameraToBounds();
 
         notifyListeners();
-
-        log(encodedPolyline);
-
-        // log(data.toString());
       } else {
         log('Request failed with status: ${response.statusCode}, response: ${response.body}');
       }
     } catch (e) {
       log('Error making request: $e');
     }
+  }
+
+  LatLng getCentreOfMarkers() {
+    double totalLat = 0;
+    double totalLng = 0;
+
+    for (Marker marker in markers) {
+      totalLat += marker.position.latitude;
+      totalLng += marker.position.longitude;
+    }
+
+    int count = markers.length;
+    double centerLat = totalLat / count;
+    double centerLng = totalLng / count;
+
+    // log('${centerLat.toString()}, ${centerLng.toString()}');
+    return LatLng(centerLat, centerLng);
   }
 
   List<LatLng> decodePolyline(String encoded) {
@@ -243,36 +408,123 @@ class RoutePlannerViewModel extends ChangeNotifier {
     return await Geolocator.getCurrentPosition();
   }
 
-  void _adjustCameraToBounds(List<LatLng> polylinePoints) async {
-    if (polylinePoints.isEmpty) return;
+  // void _adjustCameraToBounds(List<LatLng> polylinePoints) async {
+  //   if (polylinePoints.isEmpty) return;
 
-    LatLngBounds bounds;
-    if (polylinePoints.length == 1) {
-      bounds = LatLngBounds(
-        southwest: polylinePoints.first,
-        northeast: polylinePoints.first,
-      );
-    } else {
-      double minLat = polylinePoints.first.latitude;
-      double maxLat = polylinePoints.first.latitude;
-      double minLng = polylinePoints.first.longitude;
-      double maxLng = polylinePoints.first.longitude;
+  //   LatLngBounds bounds;
+  //   if (polylinePoints.length == 1) {
+  //     bounds = LatLngBounds(
+  //       southwest: polylinePoints.first,
+  //       northeast: polylinePoints.first,
+  //     );
+  //   } else {
+  //     double minLat = polylinePoints.first.latitude;
+  //     double maxLat = polylinePoints.first.latitude;
+  //     double minLng = polylinePoints.first.longitude;
+  //     double maxLng = polylinePoints.first.longitude;
 
-      for (LatLng point in polylinePoints) {
-        if (point.latitude < minLat) minLat = point.latitude;
-        if (point.latitude > maxLat) maxLat = point.latitude;
-        if (point.longitude < minLng) minLng = point.longitude;
-        if (point.longitude > maxLng) maxLng = point.longitude;
-      }
+  //     for (LatLng point in polylinePoints) {
+  //       if (point.latitude < minLat) minLat = point.latitude;
+  //       if (point.latitude > maxLat) maxLat = point.latitude;
+  //       if (point.longitude < minLng) minLng = point.longitude;
+  //       if (point.longitude > maxLng) maxLng = point.longitude;
+  //     }
 
-      bounds = LatLngBounds(
-        southwest: LatLng(minLat, minLng),
-        northeast: LatLng(maxLat, maxLng),
-      );
+  //     bounds = LatLngBounds(
+  //       southwest: LatLng(minLat, minLng),
+  //       northeast: LatLng(maxLat, maxLng),
+  //     );
+  //   }
+
+  //   final GoogleMapController controller = await mapController.future;
+  //   controller.animateCamera(CameraUpdate.newLatLngBounds(bounds, 50));
+  // }
+
+  LatLngBounds calculatePolylineBounds(List<LatLng> polylinePoints) {
+    double minLat = polylinePoints.first.latitude;
+    double maxLat = polylinePoints.first.latitude;
+    double minLng = polylinePoints.first.longitude;
+    double maxLng = polylinePoints.first.longitude;
+
+    for (LatLng point in polylinePoints) {
+      if (point.latitude < minLat) minLat = point.latitude;
+      if (point.latitude > maxLat) maxLat = point.latitude;
+      if (point.longitude < minLng) minLng = point.longitude;
+      if (point.longitude > maxLng) maxLng = point.longitude;
     }
 
+    return LatLngBounds(
+      southwest: LatLng(minLat, minLng),
+      northeast: LatLng(maxLat, maxLng),
+    );
+  }
+
+  // void adjustCameraToBounds(List<LatLng> polylinePoints) async {
+  //   if (polylinePoints.isEmpty) return;
+
+  //   double minLat = polylinePoints.first.latitude;
+  //   double maxLat = polylinePoints.first.latitude;
+  //   double minLng = polylinePoints.first.longitude;
+  //   double maxLng = polylinePoints.first.longitude;
+
+  //   for (LatLng point in polylinePoints) {
+  //     if (point.latitude < minLat) minLat = point.latitude;
+  //     if (point.latitude > maxLat) maxLat = point.latitude;
+  //     if (point.longitude < minLng) minLng = point.longitude;
+  //     if (point.longitude > maxLng) maxLng = point.longitude;
+  //   }
+
+  //   LatLng southwest = LatLng(minLat, minLng);
+  //   LatLng northeast = LatLng(maxLat, maxLng);
+
+  //   LatLngBounds bounds = LatLngBounds(
+  //     southwest: southwest,
+  //     northeast: northeast,
+  //   );
+
+  //   final GoogleMapController controller = await mapController.future;
+
+  //   // Log the bounds for debugging
+  //   log('Camera bounds - Southwest: ${southwest.latitude}, ${southwest.longitude}; '
+  //       'Northeast: ${northeast.latitude}, ${northeast.longitude}');
+
+  //   controller.animateCamera(CameraUpdate.newLatLngBounds(bounds, 50));
+  // }
+  void adjustCameraToBounds() async {
     final GoogleMapController controller = await mapController.future;
+    final bounds = calculateBounds();
     controller.animateCamera(CameraUpdate.newLatLngBounds(bounds, 50));
+    notifyListeners();
+  }
+
+  LatLngBounds calculateBounds() {
+    double minLat = double.infinity;
+    double maxLat = double.negativeInfinity;
+    double minLng = double.infinity;
+    double maxLng = double.negativeInfinity;
+
+    // Include all marker positions
+    for (Marker marker in markers) {
+      if (marker.position.latitude < minLat) minLat = marker.position.latitude;
+      if (marker.position.latitude > maxLat) maxLat = marker.position.latitude;
+      if (marker.position.longitude < minLng)
+        minLng = marker.position.longitude;
+      if (marker.position.longitude > maxLng)
+        maxLng = marker.position.longitude;
+    }
+
+    // Include all polyline points
+    for (LatLng point in polylinePoints) {
+      if (point.latitude < minLat) minLat = point.latitude;
+      if (point.latitude > maxLat) maxLat = point.latitude;
+      if (point.longitude < minLng) minLng = point.longitude;
+      if (point.longitude > maxLng) maxLng = point.longitude;
+    }
+
+    return LatLngBounds(
+      southwest: LatLng(minLat, minLng),
+      northeast: LatLng(maxLat, maxLng),
+    );
   }
 
   void packData() {
@@ -294,8 +546,6 @@ class RoutePlannerViewModel extends ChangeNotifier {
   }
 
   Future<List<PredictedRoutePlace>> makeSuggestion(String input) async {
-    log(input);
-
     String url = 'https://maps.googleapis.com/maps/api/place/autocomplete/json';
     String request = '$url?input=$input&key=$apiKey&sessiontoken=$sessionToken';
 

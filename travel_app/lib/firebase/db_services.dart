@@ -168,7 +168,6 @@ class DbService {
             addedOn: addedOn,
             addedBy: addedBy));
       }
-      log('length ${locations.length.toString()}');
       return locations;
     } catch (e) {
       log("Error fetching locations: $e");

@@ -4,6 +4,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geocoding/geocoding.dart';
 
 import 'package:provider/provider.dart';
+import 'package:travel_app/models/dreamlist_location.dart';
 import 'package:travel_app/models/predicted_route_place_model.dart';
 import '../../viewmodels/route_viewmodel.dart';
 import '../models/route_place.dart';
@@ -52,14 +53,20 @@ class RoutePlanner extends StatelessWidget {
     return Stack(
       children: [
         GoogleMap(
-          initialCameraPosition: RoutePlannerViewModel.initPos,
+          initialCameraPosition: CameraPosition(
+            target: viewModel
+                .getCentreOfMarkers(), // Set the center as the initial target
+            zoom: 14, // Adjust zoom level as needed
+          ),
           mapType: MapType.normal,
           markers: Set<Marker>.of(viewModel.myMarker),
           polylines: viewModel.polyines,
-          onMapCreated: (GoogleMapController controller) {
+          onMapCreated: (GoogleMapController controller) async {
             if (!viewModel.mapController.isCompleted) {
               viewModel.mapController.complete(controller);
             }
+            await Future.delayed(
+                Duration(milliseconds: 100)); // Ensure the map is fully loaded
           },
         ),
         Align(
@@ -86,6 +93,36 @@ class RoutePlanner extends StatelessWidget {
             child: ViewRouteInitialWidget(context),
           ),
         ),
+        Align(
+          alignment: Alignment.bottomCenter,
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(0, 0, 0, 95),
+            child: Container(
+              width: 250,
+              height: 40,
+              // decoration: BoxDecoration(
+              //     // borderRadius: BorderRadius.circular(25),
+              //     ),
+              child: ElevatedButton(
+                onPressed: () {
+                  log(viewModel.polyines.first.toString());
+                  log('origin: ${viewModel.start.name}');
+                  log('destination: ${viewModel.destination.name}');
+                  for (DreamListLocation location
+                      in viewModel.dreamlistLocationsOnRoute) {
+                    log(location.name);
+                  }
+                },
+                child: Text('Save route'),
+                style: ElevatedButton.styleFrom(
+                  primary: Colors.green,
+                  foregroundColor: Colors.white,
+                  elevation: 2,
+                ),
+              ),
+            ),
+          ),
+        ),
       ],
     );
   }
@@ -104,7 +141,9 @@ class RoutePlanner extends StatelessWidget {
             markers: Set<Marker>.of(viewModel.myMarker),
             polylines: viewModel.polyines,
             onMapCreated: (GoogleMapController controller) {
-              viewModel.mapController.complete(controller);
+              if (!viewModel.mapController.isCompleted) {
+                viewModel.mapController.complete(controller);
+              }
             },
           ),
           Align(
@@ -273,8 +312,9 @@ class RoutePlanner extends StatelessWidget {
                   decoration:
                       BoxDecoration(borderRadius: BorderRadius.circular(25)),
                   child: ElevatedButton(
-                    onPressed: () {
+                    onPressed: () async {
                       // viewModel.getRoute();
+                      await viewModel.addNearbyBucketListLocations(context);
                       viewModel.togglePage();
                     },
                     child: Text('Calculate route'),
@@ -323,12 +363,35 @@ class RoutePlanner extends StatelessWidget {
   Widget ViewRouteTitleWidget(RoutePlannerViewModel viewModel) {
     return Padding(
       padding: EdgeInsets.fromLTRB(20, 50, 0, 0),
-      child: Padding(
-        padding: EdgeInsets.fromLTRB(20, 0, 20, 0),
-        child: Text(
-          'View route',
-          style: TextStyle(fontSize: 35, fontWeight: FontWeight.w500),
-        ),
+      child: Row(
+        children: [
+          Padding(
+            padding: EdgeInsets.fromLTRB(20, 0, 20, 0),
+            child: Text(
+              'View route',
+              style: TextStyle(fontSize: 35, fontWeight: FontWeight.w500),
+            ),
+          ),
+          Spacer(),
+          Padding(
+            padding: EdgeInsets.fromLTRB(5, 0, 30, 0),
+            child: Container(
+              width: 60,
+              child: ElevatedButton(
+                onPressed: () {
+                  viewModel.togglePage();
+                },
+                child: Icon(Icons.arrow_back_sharp),
+                style: ElevatedButton.styleFrom(
+                  primary: Colors.grey[900],
+                  onPrimary: Colors.white,
+                  padding: EdgeInsets.zero,
+                  minimumSize: Size(50, 40),
+                ),
+              ),
+            ),
+          )
+        ],
       ),
     );
   }
