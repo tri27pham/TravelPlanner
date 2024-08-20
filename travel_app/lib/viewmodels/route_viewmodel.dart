@@ -14,8 +14,8 @@ import '../models/predicted_route_place_model.dart';
 import '../models/route_place.dart';
 import 'package:dio/dio.dart';
 import 'dart:developer';
-import 'package:geolocator/geolocator.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import '../models/route.dart';
 
 class RoutePlannerViewModel extends ChangeNotifier {
   final Completer<GoogleMapController> _mapController = Completer();
@@ -52,6 +52,14 @@ class RoutePlannerViewModel extends ChangeNotifier {
   Polyline? directPolyline;
 
   List<LatLng> polylinePoints = [];
+
+  RouteWithDreamlistLocations currentRoute = RouteWithDreamlistLocations(
+      polyline: Polyline(polylineId: PolylineId('')),
+      origin: RoutePlace(placeId: '', name: '', coordinates: LatLng(0, 0)),
+      destination: RoutePlace(placeId: '', name: '', coordinates: LatLng(0, 0)),
+      locationsOnRoute: [],
+      distance: 0,
+      time: '');
 
   RoutePlace start =
       RoutePlace(placeId: '', name: '', coordinates: LatLng(0, 0));
@@ -91,6 +99,11 @@ class RoutePlannerViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> saveRoute(BuildContext context) async {
+    final db_service = DbService();
+    await db_service.addRoute(context, currentRoute);
+  }
+
   Future<void> addNearbyBucketListLocations(BuildContext context) async {
     DbService db_service = DbService();
 
@@ -114,7 +127,7 @@ class RoutePlannerViewModel extends ChangeNotifier {
   }
 
   void addLocationsOnRouteMarker(List<DreamListLocation> locations) {
-    log('markers: ${myMarker.length.toString()}');
+    log('markers: ${markers.length.toString()}');
     log('locations: ${locations.length.toString()}');
     markers.clear();
     markers.add(originMarker!);
@@ -122,11 +135,11 @@ class RoutePlannerViewModel extends ChangeNotifier {
     for (DreamListLocation location in locations) {
       log('id: ${location.id}');
       log('coords: ${location.locationCoordinates.toString()}');
-      myMarker.add(Marker(
+      markers.add(Marker(
           markerId: MarkerId(location.id),
           position: location.locationCoordinates));
     }
-    log('markers: ${myMarker.length.toString()}');
+    log('markers: ${markers.length.toString()}');
     notifyListeners();
   }
 
@@ -188,10 +201,9 @@ class RoutePlannerViewModel extends ChangeNotifier {
         final data = jsonDecode(response.body);
 
         Map<String, dynamic> route = data['routes'][0]; // Get the first route
-        int distanceMeters = route['distanceMeters'];
+        int distance = route['distanceMeters'];
         String duration = route['duration'];
         String encodedPolyline = route['polyline']['encodedPolyline'];
-
         List<LatLng> decodedPolyline = decodePolyline(encodedPolyline);
         polylinePoints = decodedPolyline;
 
@@ -203,6 +215,15 @@ class RoutePlannerViewModel extends ChangeNotifier {
           width: 5,
         ));
         directPolyline = newPolyline;
+
+        currentRoute = RouteWithDreamlistLocations(
+            polyline: newPolyline,
+            origin: start,
+            destination: destination,
+            locationsOnRoute: dreamlistLocationsOnRoute,
+            distance: distance,
+            time: duration);
+
         polyines.add(newPolyline);
 
         adjustCameraToBounds();

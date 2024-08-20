@@ -1,16 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:travel_app/models/dreamlist_location.dart';
 import 'package:travel_app/models/route_place.dart';
 
-class Route {
+class RouteWithDreamlistLocations {
   Polyline polyline;
   RoutePlace origin;
   RoutePlace destination;
-  List<RoutePlace> locationsOnRoute;
-  double distance;
-  DateTime time;
+  List<DreamListLocation> locationsOnRoute;
+  int distance;
+  String time;
 
-  Route({
+  RouteWithDreamlistLocations({
     required this.polyline,
     required this.origin,
     required this.destination,

@@ -105,13 +105,17 @@ class RoutePlanner extends StatelessWidget {
               //     ),
               child: ElevatedButton(
                 onPressed: () {
-                  log(viewModel.polyines.first.toString());
-                  log('origin: ${viewModel.start.name}');
-                  log('destination: ${viewModel.destination.name}');
-                  for (DreamListLocation location
-                      in viewModel.dreamlistLocationsOnRoute) {
-                    log(location.name);
-                  }
+                  // log(viewModel.currentRoute.polyline.toString());
+                  // log(viewModel.currentRoute.origin.name);
+                  // log(viewModel.currentRoute.destination.name);
+                  // log(viewModel.currentRoute.distance.toString());
+                  // log(viewModel.currentRoute.time.toString());
+
+                  // for (DreamListLocation location
+                  //     in viewModel.dreamlistLocationsOnRoute) {
+                  //   log(location.name);
+                  // }
+                  viewModel.saveRoute(context);
                 },
                 child: Text('Save route'),
                 style: ElevatedButton.styleFrom(
@@ -170,6 +174,24 @@ class RoutePlanner extends StatelessWidget {
               child: CreateRouteInitialWidget(context),
             ),
           ),
+          Align(
+            alignment: Alignment.topRight,
+            child: Padding(
+              padding: EdgeInsets.fromLTRB(0, 45, 20, 0),
+              child: Container(
+                width: 200,
+                height: 40,
+                decoration:
+                    BoxDecoration(borderRadius: BorderRadius.circular(20)),
+                child: ElevatedButton(
+                  onPressed: () {},
+                  child: Text('View saved routes'),
+                  style: ElevatedButton.styleFrom(
+                      primary: Colors.green, foregroundColor: Colors.white),
+                ),
+              ),
+            ),
+          )
         ],
       ),
     );
@@ -313,7 +335,6 @@ class RoutePlanner extends StatelessWidget {
                       BoxDecoration(borderRadius: BorderRadius.circular(25)),
                   child: ElevatedButton(
                     onPressed: () async {
-                      // viewModel.getRoute();
                       await viewModel.addNearbyBucketListLocations(context);
                       viewModel.togglePage();
                     },

@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:travel_app/models/route.dart';
 import '../models/AppState.dart';
 import 'package:provider/provider.dart';
 import 'dart:developer';
@@ -68,6 +69,69 @@ class DbService {
       }
     } else {
       log(appState.account.toString());
+      log("Account is null or email is empty");
+    }
+  }
+
+  Future<void> addRoute(
+      BuildContext context, RouteWithDreamlistLocations route) async {
+    final appState = Provider.of<AppState>(context, listen: false);
+
+    if (appState.account != null && appState.account!.email.isNotEmpty) {
+      String uid = appState.account!.uid;
+
+      try {
+        CollectionReference collectionRef =
+            firestore.collection('accounts').doc(uid).collection('routes');
+
+        String routeID = collectionRef.doc().id;
+
+        DocumentReference docRef = collectionRef.doc(routeID);
+
+        Map<String, dynamic> routeData = {
+          "routeID": routeID,
+          "origin": route.origin.toMap(),
+          "destination": route.destination.toMap(),
+          "distance": route.distance,
+          "time": route.time,
+        };
+
+        await docRef.set(routeData);
+
+        collectionRef = docRef.collection('locationsOnRoute');
+
+        for (DreamListLocation location in route.locationsOnRoute) {
+          Map<String, dynamic> locationData = {
+            "id": location.id,
+            "name": location.name,
+            "locationName": location.locationName,
+            "coordinates": {
+              "latitude": location.locationCoordinates.latitude,
+              "longitude": location.locationCoordinates.longitude,
+            },
+            "description": location.description,
+            "rating": location.rating,
+            "numReviews": location.numReviews,
+            "addedOn": location.addedOn,
+            "addedBy": location.addedBy
+          };
+
+          await collectionRef.doc(location.id).set(locationData);
+
+          CollectionReference photosSubCollectionRef =
+              collectionRef.doc(location.id).collection('photos');
+
+          for (Uint8List image in location.imageDatas) {
+            await photosSubCollectionRef.add({
+              'imageData': base64Encode(image),
+            });
+          }
+        }
+        log('added');
+      } catch (e) {
+        log("Error adding profile: $e");
+      }
+    } else {
       log("Account is null or email is empty");
     }
   }
