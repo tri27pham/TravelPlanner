@@ -53,6 +53,8 @@ class RoutePlannerViewModel extends ChangeNotifier {
 
   List<LatLng> polylinePoints = [];
 
+  List<RouteWithDreamlistLocations> routes = [];
+
   RouteWithDreamlistLocations currentRoute = RouteWithDreamlistLocations(
       polyline: Polyline(polylineId: PolylineId('')),
       origin: RoutePlace(placeId: '', name: '', coordinates: LatLng(0, 0)),
@@ -101,9 +103,9 @@ class RoutePlannerViewModel extends ChangeNotifier {
     await db_service.addRoute(context, currentRoute);
   }
 
-  Future<List<RouteWithDreamlistLocations>> loadRoutes(
-      BuildContext context) async {
-    return await db_service.loadRoutesFromDb(context);
+  Future<void> loadRoutes(BuildContext context) async {
+    routes.clear();
+    routes = await db_service.loadRoutesFromDb(context);
   }
 
   Future<void> addNearbyBucketListLocations(BuildContext context) async {

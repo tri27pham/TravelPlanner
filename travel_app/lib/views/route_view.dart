@@ -192,12 +192,6 @@ class RoutePlanner extends StatelessWidget {
                     BoxDecoration(borderRadius: BorderRadius.circular(20)),
                 child: ElevatedButton(
                   onPressed: () async {
-                    List<RouteWithDreamlistLocations> routes =
-                        await viewModel.loadRoutes(context);
-                    for (RouteWithDreamlistLocations route in routes) {
-                      log(route.origin.name);
-                      log(route.destination.name);
-                    }
                     viewModel.togglePage(3);
                   },
                   child: Text('View saved routes'),
