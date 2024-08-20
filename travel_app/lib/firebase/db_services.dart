@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:travel_app/models/route.dart';
+import 'package:travel_app/models/route_place.dart';
 import '../models/AppState.dart';
 import 'package:provider/provider.dart';
 import 'dart:developer';
@@ -11,6 +12,7 @@ import 'package:intl/intl.dart';
 import 'package:dio/dio.dart';
 import 'dart:typed_data';
 import 'dart:convert';
+import '../models/route.dart';
 
 class DbService {
   FirebaseFirestore firestore = FirebaseFirestore.instance;
@@ -73,6 +75,25 @@ class DbService {
     }
   }
 
+  List<GeoPoint> polylineToGeoPoints(Polyline polyline) {
+    return polyline.points
+        .map((LatLng point) => GeoPoint(point.latitude, point.longitude))
+        .toList();
+  }
+
+  Polyline geoPointsToPolyline(List<dynamic> geoPointsList, String polylineId) {
+    List<GeoPoint> geoPoints =
+        geoPointsList.map((item) => item as GeoPoint).toList();
+    List<LatLng> latLngPoints = geoPoints.map((geoPoint) {
+      return LatLng(geoPoint.latitude, geoPoint.longitude);
+    }).toList();
+
+    return Polyline(
+      polylineId: PolylineId(polylineId),
+      points: latLngPoints,
+    );
+  }
+
   Future<void> addRoute(
       BuildContext context, RouteWithDreamlistLocations route) async {
     final appState = Provider.of<AppState>(context, listen: false);
@@ -90,6 +111,7 @@ class DbService {
 
         Map<String, dynamic> routeData = {
           "routeID": routeID,
+          "polyline": polylineToGeoPoints(route.polyline),
           "origin": route.origin.toMap(),
           "destination": route.destination.toMap(),
           "distance": route.distance,
@@ -133,6 +155,95 @@ class DbService {
       }
     } else {
       log("Account is null or email is empty");
+    }
+  }
+
+  Future<List<RouteWithDreamlistLocations>> loadRoutesFromDb(
+      BuildContext context) async {
+    final appState = Provider.of<AppState>(context, listen: false);
+
+    List<RouteWithDreamlistLocations> routes = [];
+
+    try {
+      CollectionReference routesCollection = firestore
+          .collection('accounts')
+          .doc(appState.account!.uid)
+          .collection('routes');
+
+      QuerySnapshot querySnapshot = await routesCollection.get();
+
+      for (var doc in querySnapshot.docs) {
+        // log(doc['polyline'].toString());
+        String routeID = doc.id;
+        Polyline polyline = geoPointsToPolyline(doc['polyline'], routeID);
+        RoutePlace origin = RoutePlace(
+            placeId: doc['origin']['placeId'],
+            name: doc['origin']['name'],
+            coordinates: LatLng(doc['origin']['coordinates']['latitude'],
+                doc['origin']['coordinates']['longitude']));
+        RoutePlace destination = RoutePlace(
+            placeId: doc['destination']['placeId'],
+            name: doc['destination']['name'],
+            coordinates: LatLng(doc['destination']['coordinates']['latitude'],
+                doc['destination']['coordinates']['longitude']));
+        int distance = doc['distance'];
+        String time = doc['time'];
+
+        QuerySnapshot locationsOnRoute = await routesCollection
+            .doc(routeID)
+            .collection('locationsOnRoute')
+            .get();
+
+        List<DreamListLocation> locations = [];
+
+        for (var location in locationsOnRoute.docs) {
+          String id = location.id;
+          String name = location['name'];
+          String locationName = location['locationName'];
+          LatLng locationCoordinates = LatLng(
+              location['coordinates']['latitude'],
+              location['coordinates']['longitude']);
+          String description = location['description'];
+          double rating = location['rating'];
+          int numReviews = location['numReviews'];
+          String addedOn = location['addedOn'];
+          String addedBy = location['addedBy'];
+
+          QuerySnapshot querySnapshotPhotos =
+              await routesCollection.doc(id).collection('photos').get();
+
+          List<Uint8List> imageDatas = [];
+
+          for (var photoDoc in querySnapshotPhotos.docs) {
+            imageDatas.add(base64Decode(photoDoc['imageData']));
+          }
+
+          locations.add(DreamListLocation(
+              id: id,
+              name: name,
+              locationName: locationName,
+              locationCoordinates: locationCoordinates,
+              description: description,
+              rating: rating,
+              numReviews: numReviews,
+              imageDatas: imageDatas,
+              photoRefs: [],
+              addedOn: addedOn,
+              addedBy: addedBy));
+        }
+
+        routes.add(RouteWithDreamlistLocations(
+            polyline: polyline,
+            origin: origin,
+            destination: destination,
+            locationsOnRoute: locations,
+            distance: distance,
+            time: time));
+      }
+      return routes;
+    } catch (e) {
+      log("Error fetching routes: $e");
+      return [];
     }
   }
 

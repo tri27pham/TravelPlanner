@@ -6,6 +6,8 @@ import 'package:geocoding/geocoding.dart';
 import 'package:provider/provider.dart';
 import 'package:travel_app/models/dreamlist_location.dart';
 import 'package:travel_app/models/predicted_route_place_model.dart';
+import 'package:travel_app/models/route.dart';
+import 'package:travel_app/views/view_saved_routes_view.dart';
 import '../../viewmodels/route_viewmodel.dart';
 import '../models/route_place.dart';
 import 'dart:developer';
@@ -36,7 +38,8 @@ class RoutePlanner extends StatelessWidget {
         builder: (context, viewModel, child) {
           final pageWidgets = {
             1: createRouteWidget(context),
-            2: displayRouteWidget(context)
+            2: displayRouteWidget(context),
+            3: viewSavedRoutes(context),
           };
           return pageWidgets[viewModel.page] ??
               Center(
@@ -46,6 +49,10 @@ class RoutePlanner extends StatelessWidget {
         },
       )),
     );
+  }
+
+  Widget viewSavedRoutes(BuildContext context) {
+    return ViewSavedRoutes();
   }
 
   Widget displayRouteWidget(BuildContext context) {
@@ -184,7 +191,15 @@ class RoutePlanner extends StatelessWidget {
                 decoration:
                     BoxDecoration(borderRadius: BorderRadius.circular(20)),
                 child: ElevatedButton(
-                  onPressed: () {},
+                  onPressed: () async {
+                    List<RouteWithDreamlistLocations> routes =
+                        await viewModel.loadRoutes(context);
+                    for (RouteWithDreamlistLocations route in routes) {
+                      log(route.origin.name);
+                      log(route.destination.name);
+                    }
+                    viewModel.togglePage(3);
+                  },
                   child: Text('View saved routes'),
                   style: ElevatedButton.styleFrom(
                       primary: Colors.green, foregroundColor: Colors.white),
@@ -336,7 +351,7 @@ class RoutePlanner extends StatelessWidget {
                   child: ElevatedButton(
                     onPressed: () async {
                       await viewModel.addNearbyBucketListLocations(context);
-                      viewModel.togglePage();
+                      viewModel.togglePage(2);
                     },
                     child: Text('Calculate route'),
                     style: ElevatedButton.styleFrom(
@@ -400,7 +415,7 @@ class RoutePlanner extends StatelessWidget {
               width: 60,
               child: ElevatedButton(
                 onPressed: () {
-                  viewModel.togglePage();
+                  viewModel.togglePage(1);
                 },
                 child: Icon(Icons.arrow_back_sharp),
                 style: ElevatedButton.styleFrom(

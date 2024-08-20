@@ -78,6 +78,8 @@ class RoutePlannerViewModel extends ChangeNotifier {
 
   double containerHeight = 320;
 
+  final db_service = DbService();
+
   int page = 1;
 
   RoutePlannerViewModel() {
@@ -90,18 +92,18 @@ class RoutePlannerViewModel extends ChangeNotifier {
     packData();
   }
 
-  void togglePage() {
-    if (page == 1) {
-      page = 2;
-    } else if (page == 2) {
-      page = 1;
-    }
+  void togglePage(int pageNum) {
+    page = pageNum;
     notifyListeners();
   }
 
   Future<void> saveRoute(BuildContext context) async {
-    final db_service = DbService();
     await db_service.addRoute(context, currentRoute);
+  }
+
+  Future<List<RouteWithDreamlistLocations>> loadRoutes(
+      BuildContext context) async {
+    return await db_service.loadRoutesFromDb(context);
   }
 
   Future<void> addNearbyBucketListLocations(BuildContext context) async {
