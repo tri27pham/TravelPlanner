@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:travel_app/models/dreamlist_location.dart';
 import 'package:travel_app/models/route_place.dart';
+import 'dart:developer';
 
 class RouteWithDreamlistLocations {
   Polyline polyline;
@@ -19,6 +20,19 @@ class RouteWithDreamlistLocations {
     required this.distance,
     required this.time,
   });
+
+  void showImageData() {
+    if (locationsOnRoute.isNotEmpty) {
+      log('has locations');
+      for (DreamListLocation location in locationsOnRoute) {
+        if (location.imageDatas.isNotEmpty) {
+          log(location.imageDatas.first.toString());
+        }
+      }
+    } else {
+      log('fuck');
+    }
+  }
 
   Set<Marker> getMarkers() {
     Set<Marker> markers = {};

@@ -140,6 +140,7 @@ class ViewSavedRoutes extends StatelessWidget {
       padding: EdgeInsets.fromLTRB(20, 5, 20, 5),
       child: InkWell(
         onTap: () {
+          // route.showImageData();
           showRoutePopup(context, route);
         },
         borderRadius: BorderRadius.circular(
@@ -207,11 +208,19 @@ class ViewSavedRoutes extends StatelessWidget {
                   height: 60,
                   child: ListView.builder(
                     scrollDirection: Axis.horizontal,
-                    itemCount: viewModel.routes.length,
+                    itemCount: route.locationsOnRoute.length,
                     itemBuilder: (context, index) {
                       return Container(
-                          // Customize your item here
-                          );
+                        // Customize your item here
+                        width: 100,
+                        height: 100,
+                        decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(15)),
+                        child: Image(
+                            image: MemoryImage(
+                                route.locationsOnRoute[index].imageDatas.first),
+                            fit: BoxFit.cover),
+                      );
                     },
                   ),
                 ),

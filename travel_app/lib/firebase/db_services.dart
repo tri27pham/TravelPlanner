@@ -191,10 +191,10 @@ class DbService {
         int distance = doc['distance'];
         String time = doc['time'];
 
-        QuerySnapshot locationsOnRoute = await routesCollection
-            .doc(routeID)
-            .collection('locationsOnRoute')
-            .get();
+        CollectionReference locationsOnRouteRef =
+            routesCollection.doc(routeID).collection('locationsOnRoute');
+
+        QuerySnapshot locationsOnRoute = await locationsOnRouteRef.get();
 
         List<DreamListLocation> locations = [];
 
@@ -212,7 +212,7 @@ class DbService {
           String addedBy = location['addedBy'];
 
           QuerySnapshot querySnapshotPhotos =
-              await routesCollection.doc(id).collection('photos').get();
+              await locationsOnRouteRef.doc(id).collection('photos').get();
 
           List<Uint8List> imageDatas = [];
 
