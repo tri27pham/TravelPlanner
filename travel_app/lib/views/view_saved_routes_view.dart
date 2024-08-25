@@ -1,16 +1,24 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:travel_app/models/route.dart';
 import '../viewmodels/route_viewmodel.dart';
+import 'dart:developer';
 
 class ViewSavedRoutes extends StatelessWidget {
   const ViewSavedRoutes({super.key});
 
-  int metersToNearestMile(int meters) {
-    const double metersPerMile = 1609.344; // 1 mile = 1609.344 meters
-    double miles = meters / metersPerMile;
-    return miles.toInt(); // Rounds to the nearest mile
+  void showRoutePopup(BuildContext context, RouteWithDreamlistLocations route) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return RoutePopUpWidget(context, route);
+      },
+      barrierDismissible:
+          true, // Allows dialog to be dismissed by tapping outside
+    );
   }
 
   @override
@@ -129,11 +137,19 @@ class ViewSavedRoutes extends StatelessWidget {
   Widget RouteWidget(BuildContext context, RouteWithDreamlistLocations route) {
     final viewModel = Provider.of<RoutePlannerViewModel>(context);
     return Padding(
-        padding: EdgeInsets.fromLTRB(20, 5, 20, 5),
+      padding: EdgeInsets.fromLTRB(20, 5, 20, 5),
+      child: InkWell(
+        onTap: () {
+          showRoutePopup(context, route);
+        },
+        borderRadius: BorderRadius.circular(
+            15), // Ensures ripple effect is contained within rounded corners
         child: Container(
           height: 180,
           decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(15), color: Colors.grey[200]),
+            borderRadius: BorderRadius.circular(15),
+            color: Colors.grey[200],
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -165,14 +181,16 @@ class ViewSavedRoutes extends StatelessWidget {
                 ),
               ),
               Padding(
-                  padding: EdgeInsets.fromLTRB(20, 0, 0, 0),
-                  child: Text(
-                    '${metersToNearestMile(route.distance).toString()} miles',
-                    style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.grey),
-                  )),
+                padding: EdgeInsets.fromLTRB(20, 0, 0, 0),
+                child: Text(
+                  '${(route.getDistance()).toString()} miles',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.grey,
+                  ),
+                ),
+              ),
               Padding(
                 padding: EdgeInsets.fromLTRB(20, 0, 0, 0),
                 child: Text(
@@ -188,28 +206,11 @@ class ViewSavedRoutes extends StatelessWidget {
                   width: 300,
                   height: 60,
                   child: ListView.builder(
-                    scrollDirection: Axis
-                        .horizontal, // Set the scroll direction to horizontal
-                    itemCount:
-                        viewModel.routes.length, // Number of items in the list
+                    scrollDirection: Axis.horizontal,
+                    itemCount: viewModel.routes.length,
                     itemBuilder: (context, index) {
                       return Container(
-                          // width: 80.0,
-                          // margin: EdgeInsets.symmetric(horizontal: 5.0),
-                          // decoration: BoxDecoration(
-                          //   borderRadius: BorderRadius.circular(10),
-                          //   image: DecorationImage(
-                          //     image: MemoryImage(viewModel
-                          //         .routes
-                          //         .first
-                          //         .locationsOnRoute
-                          //         .first
-                          //         .imageDatas
-                          //         .first), // Use MemoryImage with Uint8List
-                          //     fit: BoxFit
-                          //         .cover, // Ensures the image covers the entire container
-                          //   ),
-                          // ),
+                          // Customize your item here
                           );
                     },
                   ),
@@ -217,6 +218,108 @@ class ViewSavedRoutes extends StatelessWidget {
               ),
             ],
           ),
-        ));
+        ),
+      ),
+    );
+  }
+
+  Widget RoutePopUpWidget(
+      BuildContext context, RouteWithDreamlistLocations route) {
+    return Dialog(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(25),
+      ),
+      insetPadding:
+          EdgeInsets.zero, // Remove default padding to use full width/height
+      child: Container(
+        height: MediaQuery.of(context).size.height * 0.8,
+        width:
+            MediaQuery.of(context).size.width * 0.9, // Example width adjustment
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(25),
+          color: Colors.white,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: EdgeInsets.fromLTRB(20, 20, 0, 0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: EdgeInsets.fromLTRB(10, 0, 0, 0),
+                    child: Text(
+                      route.origin.name,
+                      style:
+                          TextStyle(fontSize: 25, fontWeight: FontWeight.w500),
+                    ),
+                  ),
+                  Padding(
+                    padding: EdgeInsets.fromLTRB(10, 0, 10, 0),
+                    child: Icon(Icons.arrow_forward_outlined, size: 20),
+                  ),
+                  Padding(
+                    padding: EdgeInsets.fromLTRB(0, 0, 0, 0),
+                    child: Text(
+                      route.destination.name,
+                      style:
+                          TextStyle(fontSize: 25, fontWeight: FontWeight.w500),
+                    ),
+                  )
+                ],
+              ),
+            ),
+            Padding(
+              padding: EdgeInsets.fromLTRB(30, 0, 0, 0),
+              child: Text(
+                'Distance: ${route.getDistance()} miles',
+                style: TextStyle(fontSize: 18),
+              ),
+            ),
+            Padding(
+              padding: EdgeInsets.fromLTRB(30, 0, 0, 0),
+              child: Text(
+                'Distance: ${route.getTime()}',
+                style: TextStyle(fontSize: 18),
+              ),
+            ),
+            Center(
+              child: Container(
+                width: MediaQuery.sizeOf(context).width * 0.8,
+                height: MediaQuery.sizeOf(context).height * 0.6,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(20),
+                  child: GoogleMap(
+                      initialCameraPosition: RoutePlannerViewModel.initPos,
+                      markers: route.getMarkers(),
+                      polylines: {
+                        route.polyline,
+                      }),
+                ),
+              ),
+            ),
+            Center(
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(0, 5, 0, 0),
+                child: Container(
+                  width: 150,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                    child: Text('Close'),
+                    style: ElevatedButton.styleFrom(
+                        elevation: 0,
+                        primary: Colors.green,
+                        foregroundColor: Colors.white),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

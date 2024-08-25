@@ -91,6 +91,8 @@ class DbService {
     return Polyline(
       polylineId: PolylineId(polylineId),
       points: latLngPoints,
+      color: Colors.blue,
+      width: 5,
     );
   }
 
