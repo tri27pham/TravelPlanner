@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
@@ -112,16 +113,6 @@ class RoutePlanner extends StatelessWidget {
               //     ),
               child: ElevatedButton(
                 onPressed: () {
-                  // log(viewModel.currentRoute.polyline.toString());
-                  // log(viewModel.currentRoute.origin.name);
-                  // log(viewModel.currentRoute.destination.name);
-                  // log(viewModel.currentRoute.distance.toString());
-                  // log(viewModel.currentRoute.time.toString());
-
-                  // for (DreamListLocation location
-                  //     in viewModel.dreamlistLocationsOnRoute) {
-                  //   log(location.name);
-                  // }
                   viewModel.saveRoute(context);
                   Navigator.of(context).pop();
                 },
@@ -330,11 +321,53 @@ class RoutePlanner extends StatelessWidget {
   }
 
   Widget RouteWidget(BuildContext context) {
+    final viewModel = Provider.of<RoutePlannerViewModel>(context);
+    void _showCupertinoPicker(BuildContext context) {
+      showModalBottomSheet(
+        context: context,
+        builder: (BuildContext builder) {
+          return Container(
+            height: MediaQuery.of(context).size.height / 3,
+            child: CupertinoPicker(
+              backgroundColor: Colors.white,
+              itemExtent: 32.0,
+              onSelectedItemChanged: (int index) {
+                viewModel.setRadius((index + 1) * 10.0);
+              },
+              children: List<Widget>.generate(5, (int index) {
+                return Center(child: Text('${(index + 1) * 10} km'));
+              }),
+            ),
+          );
+        },
+      );
+    }
+
     return Consumer<RoutePlannerViewModel>(
         builder: (context, viewModel, child) {
       return Expanded(
         child: Stack(
           children: [
+            if (viewModel.startSelected && viewModel.destinationSelected)
+              Positioned(
+                bottom: 145,
+                left: 20,
+                child: Container(
+                  width: 350,
+                  decoration:
+                      BoxDecoration(borderRadius: BorderRadius.circular(25)),
+                  child: ElevatedButton(
+                    onPressed: () {
+                      _showCupertinoPicker(context);
+                    },
+                    child: Text('Radius: ${viewModel.selectedRadius}'),
+                    style: ElevatedButton.styleFrom(
+                        elevation: 0,
+                        primary: Colors.grey[300],
+                        foregroundColor: Colors.black),
+                  ),
+                ),
+              ),
             if (viewModel.startSelected && viewModel.destinationSelected)
               Positioned(
                 bottom: 90,
@@ -370,6 +403,27 @@ class RoutePlanner extends StatelessWidget {
         ),
       );
     });
+  }
+
+  void _showDialog(BuildContext context, Widget child) {
+    showCupertinoModalPopup<void>(
+      context: context,
+      builder: (BuildContext context) => Container(
+        height: 216,
+        padding: const EdgeInsets.only(top: 6.0),
+        // The Bottom margin is provided to align the popup above the system navigation bar.
+        margin: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
+        ),
+        // Provide a background color for the popup.
+        color: CupertinoColors.systemBackground.resolveFrom(context),
+        // Use a SafeArea widget to avoid system overlaps.
+        child: SafeArea(
+          top: false,
+          child: child,
+        ),
+      ),
+    );
   }
 
   Widget CreateRouteTitleWidget(RoutePlannerViewModel viewModel) {

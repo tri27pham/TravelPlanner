@@ -78,11 +78,13 @@ class RoutePlannerViewModel extends ChangeNotifier {
 
   bool _isDisposed = false;
 
-  double containerHeight = 320;
+  double containerHeight = 370;
 
   final db_service = DbService();
 
   int page = 1;
+
+  double selectedRadius = 10.0;
 
   RoutePlannerViewModel() {
     textEditingController.addListener(onMainSearchModify);
@@ -92,6 +94,11 @@ class RoutePlannerViewModel extends ChangeNotifier {
     startLocationFocusNode.addListener(onFocusChange);
     endLocationFocusNode.addListener(onFocusChange);
     packData();
+  }
+
+  void setRadius(double newRadius) {
+    selectedRadius = newRadius;
+    notifyListeners();
   }
 
   void togglePage(int pageNum) {
@@ -112,7 +119,7 @@ class RoutePlannerViewModel extends ChangeNotifier {
     DbService db_service = DbService();
 
     List<DreamListLocation> locationsOnRoute = [];
-    double radius = 50000;
+    double radius = selectedRadius * 1000;
     List<DreamListLocation> dreamlistLocations =
         await db_service.loadDreamlistFromDb(context);
 
@@ -666,7 +673,7 @@ class RoutePlannerViewModel extends ChangeNotifier {
         endLocationFocusNode.hasFocus) {
       containerHeight = 450;
     } else {
-      containerHeight = 320;
+      containerHeight = 370;
     }
     notifyListeners();
   }
