@@ -210,16 +210,22 @@ class ViewSavedRoutes extends StatelessWidget {
                     scrollDirection: Axis.horizontal,
                     itemCount: route.locationsOnRoute.length,
                     itemBuilder: (context, index) {
-                      return Container(
-                        // Customize your item here
-                        width: 100,
-                        height: 100,
-                        decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(15)),
-                        child: Image(
-                            image: MemoryImage(
-                                route.locationsOnRoute[index].imageDatas.first),
-                            fit: BoxFit.cover),
+                      return Padding(
+                        padding: EdgeInsets.fromLTRB(5, 0, 5, 0),
+                        child: Container(
+                          // Customize your item here
+                          width: 100,
+                          height: 100,
+                          decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(15)),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(10),
+                            child: Image(
+                                image: MemoryImage(route
+                                    .locationsOnRoute[index].imageDatas.first),
+                                fit: BoxFit.cover),
+                          ),
+                        ),
                       );
                     },
                   ),
@@ -293,15 +299,45 @@ class ViewSavedRoutes extends StatelessWidget {
                 style: TextStyle(fontSize: 18),
               ),
             ),
+            Padding(
+              padding: EdgeInsets.fromLTRB(15, 5, 0, 10),
+              child: Container(
+                width: 300,
+                height: 100,
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: route.locationsOnRoute.length,
+                  itemBuilder: (context, index) {
+                    return Padding(
+                      padding: EdgeInsets.fromLTRB(5, 0, 5, 0),
+                      child: Container(
+                        // Customize your item here
+                        width: 150,
+                        height: 125,
+                        decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(15)),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(10),
+                          child: Image(
+                              image: MemoryImage(route
+                                  .locationsOnRoute[index].imageDatas.first),
+                              fit: BoxFit.cover),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ),
             Center(
               child: Container(
                 width: MediaQuery.sizeOf(context).width * 0.8,
-                height: MediaQuery.sizeOf(context).height * 0.6,
+                height: MediaQuery.sizeOf(context).height * 0.45,
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(20),
                   child: GoogleMap(
                       initialCameraPosition: RoutePlannerViewModel.initPos,
-                      markers: route.getMarkers(),
+                      markers: route.getMarkers(context),
                       polylines: {
                         route.polyline,
                       }),
