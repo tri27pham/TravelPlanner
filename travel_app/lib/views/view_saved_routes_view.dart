@@ -164,18 +164,24 @@ class ViewSavedRoutes extends StatelessWidget {
                         route.origin.name,
                         style: TextStyle(
                             fontSize: 22, fontWeight: FontWeight.w500),
+                        maxLines: 1,
+                        overflow: TextOverflow.clip,
                       ),
                     ),
                     Icon(
                       Icons.arrow_forward_rounded,
                       size: 22,
                     ),
-                    Padding(
-                      padding: EdgeInsets.fromLTRB(10, 0, 20, 0),
-                      child: Text(
-                        route.destination.name,
-                        style: TextStyle(
-                            fontSize: 25, fontWeight: FontWeight.w500),
+                    Flexible(
+                      child: Padding(
+                        padding: EdgeInsets.fromLTRB(10, 0, 20, 0),
+                        child: Text(
+                          route.destination.name,
+                          style: TextStyle(
+                              fontSize: 25, fontWeight: FontWeight.w500),
+                          maxLines: 1,
+                          overflow: TextOverflow.clip,
+                        ),
                       ),
                     ),
                   ],
@@ -259,30 +265,41 @@ class ViewSavedRoutes extends StatelessWidget {
           children: [
             Padding(
               padding: EdgeInsets.fromLTRB(20, 20, 0, 0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: [
-                  Padding(
-                    padding: EdgeInsets.fromLTRB(10, 0, 0, 0),
-                    child: Text(
-                      route.origin.name,
-                      style:
-                          TextStyle(fontSize: 25, fontWeight: FontWeight.w500),
-                    ),
+              child: ClipRect(
+                clipBehavior: Clip.hardEdge,
+                child: Container(
+                  width: 300,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: [
+                      Padding(
+                        padding: EdgeInsets.fromLTRB(10, 0, 0, 0),
+                        child: Text(
+                          route.origin.name,
+                          style: TextStyle(
+                              fontSize: 25, fontWeight: FontWeight.w500),
+                          maxLines: 1,
+                          overflow: TextOverflow.clip,
+                        ),
+                      ),
+                      Padding(
+                        padding: EdgeInsets.fromLTRB(10, 0, 10, 0),
+                        child: Icon(Icons.arrow_forward_outlined, size: 20),
+                      ),
+                      Flexible(
+                          child: Padding(
+                        padding: EdgeInsets.fromLTRB(0, 0, 0, 0),
+                        child: Text(
+                          route.destination.name,
+                          style: TextStyle(
+                              fontSize: 25, fontWeight: FontWeight.w500),
+                          maxLines: 1,
+                          overflow: TextOverflow.clip,
+                        ),
+                      ))
+                    ],
                   ),
-                  Padding(
-                    padding: EdgeInsets.fromLTRB(10, 0, 10, 0),
-                    child: Icon(Icons.arrow_forward_outlined, size: 20),
-                  ),
-                  Padding(
-                    padding: EdgeInsets.fromLTRB(0, 0, 0, 0),
-                    child: Text(
-                      route.destination.name,
-                      style:
-                          TextStyle(fontSize: 25, fontWeight: FontWeight.w500),
-                    ),
-                  )
-                ],
+                ),
               ),
             ),
             Padding(
@@ -336,11 +353,16 @@ class ViewSavedRoutes extends StatelessWidget {
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(20),
                   child: GoogleMap(
-                      initialCameraPosition: RoutePlannerViewModel.initPos,
-                      markers: route.getMarkers(context),
-                      polylines: {
-                        route.polyline,
-                      }),
+                    initialCameraPosition: RoutePlannerViewModel.initPos,
+                    markers: route.getMarkers(context),
+                    polylines: {
+                      route.polyline,
+                    },
+                    onMapCreated: (GoogleMapController controller) {
+                      controller.animateCamera(CameraUpdate.newLatLngBounds(
+                          route.calculateBounds(), 50));
+                    },
+                  ),
                 ),
               ),
             ),

@@ -123,6 +123,7 @@ class RoutePlanner extends StatelessWidget {
                   //   log(location.name);
                   // }
                   viewModel.saveRoute(context);
+                  Navigator.of(context).pop();
                 },
                 child: Text('Save route'),
                 style: ElevatedButton.styleFrom(

@@ -71,6 +71,32 @@ class RouteWithDreamlistLocations {
     return markers;
   }
 
+  LatLngBounds calculateBounds() {
+    if (locationsOnRoute.isEmpty)
+      return LatLngBounds(
+        southwest: LatLng(0, 0),
+        northeast: LatLng(0, 0),
+      ); // Default if no coordinates
+
+    double minLat = locationsOnRoute.first.locationCoordinates.latitude;
+    double maxLat = locationsOnRoute.first.locationCoordinates.latitude;
+    double minLng = locationsOnRoute.first.locationCoordinates.latitude;
+    double maxLng = locationsOnRoute.first.locationCoordinates.longitude;
+
+    for (DreamListLocation location in locationsOnRoute) {
+      LatLng coord = location.locationCoordinates;
+      if (coord.latitude < minLat) minLat = coord.latitude;
+      if (coord.latitude > maxLat) maxLat = coord.latitude;
+      if (coord.longitude < minLng) minLng = coord.longitude;
+      if (coord.longitude > maxLng) maxLng = coord.longitude;
+    }
+
+    return LatLngBounds(
+      southwest: LatLng(minLat, minLng),
+      northeast: LatLng(maxLat, maxLng),
+    );
+  }
+
   void _showImageDialog(BuildContext context, DreamListLocation location) {
     showDialog(
       context: context,
