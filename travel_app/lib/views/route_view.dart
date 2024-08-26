@@ -114,7 +114,7 @@ class RoutePlanner extends StatelessWidget {
               child: ElevatedButton(
                 onPressed: () {
                   viewModel.saveRoute(context);
-                  Navigator.of(context).pop();
+                  viewModel.togglePage(1);
                 },
                 child: Text('Save route'),
                 style: ElevatedButton.styleFrom(
