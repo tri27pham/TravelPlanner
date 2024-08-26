@@ -11,6 +11,15 @@ import '../models/dreamlist_location.dart';
 class DreamListViewModel extends ChangeNotifier {
   int _page = 1;
 
+  Set<String> _segmentSelected = {'0'};
+
+  Set<String> get segmentSelected => _segmentSelected;
+
+  void updateSegmentSelected(Set<String> newSelection) {
+    _segmentSelected = newSelection;
+    notifyListeners(); // Notify listeners to rebuild the UI
+  }
+
   int get page => _page;
 
   bool locationsLoaded = false;

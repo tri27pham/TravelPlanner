@@ -1,10 +1,14 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 import 'package:geocoding/geocoding.dart';
 
 import 'package:provider/provider.dart';
+import 'package:travel_app/models/dreamlist_location.dart';
 import 'package:travel_app/models/predicted_route_place_model.dart';
+import 'package:travel_app/models/route.dart';
+import 'package:travel_app/views/view_saved_routes_view.dart';
 import '../../viewmodels/route_viewmodel.dart';
 import '../models/route_place.dart';
 import 'dart:developer';
@@ -31,54 +35,165 @@ class RoutePlanner extends StatelessWidget {
             .addListener(() => viewModel.onFocusChange());
         return viewModel;
       },
-      child: Scaffold(
-        body: Consumer<RoutePlannerViewModel>(
-          builder: (context, viewModel, child) {
-            return GestureDetector(
-              onTap: () {
-                // FocusScope.of(context).unfocus();
-                viewModel.resetControllersAndFocus();
-              },
-              child: Stack(
-                children: [
-                  GoogleMap(
-                    initialCameraPosition: RoutePlannerViewModel.initPos,
-                    mapType: MapType.normal,
-                    markers: Set<Marker>.of(viewModel.myMarker),
-                    polylines: viewModel.polyines,
-                    onMapCreated: (GoogleMapController controller) {
-                      viewModel.mapController.complete(controller);
-                    },
-                  ),
-                  Align(
-                    alignment: Alignment.bottomCenter,
-                    child: AnimatedContainer(
-                      duration: Duration(milliseconds: 200),
-                      width: MediaQuery.of(context).size.width,
-                      height: viewModel.containerHeight,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.only(
-                          topLeft: Radius.circular(50.0),
-                          topRight: Radius.circular(50.0),
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black26,
-                            offset: Offset(0, -2),
-                            blurRadius: 1,
-                            spreadRadius: 0.5,
-                          ),
-                        ],
-                      ),
-                      child: CreateRouteInitialWidget(context),
-                    ),
+      child: Scaffold(body: Consumer<RoutePlannerViewModel>(
+        builder: (context, viewModel, child) {
+          final pageWidgets = {
+            1: createRouteWidget(context),
+            2: displayRouteWidget(context),
+            3: viewSavedRoutes(context),
+          };
+          return pageWidgets[viewModel.page] ??
+              Center(
+                child: Text('Page not found'),
+              );
+          ;
+        },
+      )),
+    );
+  }
+
+  Widget viewSavedRoutes(BuildContext context) {
+    return ViewSavedRoutes();
+  }
+
+  Widget displayRouteWidget(BuildContext context) {
+    final viewModel = Provider.of<RoutePlannerViewModel>(context);
+    return Stack(
+      children: [
+        GoogleMap(
+          initialCameraPosition: CameraPosition(
+            target: viewModel
+                .getCentreOfMarkers(), // Set the center as the initial target
+            zoom: 14, // Adjust zoom level as needed
+          ),
+          mapType: MapType.normal,
+          markers: Set<Marker>.of(viewModel.myMarker),
+          polylines: viewModel.polyines,
+          onMapCreated: (GoogleMapController controller) async {
+            if (!viewModel.mapController.isCompleted) {
+              viewModel.mapController.complete(controller);
+            }
+            await Future.delayed(
+                Duration(milliseconds: 100)); // Ensure the map is fully loaded
+          },
+        ),
+        Align(
+          alignment: Alignment.topCenter,
+          child: AnimatedContainer(
+            duration: Duration(milliseconds: 200),
+            width: MediaQuery.of(context).size.width,
+            height: 240,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.only(
+                bottomLeft: Radius.circular(40.0),
+                bottomRight: Radius.circular(40.0),
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black26,
+                  offset: Offset(0, 1),
+                  blurRadius: 1,
+                  spreadRadius: 0.5,
+                ),
+              ],
+            ),
+            child: ViewRouteInitialWidget(context),
+          ),
+        ),
+        Align(
+          alignment: Alignment.bottomCenter,
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(0, 0, 0, 95),
+            child: Container(
+              width: 250,
+              height: 40,
+              // decoration: BoxDecoration(
+              //     // borderRadius: BorderRadius.circular(25),
+              //     ),
+              child: ElevatedButton(
+                onPressed: () {
+                  viewModel.saveRoute(context);
+                  Navigator.of(context).pop();
+                },
+                child: Text('Save route'),
+                style: ElevatedButton.styleFrom(
+                  primary: Colors.green,
+                  foregroundColor: Colors.white,
+                  elevation: 2,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget createRouteWidget(BuildContext context) {
+    final viewModel = Provider.of<RoutePlannerViewModel>(context);
+    return GestureDetector(
+      onTap: () {
+        viewModel.resetControllersAndFocus();
+      },
+      child: Stack(
+        children: [
+          GoogleMap(
+            initialCameraPosition: RoutePlannerViewModel.initPos,
+            mapType: MapType.normal,
+            markers: Set<Marker>.of(viewModel.myMarker),
+            polylines: viewModel.polyines,
+            onMapCreated: (GoogleMapController controller) {
+              if (!viewModel.mapController.isCompleted) {
+                viewModel.mapController.complete(controller);
+              }
+            },
+          ),
+          Align(
+            alignment: Alignment.bottomCenter,
+            child: AnimatedContainer(
+              duration: Duration(milliseconds: 200),
+              width: MediaQuery.of(context).size.width,
+              height: viewModel.containerHeight,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(50.0),
+                  topRight: Radius.circular(50.0),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black26,
+                    offset: Offset(0, -2),
+                    blurRadius: 1,
+                    spreadRadius: 0.5,
                   ),
                 ],
               ),
-            );
-          },
-        ),
+              child: CreateRouteInitialWidget(context),
+            ),
+          ),
+          Align(
+            alignment: Alignment.topRight,
+            child: Padding(
+              padding: EdgeInsets.fromLTRB(0, 45, 20, 0),
+              child: Container(
+                width: 200,
+                height: 40,
+                decoration:
+                    BoxDecoration(borderRadius: BorderRadius.circular(20)),
+                child: ElevatedButton(
+                  onPressed: () async {
+                    viewModel.togglePage(3);
+                  },
+                  child: Text('View saved routes'),
+                  style: ElevatedButton.styleFrom(
+                      primary: Colors.green, foregroundColor: Colors.white),
+                ),
+              ),
+            ),
+          )
+        ],
       ),
     );
   }
@@ -109,12 +224,150 @@ class RoutePlanner extends StatelessWidget {
     });
   }
 
+  Widget ViewRouteInitialWidget(BuildContext context) {
+    return Consumer<RoutePlannerViewModel>(
+        builder: (context, viewModel, child) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          ViewRouteTitleWidget(viewModel),
+          OriginAndDestinationNamesWidget(context),
+          // viewModel.destinationSelected
+          //     ? RouteWidget(context)
+          //     : SearchBarWidget(viewModel, context)
+        ],
+      );
+    });
+  }
+
+  Widget OriginAndDestinationNamesWidget(BuildContext context) {
+    final viewModel = Provider.of<RoutePlannerViewModel>(context);
+    return Padding(
+        padding: EdgeInsets.fromLTRB(0, 0, 0, 0),
+        child: Column(
+          children: [
+            Padding(
+              padding: EdgeInsets.fromLTRB(0, 0, 0, 10),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    width: 350,
+                    height: 50,
+                    decoration: BoxDecoration(
+                      color: Color.fromARGB(255, 240, 240, 240),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: EdgeInsets.fromLTRB(30, 0, 0, 0),
+                          width: 65,
+                          child: Text('Start'),
+                        ),
+                        Expanded(
+                          child: Container(
+                            padding: EdgeInsets.fromLTRB(20, 0, 0, 0),
+                            child: Text(
+                              viewModel.start.name,
+                              style: TextStyle(
+                                  fontSize: 17, fontWeight: FontWeight.w500),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Padding(
+              padding: EdgeInsets.fromLTRB(0, 0, 0, 10),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    width: 350,
+                    height: 50,
+                    decoration: BoxDecoration(
+                      color: Color.fromARGB(255, 240, 240, 240),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: EdgeInsets.fromLTRB(30, 0, 0, 0),
+                          width: 65,
+                          child: Text('End'),
+                        ),
+                        Expanded(
+                          child: Container(
+                            padding: EdgeInsets.fromLTRB(20, 0, 0, 0),
+                            child: Text(
+                              viewModel.destination.name,
+                              style: TextStyle(
+                                  fontSize: 17, fontWeight: FontWeight.w500),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ));
+  }
+
   Widget RouteWidget(BuildContext context) {
+    final viewModel = Provider.of<RoutePlannerViewModel>(context);
+    void _showCupertinoPicker(BuildContext context) {
+      showModalBottomSheet(
+        context: context,
+        builder: (BuildContext builder) {
+          return Container(
+            height: MediaQuery.of(context).size.height / 3,
+            child: CupertinoPicker(
+              backgroundColor: Colors.white,
+              itemExtent: 32.0,
+              onSelectedItemChanged: (int index) {
+                viewModel.setRadius((index + 1) * 10.0);
+              },
+              children: List<Widget>.generate(5, (int index) {
+                return Center(child: Text('${(index + 1) * 10} km'));
+              }),
+            ),
+          );
+        },
+      );
+    }
+
     return Consumer<RoutePlannerViewModel>(
         builder: (context, viewModel, child) {
       return Expanded(
         child: Stack(
           children: [
+            if (viewModel.startSelected && viewModel.destinationSelected)
+              Positioned(
+                bottom: 145,
+                left: 20,
+                child: Container(
+                  width: 350,
+                  decoration:
+                      BoxDecoration(borderRadius: BorderRadius.circular(25)),
+                  child: ElevatedButton(
+                    onPressed: () {
+                      _showCupertinoPicker(context);
+                    },
+                    child: Text('Radius: ${viewModel.selectedRadius}'),
+                    style: ElevatedButton.styleFrom(
+                        elevation: 0,
+                        primary: Colors.grey[300],
+                        foregroundColor: Colors.black),
+                  ),
+                ),
+              ),
             if (viewModel.startSelected && viewModel.destinationSelected)
               Positioned(
                 bottom: 90,
@@ -124,8 +377,9 @@ class RoutePlanner extends StatelessWidget {
                   decoration:
                       BoxDecoration(borderRadius: BorderRadius.circular(25)),
                   child: ElevatedButton(
-                    onPressed: () {
-                      viewModel.getRoute();
+                    onPressed: () async {
+                      await viewModel.addNearbyBucketListLocations(context);
+                      viewModel.togglePage(2);
                     },
                     child: Text('Calculate route'),
                     style: ElevatedButton.styleFrom(
@@ -151,6 +405,27 @@ class RoutePlanner extends StatelessWidget {
     });
   }
 
+  void _showDialog(BuildContext context, Widget child) {
+    showCupertinoModalPopup<void>(
+      context: context,
+      builder: (BuildContext context) => Container(
+        height: 216,
+        padding: const EdgeInsets.only(top: 6.0),
+        // The Bottom margin is provided to align the popup above the system navigation bar.
+        margin: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
+        ),
+        // Provide a background color for the popup.
+        color: CupertinoColors.systemBackground.resolveFrom(context),
+        // Use a SafeArea widget to avoid system overlaps.
+        child: SafeArea(
+          top: false,
+          child: child,
+        ),
+      ),
+    );
+  }
+
   Widget CreateRouteTitleWidget(RoutePlannerViewModel viewModel) {
     return Padding(
       padding: EdgeInsets.fromLTRB(0, 20, 0, 0),
@@ -166,6 +441,42 @@ class RoutePlanner extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget ViewRouteTitleWidget(RoutePlannerViewModel viewModel) {
+    return Padding(
+      padding: EdgeInsets.fromLTRB(20, 50, 0, 0),
+      child: Row(
+        children: [
+          Padding(
+            padding: EdgeInsets.fromLTRB(20, 0, 20, 0),
+            child: Text(
+              'View route',
+              style: TextStyle(fontSize: 35, fontWeight: FontWeight.w500),
+            ),
+          ),
+          Spacer(),
+          Padding(
+            padding: EdgeInsets.fromLTRB(5, 0, 30, 0),
+            child: Container(
+              width: 60,
+              child: ElevatedButton(
+                onPressed: () {
+                  viewModel.togglePage(1);
+                },
+                child: Icon(Icons.arrow_back_sharp),
+                style: ElevatedButton.styleFrom(
+                  primary: Colors.grey[900],
+                  onPrimary: Colors.white,
+                  padding: EdgeInsets.zero,
+                  minimumSize: Size(50, 40),
+                ),
+              ),
+            ),
+          )
+        ],
       ),
     );
   }

@@ -12,17 +12,6 @@ class RoutePlace {
   RoutePlace(
       {required this.placeId, required this.name, required this.coordinates});
 
-  Map<String, dynamic> toMap() {
-    return {
-      'placeId': placeId,
-      'name': name,
-      'coordinates': {
-        'latitude': coordinates.latitude,
-        'longitude': coordinates.longitude,
-      },
-    };
-  }
-
   factory RoutePlace.fromJson(String placeId, Map<String, dynamic> json) {
     return RoutePlace(
         placeId: placeId,
