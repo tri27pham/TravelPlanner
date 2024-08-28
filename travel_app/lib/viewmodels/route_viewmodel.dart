@@ -44,6 +44,9 @@ class RoutePlannerViewModel extends ChangeNotifier {
   int directRouteDistance = 0;
   String directRouteTime = '0s';
 
+  int dreamlistRouteDistance = 0;
+  String dreamlistRouteTime = '0s';
+
   List<PredictedRoutePlace> places = [];
   List<PredictedRoutePlace> startPlaces = [];
   List<PredictedRoutePlace> endPlaces = [];
@@ -215,8 +218,8 @@ class RoutePlannerViewModel extends ChangeNotifier {
         final data = jsonDecode(response.body);
 
         Map<String, dynamic> route = data['routes'][0]; // Get the first route
-        int distance = route['distanceMeters'];
-        String duration = route['duration'];
+        dreamlistRouteDistance = route['distanceMeters'];
+        dreamlistRouteTime = route['duration'];
         String encodedPolyline = route['polyline']['encodedPolyline'];
         List<LatLng> decodedPolyline = decodePolyline(encodedPolyline);
         polylinePoints = decodedPolyline;
@@ -235,8 +238,8 @@ class RoutePlannerViewModel extends ChangeNotifier {
             origin: start,
             destination: destination,
             locationsOnRoute: dreamlistLocationsOnRoute,
-            distance: distance,
-            time: duration);
+            distance: dreamlistRouteDistance,
+            time: dreamlistRouteTime);
 
         polyines.add(newPolyline);
 
@@ -693,24 +696,58 @@ class RoutePlannerViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  int getDirectRouteDistance() {
+  int convertMetersToMiles(int distance) {
     const double metersPerMile = 1609.34;
 
     // Convert meters to miles
-    double distanceInMiles = directRouteDistance / metersPerMile;
+    double distanceInMiles = distance / metersPerMile;
 
     // Round to the nearest mile
     return distanceInMiles.round();
   }
 
-  String getDirectRouteTime() {
+  String convertTime(String time) {
     // Extract the numeric part from the input string by removing the trailing 's'
-    int totalSeconds = int.parse(directRouteTime.replaceAll('s', ''));
+    int totalSeconds = int.parse(time.replaceAll('s', ''));
 
     // Calculate the number of hours
     int hours = totalSeconds ~/ 3600;
 
     int remainingSeconds = totalSeconds % 3600;
+
+    // Calculate the number of minutes from the remaining seconds
+    int minutes = remainingSeconds ~/ 60;
+
+    // Return the formatted string with hours and remaining seconds
+    return '$hours h $minutes mins';
+  }
+
+  int getDirectRouteDistance() {
+    return convertMetersToMiles(directRouteDistance);
+  }
+
+  int getDreamlistRouteDistance() {
+    return convertMetersToMiles(dreamlistRouteDistance);
+  }
+
+  String getDirectRouteTime() {
+    return convertTime(directRouteTime);
+  }
+
+  String getDreamlistRouteTime() {
+    return convertTime(dreamlistRouteTime);
+  }
+
+  int getDistanceDifference() {
+    return convertMetersToMiles(dreamlistRouteDistance - directRouteDistance);
+  }
+
+  String getTimeDifference() {
+    int differenceSeconds = int.parse(dreamlistRouteTime.replaceAll('s', '')) -
+        int.parse(directRouteTime.replaceAll('s', ''));
+    int hours = differenceSeconds ~/ 3600;
+
+    int remainingSeconds = differenceSeconds % 3600;
 
     // Calculate the number of minutes from the remaining seconds
     int minutes = remainingSeconds ~/ 60;

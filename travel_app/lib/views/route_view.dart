@@ -112,8 +112,8 @@ class RoutePlanner extends StatelessWidget {
               //     // borderRadius: BorderRadius.circular(25),
               //     ),
               child: ElevatedButton(
-                onPressed: () {
-                  viewModel.saveRoute(context);
+                onPressed: () async {
+                  await viewModel.saveRoute(context);
                   viewModel.togglePage(1);
                 },
                 child: Text('Save route'),
@@ -126,6 +126,82 @@ class RoutePlanner extends StatelessWidget {
             ),
           ),
         ),
+        Positioned(
+          top: 200,
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(20, 45, 20, 10),
+            child: Center(
+              child: Container(
+                width: 350,
+                height: 70,
+                decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(20),
+                    color: Colors.white),
+                child: Column(
+                  children: [
+                    Padding(
+                      padding: EdgeInsets.only(top: 5),
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        Padding(
+                          padding: EdgeInsets.fromLTRB(20, 0, 0, 0),
+                          child: Text(
+                              '${viewModel.getDirectRouteDistance()} miles'),
+                        ),
+                        Padding(
+                          padding: EdgeInsets.fromLTRB(0, 0, 20, 0),
+                          child: Text('${viewModel.getDirectRouteTime()}'),
+                        ),
+                      ],
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        Padding(
+                          padding: EdgeInsets.fromLTRB(20, 0, 0, 0),
+                          child: Text(
+                            ' ${viewModel.getDreamlistRouteDistance()} miles',
+                            style: TextStyle(
+                                fontSize: 16, fontWeight: FontWeight.w500),
+                          ),
+                        ),
+                        Padding(
+                          padding: EdgeInsets.fromLTRB(0, 0, 20, 0),
+                          child: Text(
+                            '${viewModel.getDreamlistRouteTime()}',
+                            style: TextStyle(
+                                fontSize: 16, fontWeight: FontWeight.w500),
+                          ),
+                        ),
+                      ],
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        Padding(
+                          padding: EdgeInsets.fromLTRB(20, 0, 0, 0),
+                          child: Text(
+                            ' + ${viewModel.getDistanceDifference()} miles',
+                            style: TextStyle(color: Colors.red),
+                          ),
+                        ),
+                        Padding(
+                          padding: EdgeInsets.fromLTRB(0, 0, 20, 0),
+                          child: Text(
+                            '+ ${viewModel.getTimeDifference()}',
+                            style: TextStyle(color: Colors.red),
+                          ),
+                        ),
+                      ],
+                    )
+                  ],
+                ),
+              ),
+            ),
+          ),
+        )
       ],
     );
   }
