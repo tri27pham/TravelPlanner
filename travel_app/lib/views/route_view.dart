@@ -192,7 +192,42 @@ class RoutePlanner extends StatelessWidget {
                 ),
               ),
             ),
-          )
+          ),
+          if (viewModel.startSelected &&
+              viewModel.destinationSelected &&
+              !viewModel.startLocationFocusNode.hasFocus &&
+              !viewModel.endLocationFocusNode.hasFocus &&
+              viewModel.startSelected &&
+              viewModel.destinationSelected)
+            Align(
+              alignment: Alignment.center,
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(20, 45, 20, 10),
+                child: Center(
+                  child: Container(
+                      width: 350,
+                      height: 40,
+                      decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(20),
+                          color: Colors.white),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        children: [
+                          Padding(
+                            padding: EdgeInsets.fromLTRB(20, 0, 0, 0),
+                            child: Text(
+                                'Distance: ${viewModel.getDirectRouteDistance()} miles'),
+                          ),
+                          Padding(
+                            padding: EdgeInsets.fromLTRB(0, 0, 20, 0),
+                            child:
+                                Text('Time: ${viewModel.getDirectRouteTime()}'),
+                          ),
+                        ],
+                      )),
+                ),
+              ),
+            )
         ],
       ),
     );
@@ -216,9 +251,11 @@ class RoutePlanner extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           CreateRouteTitleWidget(viewModel),
-          viewModel.destinationSelected
-              ? RouteWidget(context)
-              : SearchBarWidget(viewModel, context)
+          // viewModel.destinationSelected
+          // ?
+          RouteWidget(context)
+          // :
+          //  SearchBarWidget(viewModel, context)
         ],
       );
     });

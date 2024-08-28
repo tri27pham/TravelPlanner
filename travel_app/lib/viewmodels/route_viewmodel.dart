@@ -41,6 +41,9 @@ class RoutePlannerViewModel extends ChangeNotifier {
   bool startSelected = false;
   bool destinationSelected = false;
 
+  int directRouteDistance = 0;
+  String directRouteTime = '0s';
+
   List<PredictedRoutePlace> places = [];
   List<PredictedRoutePlace> startPlaces = [];
   List<PredictedRoutePlace> endPlaces = [];
@@ -329,8 +332,8 @@ class RoutePlannerViewModel extends ChangeNotifier {
         final data = jsonDecode(response.body);
 
         Map<String, dynamic> route = data['routes'][0]; // Get the first route
-        int distanceMeters = route['distanceMeters'];
-        String duration = route['duration'];
+        directRouteDistance = route['distanceMeters'];
+        directRouteTime = route['duration'];
         String encodedPolyline = route['polyline']['encodedPolyline'];
 
         List<LatLng> decodedPolyline = decodePolyline(encodedPolyline);
@@ -688,6 +691,32 @@ class RoutePlannerViewModel extends ChangeNotifier {
     endLocationFocusNode.unfocus();
     destinationSelected = false;
     notifyListeners();
+  }
+
+  int getDirectRouteDistance() {
+    const double metersPerMile = 1609.34;
+
+    // Convert meters to miles
+    double distanceInMiles = directRouteDistance / metersPerMile;
+
+    // Round to the nearest mile
+    return distanceInMiles.round();
+  }
+
+  String getDirectRouteTime() {
+    // Extract the numeric part from the input string by removing the trailing 's'
+    int totalSeconds = int.parse(directRouteTime.replaceAll('s', ''));
+
+    // Calculate the number of hours
+    int hours = totalSeconds ~/ 3600;
+
+    int remainingSeconds = totalSeconds % 3600;
+
+    // Calculate the number of minutes from the remaining seconds
+    int minutes = remainingSeconds ~/ 60;
+
+    // Return the formatted string with hours and remaining seconds
+    return '$hours h $minutes mins';
   }
 
   @override
