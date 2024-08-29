@@ -116,8 +116,12 @@ class DbService {
           "polyline": polylineToGeoPoints(route.polyline),
           "origin": route.origin.toMap(),
           "destination": route.destination.toMap(),
-          "distance": route.distance,
-          "time": route.time,
+          "directDistance": route.directDistance,
+          "indirectDistance": route.indirectDistance,
+          "distanceDifference": route.distanceDifference,
+          "directTime": route.directTime,
+          "indirectTime": route.indirectTime,
+          "timeDifference": route.timeDifference
         };
 
         await docRef.set(routeData);
@@ -137,7 +141,8 @@ class DbService {
             "rating": location.rating,
             "numReviews": location.numReviews,
             "addedOn": location.addedOn,
-            "addedBy": location.addedBy
+            "addedBy": location.addedBy,
+            "visited": location.visited
           };
 
           await collectionRef.doc(location.id).set(locationData);
@@ -209,8 +214,13 @@ class DbService {
             name: doc['destination']['name'],
             coordinates: LatLng(doc['destination']['coordinates']['latitude'],
                 doc['destination']['coordinates']['longitude']));
-        int distance = doc['distance'];
-        String time = doc['time'];
+
+        int directDistance = doc['directDistance'];
+        int indirectDistance = doc['indirectDistance'];
+        int distanceDifference = doc['distanceDifference'];
+        String directTime = doc['directTime'];
+        String indirectTime = doc['indirectTime'];
+        String timeDifference = doc['timeDifference'];
 
         CollectionReference locationsOnRouteRef =
             routesCollection.doc(routeID).collection('locationsOnRoute');
@@ -263,9 +273,16 @@ class DbService {
             origin: origin,
             destination: destination,
             locationsOnRoute: locations,
-            distance: distance,
-            time: time));
+            directDistance: directDistance,
+            indirectDistance: indirectDistance,
+            distanceDifference: distanceDifference,
+            directTime: directTime,
+            indirectTime: indirectTime,
+            timeDifference: timeDifference));
       }
+
+      log(routes.first.directDistance.toString());
+
       return routes;
     } catch (e) {
       log("Error fetching routes: $e");
@@ -378,27 +395,6 @@ class DbService {
     }
   }
 
-  // Future<void> deleteDreamListLocation(
-  //     BuildContext context, DreamListLocation location) async {
-  //   final appState = Provider.of<AppState>(context, listen: false);
-  //   try {
-  //     // Create a reference to the 'routes' collection for the user's account
-  //     CollectionReference collectionRef = FirebaseFirestore.instance
-  //         .collection('accounts')
-  //         .doc(appState.account!.uid)
-  //         .collection('dreamlist');
-
-  //     // Delete the document with the given route ID
-  //     await collectionRef
-  //         .doc(location.id) // Use the route's ID to locate the document
-  //         .delete();
-
-  //     print("Document deleted successfully.");
-  //   } catch (e) {
-  //     print("Error deleting document: $e");
-  //   }
-  // }
-
   Future<void> deleteDreamListLocation(
       BuildContext context, DreamListLocation location) async {
     final appState = Provider.of<AppState>(context, listen: false);
@@ -491,6 +487,27 @@ class DbService {
       }
     } else {
       log("Account is null or email is empty");
+    }
+  }
+
+  Future<void> updateDreamlistLocation(
+      BuildContext context, DreamListLocation location) async {
+    final appState = Provider.of<AppState>(context, listen: false);
+    final FirebaseFirestore firestore = FirebaseFirestore.instance;
+
+    // Specify the collection and document you want to update
+    final DocumentReference documentRef = firestore
+        .collection('accounts')
+        .doc(appState.account!.uid)
+        .collection('dreamlist')
+        .doc(location.id);
+
+    // Update a specific field in the document
+    try {
+      await documentRef.update({'visited': location.visited});
+      print('Document field updated successfully');
+    } catch (e) {
+      print('Error updating document field: $e');
     }
   }
 }

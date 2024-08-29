@@ -62,13 +62,18 @@ class RoutePlannerViewModel extends ChangeNotifier {
   List<RouteWithDreamlistLocations> routes = [];
 
   RouteWithDreamlistLocations currentRoute = RouteWithDreamlistLocations(
-      id: 'null',
-      polyline: Polyline(polylineId: PolylineId('')),
-      origin: RoutePlace(placeId: '', name: '', coordinates: LatLng(0, 0)),
-      destination: RoutePlace(placeId: '', name: '', coordinates: LatLng(0, 0)),
-      locationsOnRoute: [],
-      distance: 0,
-      time: '');
+    id: 'null',
+    polyline: Polyline(polylineId: PolylineId('')),
+    origin: RoutePlace(placeId: '', name: '', coordinates: LatLng(0, 0)),
+    destination: RoutePlace(placeId: '', name: '', coordinates: LatLng(0, 0)),
+    locationsOnRoute: [],
+    directDistance: 0,
+    indirectDistance: 0,
+    distanceDifference: 0,
+    directTime: '0h 0mins',
+    indirectTime: '0h 0mins',
+    timeDifference: '0h 0mins',
+  );
 
   RoutePlace start =
       RoutePlace(placeId: '', name: '', coordinates: LatLng(0, 0));
@@ -500,13 +505,18 @@ class RoutePlannerViewModel extends ChangeNotifier {
         directPolyline = newPolyline;
 
         currentRoute = RouteWithDreamlistLocations(
-            id: uuid.v4(),
-            polyline: newPolyline,
-            origin: start,
-            destination: destination,
-            locationsOnRoute: dreamlistLocationsOnRoute,
-            distance: dreamlistRouteDistance,
-            time: dreamlistRouteTime);
+          id: uuid.v4(),
+          polyline: newPolyline,
+          origin: start,
+          destination: destination,
+          locationsOnRoute: dreamlistLocationsOnRoute,
+          directDistance: directRouteDistance,
+          indirectDistance: dreamlistRouteDistance,
+          distanceDifference: getDistanceDifference(),
+          directTime: directRouteTime,
+          indirectTime: dreamlistRouteTime,
+          timeDifference: getTimeDifference(),
+        );
 
         polyines.add(newPolyline);
 

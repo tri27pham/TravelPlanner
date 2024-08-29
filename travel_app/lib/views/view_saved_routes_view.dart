@@ -189,7 +189,7 @@ class ViewSavedRoutes extends StatelessWidget {
               Padding(
                 padding: EdgeInsets.fromLTRB(20, 0, 0, 0),
                 child: Text(
-                  '${(route.getDistance()).toString()} miles',
+                  '${(route.getIndirectDistance()).toString()} miles',
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w500,
@@ -478,14 +478,14 @@ class ViewSavedRoutes extends StatelessWidget {
                 Padding(
                   padding: EdgeInsets.fromLTRB(30, 0, 0, 0),
                   child: Text(
-                    'Distance: ${route.getDistance()} miles',
+                    'Distance: ${route.getIndirectDistance()} miles',
                     style: TextStyle(fontSize: 18),
                   ),
                 ),
                 Padding(
                   padding: EdgeInsets.fromLTRB(30, 0, 0, 0),
                   child: Text(
-                    'Time: ${route.getTime()}',
+                    'Time: ${route.getIndirectTime()}',
                     style: TextStyle(fontSize: 18),
                   ),
                 ),
@@ -520,10 +520,86 @@ class ViewSavedRoutes extends StatelessWidget {
                     ),
                   ),
                 ),
+                Padding(
+                  padding: EdgeInsets.fromLTRB(20, 0, 20, 10),
+                  child: Center(
+                    child: Container(
+                      width: 350,
+                      height: 70,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(20),
+                        color: Colors.white,
+                      ),
+                      child: Column(
+                        children: [
+                          Padding(
+                            padding: EdgeInsets.only(top: 5),
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceAround,
+                            children: [
+                              Padding(
+                                padding: EdgeInsets.fromLTRB(20, 0, 0, 0),
+                                child:
+                                    Text('${route.getDirectDistance()} miles'),
+                              ),
+                              Padding(
+                                padding: EdgeInsets.fromLTRB(0, 0, 20, 0),
+                                child: Text('${route.getDirectTime()}'),
+                              ),
+                            ],
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceAround,
+                            children: [
+                              Padding(
+                                padding: EdgeInsets.fromLTRB(20, 0, 0, 0),
+                                child: Text(
+                                  ' ${route.getIndirectDistance()} miles',
+                                  style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w500),
+                                ),
+                              ),
+                              Padding(
+                                padding: EdgeInsets.fromLTRB(0, 0, 20, 0),
+                                child: Text(
+                                  '${route.getIndirectTime()}',
+                                  style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w500),
+                                ),
+                              ),
+                            ],
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceAround,
+                            children: [
+                              Padding(
+                                padding: EdgeInsets.fromLTRB(20, 0, 0, 0),
+                                child: Text(
+                                  ' + ${route.getDistanceDifference()} miles',
+                                  style: TextStyle(color: Colors.red),
+                                ),
+                              ),
+                              Padding(
+                                padding: EdgeInsets.fromLTRB(0, 0, 20, 0),
+                                child: Text(
+                                  '+ ${route.getTimeDifference()}',
+                                  style: TextStyle(color: Colors.red),
+                                ),
+                              ),
+                            ],
+                          )
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
                 Center(
                   child: Container(
                     width: MediaQuery.of(context).size.width * 0.8,
-                    height: MediaQuery.of(context).size.height * 0.45,
+                    height: MediaQuery.of(context).size.height * 0.35,
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(20),
                       child: GoogleMap(

@@ -1,9 +1,9 @@
 import 'dart:typed_data';
-
+import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'dart:developer';
 
-class DreamListLocation {
+class DreamListLocation extends ChangeNotifier {
   final String id;
   final String name;
   final String locationName;
@@ -30,6 +30,11 @@ class DreamListLocation {
       required this.addedOn,
       required this.addedBy,
       required this.visited});
+
+  void toggleVisited() {
+    visited = !visited;
+    notifyListeners();
+  }
 
   displayInfo() {
     log(id);
