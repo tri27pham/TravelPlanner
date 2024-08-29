@@ -12,6 +12,7 @@ import 'package:travel_app/views/view_saved_routes_view.dart';
 import '../../viewmodels/route_viewmodel.dart';
 import '../models/route_place.dart';
 import 'dart:developer';
+import 'package:travel_app/main.dart';
 
 class RoutePlanner extends StatelessWidget {
   const RoutePlanner({super.key});
@@ -520,7 +521,7 @@ class RoutePlanner extends StatelessWidget {
 
   void _showDialog(BuildContext context, Widget child) {
     showCupertinoModalPopup<void>(
-      context: context,
+      context: navigatorKey.currentContext!,
       builder: (BuildContext context) => Container(
         height: 216,
         padding: const EdgeInsets.only(top: 6.0),

@@ -121,13 +121,18 @@ class RoutePlannerViewModel extends ChangeNotifier {
     routes = await db_service.loadRoutesFromDb(context);
   }
 
-  Future<void> addNearbyBucketListLocations(BuildContext context) async {
+  Future<void> addNearbyBucketListLocations(BuildContext parentContext) async {
+    // Capture the parent context for use in async operations
+    final capturedContext = parentContext;
+
     DbService db_service = DbService();
 
     List<DreamListLocation> locationsOnRoute = [];
     double radius = selectedRadius * 1000;
+
+    // Use the parent context to load data from the database
     List<DreamListLocation> dreamlistLocations =
-        await db_service.loadDreamlistFromDb(context);
+        await db_service.loadDreamlistFromDb(capturedContext);
 
     for (DreamListLocation location in dreamlistLocations) {
       if (await isNearRoute(location, radius)) {
@@ -135,30 +140,285 @@ class RoutePlannerViewModel extends ChangeNotifier {
       }
     }
 
-    if (locationsOnRoute.isNotEmpty) {
+    // Ensure the widget associated with the parent context is still mounted
+    if (locationsOnRoute.isNotEmpty && capturedContext.mounted) {
       var points = convertLocations(locationsOnRoute);
       dreamlistLocationsOnRoute = locationsOnRoute;
-      addLocationsOnRouteMarker(locationsOnRoute);
+
+      // Use the captured parent context for UI-related operations
+      addLocationsOnRouteMarker(parentContext, locationsOnRoute);
       await recalculateRoute(points);
     }
   }
 
-  void addLocationsOnRouteMarker(List<DreamListLocation> locations) {
+  void addLocationsOnRouteMarker(
+      BuildContext parentContext, List<DreamListLocation> locations) {
     log('markers: ${markers.length.toString()}');
     log('locations: ${locations.length.toString()}');
     markers.clear();
     markers.add(originMarker!);
     markers.add(destinationMarker!);
+
     for (DreamListLocation location in locations) {
       log('id: ${location.id}');
       log('coords: ${location.locationCoordinates.toString()}');
-      markers.add(Marker(
+      markers.add(
+        Marker(
           markerId: MarkerId(location.id),
-          position: location.locationCoordinates));
+          position: location.locationCoordinates,
+          infoWindow: InfoWindow(
+            title: location.name, // Name to display
+            snippet: 'Tap to view more info',
+            onTap: () {
+              // Use the parent context to show dialog
+              _showImageDialog(parentContext, location);
+            },
+          ),
+        ),
+      );
     }
     log('markers: ${markers.length.toString()}');
     notifyListeners();
   }
+
+  void _showImageDialog(
+      BuildContext parentContext, DreamListLocation location) {
+    showDialog(
+      context: parentContext,
+      builder: (BuildContext dialogContext) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          child: Container(
+            width: 1000,
+            height: 350,
+            decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(25), color: Colors.white),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: EdgeInsets.fromLTRB(20, 20, 0, 0),
+                  child: Text(
+                    location.name,
+                    style: TextStyle(fontSize: 25, fontWeight: FontWeight.w500),
+                  ),
+                ),
+                Padding(
+                  padding: EdgeInsets.fromLTRB(20, 0, 0, 0),
+                  child: Text(
+                    location.locationName,
+                    style: TextStyle(fontSize: 17, fontWeight: FontWeight.w400),
+                  ),
+                ),
+                Padding(
+                  padding: EdgeInsets.fromLTRB(10, 0, 10, 0),
+                  child: Container(
+                    padding: EdgeInsets.all(10),
+                    width: 500,
+                    height: 150,
+                    child: ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: location.imageDatas.length,
+                      itemBuilder: (context, index) {
+                        return Padding(
+                          padding: EdgeInsets.fromLTRB(0, 0, 5, 0),
+                          child: Container(
+                            width: 150,
+                            height: 100,
+                            decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(15)),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(10),
+                              child: Image(
+                                  image:
+                                      MemoryImage(location.imageDatas[index]),
+                                  fit: BoxFit.cover),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ),
+                Padding(
+                    padding: EdgeInsets.fromLTRB(20, 0, 0, 0),
+                    child: Row(
+                      children: [
+                        Padding(
+                          padding: EdgeInsets.fromLTRB(0, 0, 0, 0),
+                          child: Text(location.rating.toString()),
+                        ),
+                        Icon(Icons.star_border_rounded),
+                        SizedBox(width: 10),
+                        Padding(
+                          padding: EdgeInsets.fromLTRB(0, 0, 0, 0),
+                          child: Text(location.numReviews.toString()),
+                        )
+                      ],
+                    )),
+                Padding(
+                  padding: EdgeInsets.fromLTRB(20, 0, 0, 0),
+                  child: Text(location.description),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  // Future<void> addNearbyBucketListLocations(BuildContext context) async {
+  //   DbService db_service = DbService();
+
+  //   List<DreamListLocation> locationsOnRoute = [];
+  //   double radius = selectedRadius * 1000;
+  //   List<DreamListLocation> dreamlistLocations =
+  //       await db_service.loadDreamlistFromDb(context);
+
+  //   for (DreamListLocation location in dreamlistLocations) {
+  //     if (await isNearRoute(location, radius)) {
+  //       locationsOnRoute.add(location);
+  //     }
+  //   }
+
+  //   if (locationsOnRoute.isNotEmpty) {
+  //     var points = convertLocations(locationsOnRoute);
+  //     dreamlistLocationsOnRoute = locationsOnRoute;
+  //     addLocationsOnRouteMarker(context, locationsOnRoute);
+  //     await recalculateRoute(points);
+  //   }
+  // }
+
+  // void addLocationsOnRouteMarker(
+  //     BuildContext context, List<DreamListLocation> locations) {
+  //   log('markers: ${markers.length.toString()}');
+  //   log('locations: ${locations.length.toString()}');
+  //   markers.clear();
+  //   markers.add(originMarker!);
+  //   markers.add(destinationMarker!);
+  //   for (DreamListLocation location in locations) {
+  //     log('id: ${location.id}');
+  //     log('coords: ${location.locationCoordinates.toString()}');
+  //     markers.add(
+  //       Marker(
+  //         markerId: MarkerId(location.id),
+  //         position: location.locationCoordinates,
+  //         infoWindow: InfoWindow(
+  //           title: location.name, // Name to display
+  //           snippet: 'Tap to view more info',
+  //           onTap: () {
+  //             _showImageDialog(context, location);
+  //           },
+  //         ),
+  //       ),
+  //       // Marker(
+  //       //   markerId: MarkerId(location.id),
+  //       //   position: location.locationCoordinates)
+  //     );
+  //   }
+  //   log('markers: ${markers.length.toString()}');
+  //   notifyListeners();
+  // }
+
+  // void _showImageDialog(BuildContext context, DreamListLocation location) {
+  //   showDialog(
+  //     context: context,
+  //     builder: (BuildContext context) {
+  //       return Dialog(
+  //         backgroundColor: Colors.transparent,
+  //         elevation: 0,
+  //         child: Container(
+  //           width: 1000,
+  //           height: 350,
+  //           decoration: BoxDecoration(
+  //               borderRadius: BorderRadius.circular(25), color: Colors.white),
+  //           child: Column(
+  //             crossAxisAlignment: CrossAxisAlignment.start,
+  //             children: [
+  //               Padding(
+  //                 padding: EdgeInsets.fromLTRB(20, 20, 0, 0),
+  //                 child: Text(
+  //                   location.name,
+  //                   style: TextStyle(fontSize: 25, fontWeight: FontWeight.w500),
+  //                 ),
+  //               ),
+  //               Padding(
+  //                 padding: EdgeInsets.fromLTRB(20, 0, 0, 0),
+  //                 child: Text(
+  //                   location.locationName,
+  //                   style: TextStyle(fontSize: 17, fontWeight: FontWeight.w400),
+  //                 ),
+  //               ),
+  //               Padding(
+  //                 padding: EdgeInsets.fromLTRB(10, 0, 10, 0),
+  //                 child: Container(
+  //                   padding: EdgeInsets.all(10),
+  //                   width: 500,
+  //                   height: 150,
+  //                   child: ListView.builder(
+  //                     scrollDirection: Axis.horizontal,
+  //                     itemCount: location.imageDatas.length,
+  //                     itemBuilder: (context, index) {
+  //                       return Padding(
+  //                         padding: EdgeInsets.fromLTRB(0, 0, 5, 0),
+  //                         child: Container(
+  //                           // Customize your item here
+  //                           width: 150,
+  //                           height: 100,
+  //                           decoration: BoxDecoration(
+  //                               borderRadius: BorderRadius.circular(15)),
+  //                           child: ClipRRect(
+  //                             borderRadius: BorderRadius.circular(10),
+  //                             child: Image(
+  //                                 image:
+  //                                     MemoryImage(location.imageDatas[index]),
+  //                                 fit: BoxFit.cover),
+  //                           ),
+  //                         ),
+  //                       );
+  //                     },
+  //                   ),
+  //                 ),
+  //               ),
+  //               Padding(
+  //                   padding: EdgeInsets.fromLTRB(20, 0, 0, 0),
+  //                   child: Row(
+  //                     children: [
+  //                       Padding(
+  //                         padding: EdgeInsets.fromLTRB(0, 0, 0, 0),
+  //                         child: Text(location.rating.toString()),
+  //                       ),
+  //                       Icon(Icons.star_border_rounded),
+  //                       SizedBox(
+  //                         width: 10,
+  //                       ),
+  //                       Padding(
+  //                         padding: EdgeInsets.fromLTRB(0, 0, 0, 0),
+  //                         child: Text(location.numReviews.toString()),
+  //                       )
+  //                     ],
+  //                   )),
+  //               Padding(
+  //                 padding: EdgeInsets.fromLTRB(20, 0, 0, 0),
+  //                 child: Text(location.description),
+  //               ),
+  //             ],
+  //           ),
+  //         ), // Display image from memory
+  //         // actions: <Widget>[
+  //         //   TextButton(
+  //         //     child: Text('Close'),
+  //         //     onPressed: () {
+  //         //       Navigator.of(context).pop();
+  //         //     },
+  //         //   ),
+  //         // ],
+  //       );
+  //     },
+  //   );
+  // }
 
   List<Map<String, dynamic>> convertLocations(
       List<DreamListLocation> locations) {

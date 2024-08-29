@@ -12,6 +12,8 @@ import 'package:travel_app/models/AppState.dart';
 import 'app.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
 void main() async {
   await dotenv.load(fileName: ".env");
 
@@ -39,6 +41,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      navigatorKey: navigatorKey,
       initialRoute: '/',
       routes: {
         '/': (context) => LoginPage(),
