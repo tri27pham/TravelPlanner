@@ -255,6 +255,26 @@ class RoutePlannerViewModel extends ChangeNotifier {
     }
   }
 
+  Future<void> getCurrentStartLocation() async {
+    await Geolocator.requestPermission().then((value) {});
+    var uuid = Uuid();
+    String randomPlaceId = uuid.v4();
+    Position currentLocation = await Geolocator.getCurrentPosition();
+    String currentLocationName =
+        '${currentLocation.latitude}, ${currentLocation.longitude}';
+    LatLng currentLocationCoordinates =
+        LatLng(currentLocation.latitude, currentLocation.longitude);
+    start = RoutePlace(
+        placeId: randomPlaceId,
+        name: currentLocationName,
+        coordinates: currentLocationCoordinates);
+    startLocationTextEditingController.text = currentLocationName;
+    startSelected = true;
+    setOriginMarker();
+    notifyListeners();
+    return;
+  }
+
   Future<bool> isNearRoute(DreamListLocation location, double radius) async {
     for (LatLng point in polylinePoints) {
       double distance = Geolocator.distanceBetween(

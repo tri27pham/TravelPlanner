@@ -766,7 +766,9 @@ class RoutePlanner extends StatelessWidget {
                             child: Container(
                               width: 40,
                               child: ElevatedButton(
-                                onPressed: () {},
+                                onPressed: () async {
+                                  await viewModel.getCurrentStartLocation();
+                                },
                                 child: Icon(
                                   Icons.my_location_rounded,
                                   size: 20,
@@ -890,25 +892,25 @@ class RoutePlanner extends StatelessWidget {
                             ),
                           ),
                         ),
-                        Padding(
-                          padding: EdgeInsets.fromLTRB(0, 0, 0, 0),
-                          child: Container(
-                            width: 40,
-                            child: ElevatedButton(
-                              onPressed: () {},
-                              child: Icon(
-                                Icons.my_location_rounded,
-                                size: 20,
-                                color: Colors.grey,
-                              ),
-                              style: ElevatedButton.styleFrom(
-                                primary: Colors.transparent,
-                                shadowColor: Colors.transparent,
-                                padding: EdgeInsets.all(0),
-                              ),
-                            ),
-                          ),
-                        ),
+                        // Padding(
+                        //   padding: EdgeInsets.fromLTRB(0, 0, 0, 0),
+                        //   child: Container(
+                        //     width: 40,
+                        //     child: ElevatedButton(
+                        //       onPressed: () {},
+                        //       child: Icon(
+                        //         Icons.my_location_rounded,
+                        //         size: 20,
+                        //         color: Colors.grey,
+                        //       ),
+                        //       style: ElevatedButton.styleFrom(
+                        //         primary: Colors.transparent,
+                        //         shadowColor: Colors.transparent,
+                        //         padding: EdgeInsets.all(0),
+                        //       ),
+                        //     ),
+                        //   ),
+                        // ),
                       ],
                     ),
                   ),
