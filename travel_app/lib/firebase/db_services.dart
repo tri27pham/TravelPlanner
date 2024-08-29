@@ -160,6 +160,27 @@ class DbService {
     }
   }
 
+  Future<void> deleteRoute(
+      BuildContext context, RouteWithDreamlistLocations route) async {
+    final appState = Provider.of<AppState>(context, listen: false);
+    try {
+      // Create a reference to the 'routes' collection for the user's account
+      CollectionReference collectionRef = FirebaseFirestore.instance
+          .collection('accounts')
+          .doc(appState.account!.uid)
+          .collection('routes');
+
+      // Delete the document with the given route ID
+      await collectionRef
+          .doc(route.id) // Use the route's ID to locate the document
+          .delete();
+
+      print("Document deleted successfully.");
+    } catch (e) {
+      print("Error deleting document: $e");
+    }
+  }
+
   Future<List<RouteWithDreamlistLocations>> loadRoutesFromDb(
       BuildContext context) async {
     final appState = Provider.of<AppState>(context, listen: false);
@@ -210,6 +231,7 @@ class DbService {
           int numReviews = location['numReviews'];
           String addedOn = location['addedOn'];
           String addedBy = location['addedBy'];
+          bool visited = location['visited'];
 
           QuerySnapshot querySnapshotPhotos =
               await locationsOnRouteRef.doc(id).collection('photos').get();
@@ -231,10 +253,12 @@ class DbService {
               imageDatas: imageDatas,
               photoRefs: [],
               addedOn: addedOn,
-              addedBy: addedBy));
+              addedBy: addedBy,
+              visited: visited));
         }
 
         routes.add(RouteWithDreamlistLocations(
+            id: routeID,
             polyline: polyline,
             origin: origin,
             destination: destination,
@@ -322,6 +346,7 @@ class DbService {
         int numReviews = doc['numReviews'];
         String addedOn = formatTimestamp(doc['addedOn']);
         String addedBy = doc['addedBy'];
+        bool visited = doc['visited'];
 
         QuerySnapshot querySnapshotPhotos =
             await dreamlistCollection.doc(id).collection('photos').get();
@@ -343,12 +368,81 @@ class DbService {
             imageDatas: imageDatas,
             photoRefs: [],
             addedOn: addedOn,
-            addedBy: addedBy));
+            addedBy: addedBy,
+            visited: visited));
       }
       return locations;
     } catch (e) {
       log("Error fetching locations: $e");
       return [];
+    }
+  }
+
+  // Future<void> deleteDreamListLocation(
+  //     BuildContext context, DreamListLocation location) async {
+  //   final appState = Provider.of<AppState>(context, listen: false);
+  //   try {
+  //     // Create a reference to the 'routes' collection for the user's account
+  //     CollectionReference collectionRef = FirebaseFirestore.instance
+  //         .collection('accounts')
+  //         .doc(appState.account!.uid)
+  //         .collection('dreamlist');
+
+  //     // Delete the document with the given route ID
+  //     await collectionRef
+  //         .doc(location.id) // Use the route's ID to locate the document
+  //         .delete();
+
+  //     print("Document deleted successfully.");
+  //   } catch (e) {
+  //     print("Error deleting document: $e");
+  //   }
+  // }
+
+  Future<void> deleteDreamListLocation(
+      BuildContext context, DreamListLocation location) async {
+    final appState = Provider.of<AppState>(context, listen: false);
+    try {
+      // Reference to the 'dreamlist' collection for the user's account
+      DocumentReference docRef = FirebaseFirestore.instance
+          .collection('accounts')
+          .doc(appState.account!.uid)
+          .collection('dreamlist')
+          .doc(location.id);
+
+      // Step 1: Delete all subcollections of the document
+      await deleteSubcollections(docRef);
+
+      // Step 2: Delete the parent document
+      await docRef.delete();
+
+      print("Document and its subcollections deleted successfully.");
+    } catch (e) {
+      print("Error deleting document and subcollections: $e");
+    }
+  }
+
+  Future<void> deleteSubcollections(DocumentReference docRef) async {
+    try {
+      // Get all subcollections of the document
+      final subcollections = await docRef.collection('photos').get();
+
+      // Iterate over each subcollection
+      for (var subcollection in subcollections.docs) {
+        // Get the reference of each document in the subcollection
+        final subDocRef = docRef.collection(subcollection.reference.parent.id);
+
+        // Get all documents in this subcollection
+        final subDocSnapshot = await subDocRef.get();
+
+        // Delete each document in the subcollection
+        for (var doc in subDocSnapshot.docs) {
+          log(doc.id);
+          await doc.reference.delete();
+        }
+      }
+    } catch (e) {
+      print("Error deleting subcollections: $e");
     }
   }
 
@@ -371,6 +465,7 @@ class DbService {
           "numReviews": location.numReviews,
           "addedOn": DateTime.now(),
           "addedBy": appState.profile!.name,
+          "visited": false,
         };
 
         CollectionReference collectionRef =

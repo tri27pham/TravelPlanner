@@ -62,6 +62,11 @@ class DreamListViewModel extends ChangeNotifier {
     }
   }
 
+  Future<void> deleteDreamlistLocation(
+      BuildContext context, DreamListLocation location) async {
+    await db_service.deleteDreamListLocation(context, location);
+  }
+
   Future<Position> getUserLocation() async {
     await Geolocator.requestPermission();
     return await Geolocator.getCurrentPosition();

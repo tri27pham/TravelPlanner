@@ -62,6 +62,7 @@ class RoutePlannerViewModel extends ChangeNotifier {
   List<RouteWithDreamlistLocations> routes = [];
 
   RouteWithDreamlistLocations currentRoute = RouteWithDreamlistLocations(
+      id: 'null',
       polyline: Polyline(polylineId: PolylineId('')),
       origin: RoutePlace(placeId: '', name: '', coordinates: LatLng(0, 0)),
       destination: RoutePlace(placeId: '', name: '', coordinates: LatLng(0, 0)),
@@ -110,6 +111,11 @@ class RoutePlannerViewModel extends ChangeNotifier {
   void togglePage(int pageNum) {
     page = pageNum;
     notifyListeners();
+  }
+
+  Future<void> deleteRoute(
+      BuildContext context, RouteWithDreamlistLocations route) async {
+    await db_service.deleteRoute(context, route);
   }
 
   Future<void> saveRoute(BuildContext context) async {
@@ -494,6 +500,7 @@ class RoutePlannerViewModel extends ChangeNotifier {
         directPolyline = newPolyline;
 
         currentRoute = RouteWithDreamlistLocations(
+            id: uuid.v4(),
             polyline: newPolyline,
             origin: start,
             destination: destination,

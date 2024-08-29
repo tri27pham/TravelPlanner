@@ -7,6 +7,7 @@ import 'package:travel_app/models/route_place.dart';
 import 'dart:developer';
 
 class RouteWithDreamlistLocations {
+  String id;
   Polyline polyline;
   RoutePlace origin;
   RoutePlace destination;
@@ -15,6 +16,7 @@ class RouteWithDreamlistLocations {
   String time;
 
   RouteWithDreamlistLocations({
+    required this.id,
     required this.polyline,
     required this.origin,
     required this.destination,

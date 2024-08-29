@@ -135,7 +135,6 @@ class ViewSavedRoutes extends StatelessWidget {
   }
 
   Widget RouteWidget(BuildContext context, RouteWithDreamlistLocations route) {
-    final viewModel = Provider.of<RoutePlannerViewModel>(context);
     return Padding(
       padding: EdgeInsets.fromLTRB(20, 5, 20, 5),
       child: InkWell(
@@ -244,149 +243,353 @@ class ViewSavedRoutes extends StatelessWidget {
     );
   }
 
+  // Widget RoutePopUpWidget(
+  //     BuildContext context, RouteWithDreamlistLocations route) {
+  //   final viewModel = Provider.of<RoutePlannerViewModel>(context);
+  //   return Dialog(
+  //     shape: RoundedRectangleBorder(
+  //       borderRadius: BorderRadius.circular(25),
+  //     ),
+  //     insetPadding:
+  //         EdgeInsets.zero, // Remove default padding to use full width/height
+  //     child: Container(
+  //       height: MediaQuery.of(context).size.height * 0.85,
+  //       width:
+  //           MediaQuery.of(context).size.width * 0.9, // Example width adjustment
+  //       decoration: BoxDecoration(
+  //         borderRadius: BorderRadius.circular(25),
+  //         color: Colors.white,
+  //       ),
+  //       child: Column(
+  //         crossAxisAlignment: CrossAxisAlignment.start,
+  //         children: [
+  //           Padding(
+  //             padding: EdgeInsets.fromLTRB(20, 20, 0, 0),
+  //             child: ClipRect(
+  //               clipBehavior: Clip.hardEdge,
+  //               child: Container(
+  //                 width: 300,
+  //                 child: Row(
+  //                   mainAxisAlignment: MainAxisAlignment.start,
+  //                   children: [
+  //                     Padding(
+  //                       padding: EdgeInsets.fromLTRB(10, 0, 0, 0),
+  //                       child: Text(
+  //                         route.origin.name,
+  //                         style: TextStyle(
+  //                             fontSize: 25, fontWeight: FontWeight.w500),
+  //                         maxLines: 1,
+  //                         overflow: TextOverflow.clip,
+  //                       ),
+  //                     ),
+  //                     Padding(
+  //                       padding: EdgeInsets.fromLTRB(10, 0, 10, 0),
+  //                       child: Icon(Icons.arrow_forward_outlined, size: 20),
+  //                     ),
+  //                     Flexible(
+  //                         child: Padding(
+  //                       padding: EdgeInsets.fromLTRB(0, 0, 0, 0),
+  //                       child: Text(
+  //                         route.destination.name,
+  //                         style: TextStyle(
+  //                             fontSize: 25, fontWeight: FontWeight.w500),
+  //                         maxLines: 1,
+  //                         overflow: TextOverflow.clip,
+  //                       ),
+  //                     ))
+  //                   ],
+  //                 ),
+  //               ),
+  //             ),
+  //           ),
+  //           Padding(
+  //             padding: EdgeInsets.fromLTRB(30, 0, 0, 0),
+  //             child: Text(
+  //               'Distance: ${route.getDistance()} miles',
+  //               style: TextStyle(fontSize: 18),
+  //             ),
+  //           ),
+  //           Padding(
+  //             padding: EdgeInsets.fromLTRB(30, 0, 0, 0),
+  //             child: Text(
+  //               'Distance: ${route.getTime()}',
+  //               style: TextStyle(fontSize: 18),
+  //             ),
+  //           ),
+  //           Padding(
+  //             padding: EdgeInsets.fromLTRB(15, 5, 0, 10),
+  //             child: Container(
+  //               width: 300,
+  //               height: 100,
+  //               child: ListView.builder(
+  //                 scrollDirection: Axis.horizontal,
+  //                 itemCount: route.locationsOnRoute.length,
+  //                 itemBuilder: (context, index) {
+  //                   return Padding(
+  //                     padding: EdgeInsets.fromLTRB(5, 0, 5, 0),
+  //                     child: Container(
+  //                       // Customize your item here
+  //                       width: 150,
+  //                       height: 125,
+  //                       decoration: BoxDecoration(
+  //                           borderRadius: BorderRadius.circular(15)),
+  //                       child: ClipRRect(
+  //                         borderRadius: BorderRadius.circular(10),
+  //                         child: Image(
+  //                             image: MemoryImage(route
+  //                                 .locationsOnRoute[index].imageDatas.first),
+  //                             fit: BoxFit.cover),
+  //                       ),
+  //                     ),
+  //                   );
+  //                 },
+  //               ),
+  //             ),
+  //           ),
+  //           Center(
+  //             child: Container(
+  //               width: MediaQuery.sizeOf(context).width * 0.8,
+  //               height: MediaQuery.sizeOf(context).height * 0.45,
+  //               child: ClipRRect(
+  //                 borderRadius: BorderRadius.circular(20),
+  //                 child: GoogleMap(
+  //                   initialCameraPosition: RoutePlannerViewModel.initPos,
+  //                   markers: route.getMarkers(context),
+  //                   polylines: {
+  //                     route.polyline,
+  //                   },
+  //                   onMapCreated: (GoogleMapController controller) {
+  //                     controller.animateCamera(CameraUpdate.newLatLngBounds(
+  //                         route.calculateBounds(), 50));
+  //                   },
+  //                 ),
+  //               ),
+  //             ),
+  //           ),
+  //           Center(
+  //             child: Padding(
+  //               padding: EdgeInsets.fromLTRB(0, 5, 0, 0),
+  //               child: Container(
+  //                 height: 25,
+  //                 width: MediaQuery.of(context).size.width * 0.8,
+  //                 child: ElevatedButton(
+  //                   onPressed: () async {
+  //                     await viewModel.deleteRoute(context, route);
+  //                     Navigator.of(context).pop();
+  //                   },
+  //                   child: Text('Delete route'),
+  //                   style: ElevatedButton.styleFrom(
+  //                       elevation: 0,
+  //                       primary: Colors.red,
+  //                       foregroundColor: Colors.white),
+  //                 ),
+  //               ),
+  //             ),
+  //           ),
+  //           Center(
+  //             child: Padding(
+  //               padding: EdgeInsets.fromLTRB(0, 10, 0, 0),
+  //               child: Container(
+  //                 width: 150,
+  //                 child: ElevatedButton(
+  //                   onPressed: () {
+  //                     Navigator.of(context).pop();
+  //                   },
+  //                   child: Text('Close'),
+  //                   style: ElevatedButton.styleFrom(
+  //                       elevation: 0,
+  //                       primary: Colors.green,
+  //                       foregroundColor: Colors.white),
+  //                 ),
+  //               ),
+  //             ),
+  //           ),
+  //         ],
+  //       ),
+  //     ),
+  //   );
+  // }
   Widget RoutePopUpWidget(
       BuildContext context, RouteWithDreamlistLocations route) {
-    return Dialog(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(25),
-      ),
-      insetPadding:
-          EdgeInsets.zero, // Remove default padding to use full width/height
-      child: Container(
-        height: MediaQuery.of(context).size.height * 0.8,
-        width:
-            MediaQuery.of(context).size.width * 0.9, // Example width adjustment
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(25),
-          color: Colors.white,
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Padding(
-              padding: EdgeInsets.fromLTRB(20, 20, 0, 0),
-              child: ClipRect(
-                clipBehavior: Clip.hardEdge,
-                child: Container(
-                  width: 300,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    children: [
-                      Padding(
-                        padding: EdgeInsets.fromLTRB(10, 0, 0, 0),
-                        child: Text(
-                          route.origin.name,
-                          style: TextStyle(
-                              fontSize: 25, fontWeight: FontWeight.w500),
-                          maxLines: 1,
-                          overflow: TextOverflow.clip,
-                        ),
+    return ChangeNotifierProvider<RoutePlannerViewModel>(
+      create: (_) => RoutePlannerViewModel(),
+      builder: (context, child) {
+        // Use the context from the builder to access the provider
+        final viewModel =
+            Provider.of<RoutePlannerViewModel>(context, listen: false);
+
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(25),
+          ),
+          insetPadding: EdgeInsets
+              .zero, // Remove default padding to use full width/height
+          child: Container(
+            height: MediaQuery.of(context).size.height * 0.85,
+            width: MediaQuery.of(context).size.width *
+                0.9, // Example width adjustment
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(25),
+              color: Colors.white,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: EdgeInsets.fromLTRB(20, 20, 0, 0),
+                  child: ClipRect(
+                    clipBehavior: Clip.hardEdge,
+                    child: Container(
+                      width: 300,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: [
+                          Padding(
+                            padding: EdgeInsets.fromLTRB(10, 0, 0, 0),
+                            child: Text(
+                              route.origin.name,
+                              style: TextStyle(
+                                  fontSize: 25, fontWeight: FontWeight.w500),
+                              maxLines: 1,
+                              overflow: TextOverflow.clip,
+                            ),
+                          ),
+                          Padding(
+                            padding: EdgeInsets.fromLTRB(10, 0, 10, 0),
+                            child: Icon(Icons.arrow_forward_outlined, size: 20),
+                          ),
+                          Flexible(
+                            child: Padding(
+                              padding: EdgeInsets.fromLTRB(0, 0, 0, 0),
+                              child: Text(
+                                route.destination.name,
+                                style: TextStyle(
+                                    fontSize: 25, fontWeight: FontWeight.w500),
+                                maxLines: 1,
+                                overflow: TextOverflow.clip,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                      Padding(
-                        padding: EdgeInsets.fromLTRB(10, 0, 10, 0),
-                        child: Icon(Icons.arrow_forward_outlined, size: 20),
-                      ),
-                      Flexible(
-                          child: Padding(
-                        padding: EdgeInsets.fromLTRB(0, 0, 0, 0),
-                        child: Text(
-                          route.destination.name,
-                          style: TextStyle(
-                              fontSize: 25, fontWeight: FontWeight.w500),
-                          maxLines: 1,
-                          overflow: TextOverflow.clip,
-                        ),
-                      ))
-                    ],
+                    ),
                   ),
                 ),
-              ),
-            ),
-            Padding(
-              padding: EdgeInsets.fromLTRB(30, 0, 0, 0),
-              child: Text(
-                'Distance: ${route.getDistance()} miles',
-                style: TextStyle(fontSize: 18),
-              ),
-            ),
-            Padding(
-              padding: EdgeInsets.fromLTRB(30, 0, 0, 0),
-              child: Text(
-                'Distance: ${route.getTime()}',
-                style: TextStyle(fontSize: 18),
-              ),
-            ),
-            Padding(
-              padding: EdgeInsets.fromLTRB(15, 5, 0, 10),
-              child: Container(
-                width: 300,
-                height: 100,
-                child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: route.locationsOnRoute.length,
-                  itemBuilder: (context, index) {
-                    return Padding(
-                      padding: EdgeInsets.fromLTRB(5, 0, 5, 0),
-                      child: Container(
-                        // Customize your item here
-                        width: 150,
-                        height: 125,
-                        decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(15)),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(10),
-                          child: Image(
-                              image: MemoryImage(route
-                                  .locationsOnRoute[index].imageDatas.first),
-                              fit: BoxFit.cover),
+                Padding(
+                  padding: EdgeInsets.fromLTRB(30, 0, 0, 0),
+                  child: Text(
+                    'Distance: ${route.getDistance()} miles',
+                    style: TextStyle(fontSize: 18),
+                  ),
+                ),
+                Padding(
+                  padding: EdgeInsets.fromLTRB(30, 0, 0, 0),
+                  child: Text(
+                    'Time: ${route.getTime()}',
+                    style: TextStyle(fontSize: 18),
+                  ),
+                ),
+                Padding(
+                  padding: EdgeInsets.fromLTRB(15, 5, 0, 10),
+                  child: Container(
+                    width: 300,
+                    height: 100,
+                    child: ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: route.locationsOnRoute.length,
+                      itemBuilder: (context, index) {
+                        return Padding(
+                          padding: EdgeInsets.fromLTRB(5, 0, 5, 0),
+                          child: Container(
+                            width: 150,
+                            height: 125,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(15),
+                            ),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(10),
+                              child: Image(
+                                image: MemoryImage(route
+                                    .locationsOnRoute[index].imageDatas.first),
+                                fit: BoxFit.cover,
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ),
+                Center(
+                  child: Container(
+                    width: MediaQuery.of(context).size.width * 0.8,
+                    height: MediaQuery.of(context).size.height * 0.45,
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(20),
+                      child: GoogleMap(
+                        initialCameraPosition: RoutePlannerViewModel.initPos,
+                        markers: route.getMarkers(context),
+                        polylines: {
+                          route.polyline,
+                        },
+                        onMapCreated: (GoogleMapController controller) {
+                          controller.animateCamera(
+                            CameraUpdate.newLatLngBounds(
+                                route.calculateBounds(), 50),
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                ),
+                Center(
+                  child: Padding(
+                    padding: EdgeInsets.fromLTRB(0, 5, 0, 0),
+                    child: Container(
+                      height: 25,
+                      width: MediaQuery.of(context).size.width * 0.8,
+                      child: ElevatedButton(
+                        onPressed: () async {
+                          await viewModel.deleteRoute(context, route);
+                          viewModel.togglePage(1);
+                          Navigator.of(context).pop();
+                          // Navigator.of(context).pop();
+                          // Navigator.pushNamed(context, '/route');
+                        },
+                        child: Text('Delete route'),
+                        style: ElevatedButton.styleFrom(
+                          elevation: 0,
+                          primary: Colors.red,
+                          foregroundColor: Colors.white,
                         ),
                       ),
-                    );
-                  },
-                ),
-              ),
-            ),
-            Center(
-              child: Container(
-                width: MediaQuery.sizeOf(context).width * 0.8,
-                height: MediaQuery.sizeOf(context).height * 0.45,
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(20),
-                  child: GoogleMap(
-                    initialCameraPosition: RoutePlannerViewModel.initPos,
-                    markers: route.getMarkers(context),
-                    polylines: {
-                      route.polyline,
-                    },
-                    onMapCreated: (GoogleMapController controller) {
-                      controller.animateCamera(CameraUpdate.newLatLngBounds(
-                          route.calculateBounds(), 50));
-                    },
+                    ),
                   ),
                 ),
-              ),
-            ),
-            Center(
-              child: Padding(
-                padding: EdgeInsets.fromLTRB(0, 5, 0, 0),
-                child: Container(
-                  width: 150,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      Navigator.of(context).pop();
-                    },
-                    child: Text('Close'),
-                    style: ElevatedButton.styleFrom(
-                        elevation: 0,
-                        primary: Colors.green,
-                        foregroundColor: Colors.white),
+                Center(
+                  child: Padding(
+                    padding: EdgeInsets.fromLTRB(0, 10, 0, 0),
+                    child: Container(
+                      width: 150,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                        },
+                        child: Text('Close'),
+                        style: ElevatedButton.styleFrom(
+                          elevation: 0,
+                          primary: Colors.green,
+                          foregroundColor: Colors.white,
+                        ),
+                      ),
+                    ),
                   ),
                 ),
-              ),
+              ],
             ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 }

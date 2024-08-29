@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
 import '../../viewmodels/dreamlist_viewmodel.dart';
@@ -59,6 +60,258 @@ class ListViewContent extends StatelessWidget {
     );
   }
 
+  void showLocationInfo(BuildContext context, DreamListLocation location) {
+    showDialog<void>(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          child: locationInfoPopUp(context, location),
+          backgroundColor: Colors.transparent,
+        );
+      },
+    );
+  }
+
+  Widget locationInfoPopUp(BuildContext context, DreamListLocation location) {
+    return ChangeNotifierProvider<DreamListViewModel>(
+      create: (_) => DreamListViewModel(),
+      builder: (context, child) {
+        final viewModel =
+            Provider.of<DreamListViewModel>(context, listen: false);
+
+        return Container(
+          height: MediaQuery.of(context).size.height * 0.7,
+          width: MediaQuery.of(context).size.width * 0.8,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(25),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: EdgeInsets.fromLTRB(10, 5, 0, 0),
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  child: Text(
+                    'Back',
+                    style: TextStyle(fontSize: 15),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    padding: EdgeInsets.zero,
+                    elevation: 0,
+                    foregroundColor: Colors.grey[700],
+                    backgroundColor: Colors.transparent,
+                  ),
+                ),
+              ),
+              Expanded(
+                child: Center(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Center(
+                        child: Container(
+                          width: 250,
+                          height: 150,
+                          child: ListView.builder(
+                            scrollDirection: Axis.horizontal,
+                            itemCount: location.imageDatas.length,
+                            itemBuilder: (context, index) {
+                              return Padding(
+                                padding: EdgeInsets.only(left: 2, right: 2),
+                                child: Container(
+                                  width: 200,
+                                  height: 150,
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(20),
+                                    child: Image(
+                                      image: MemoryImage(
+                                          location.imageDatas[index]),
+                                      fit: BoxFit
+                                          .cover, // Ensure consistent sizing
+                                    ),
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                      ),
+                      Padding(
+                        padding: EdgeInsets.fromLTRB(30, 10, 30, 0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              location.name,
+                              style: TextStyle(
+                                  fontSize: 30, fontWeight: FontWeight.bold),
+                            ),
+                            Text(
+                              location.locationName,
+                              style: TextStyle(fontSize: 15),
+                            ),
+                            Row(
+                              children: [
+                                Text('${location.rating.toString()}'),
+                                Icon(Icons.star_border_rounded),
+                                Text('(${location.numReviews.toString()})'),
+                              ],
+                            ),
+                            Text(location.description),
+                            Text('Added by: ${location.addedBy}'),
+                            Text('Added on: ${location.addedOn}'),
+                            Container(
+                              height: 30,
+                              width: 300,
+                              child: ElevatedButton(
+                                onPressed: () async {
+                                  await viewModel.deleteDreamlistLocation(
+                                      context, location);
+                                  Navigator.of(context).pop();
+                                },
+                                child: Text('Delete location'),
+                                style: ElevatedButton.styleFrom(
+                                  primary: Colors.red,
+                                  foregroundColor: Colors.white,
+                                  elevation: 0,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  // Widget locationInfoPopUp(BuildContext context, DreamListLocation location) {
+  //   final viewModel = Provider.of<DreamListViewModel>(context);
+  //   return Container(
+  //       height: MediaQuery.of(context).size.height * 0.7,
+  //       width: MediaQuery.of(context).size.width * 0.8,
+  //       decoration: BoxDecoration(
+  //           color: Colors.white, borderRadius: BorderRadius.circular(25)),
+  //       child: Column(
+  //         crossAxisAlignment: CrossAxisAlignment.start,
+  //         children: [
+  //           Padding(
+  //             padding: EdgeInsets.fromLTRB(10, 5, 0, 0),
+  //             child: ElevatedButton(
+  //               onPressed: () {
+  //                 Navigator.of(context).pop();
+  //               },
+  //               child: Text(
+  //                 'Back',
+  //                 style: TextStyle(fontSize: 15),
+  //               ),
+  //               style: ElevatedButton.styleFrom(
+  //                 padding: EdgeInsets.zero,
+  //                 elevation: 0,
+  //                 foregroundColor: Colors.grey[700],
+  //                 backgroundColor: Colors.transparent,
+  //               ),
+  //             ),
+  //           ),
+  //           Expanded(
+  //             child: Center(
+  //               child: Column(
+  //                 crossAxisAlignment: CrossAxisAlignment.start,
+  //                 children: [
+  //                   Center(
+  //                     child: Container(
+  //                       width: 250,
+  //                       height: 150,
+  //                       // Use FutureBuilder to wait for the image data
+  //                       child: ListView.builder(
+  //                         scrollDirection: Axis.horizontal,
+  //                         itemCount: location.imageDatas.length,
+  //                         itemBuilder: (context, index) {
+  //                           return Padding(
+  //                               padding: EdgeInsets.only(left: 2, right: 2),
+  //                               child: Container(
+  //                                 width: 200,
+  //                                 height: 150,
+  //                                 decoration: BoxDecoration(
+  //                                   borderRadius: BorderRadius.circular(20),
+  //                                 ),
+  //                                 child: ClipRRect(
+  //                                   borderRadius: BorderRadius.circular(20),
+  //                                   child: Image(
+  //                                     image: MemoryImage(
+  //                                         location.imageDatas[index]),
+  //                                     fit: BoxFit
+  //                                         .cover, // Use BoxFit.cover to ensure consistent sizing
+  //                                   ),
+  //                                 ),
+  //                               ));
+  //                         },
+  //                       ),
+  //                     ),
+  //                   ),
+  //                   Padding(
+  //                       padding: EdgeInsets.fromLTRB(30, 10, 30, 0),
+  //                       child: Column(
+  //                         crossAxisAlignment: CrossAxisAlignment.start,
+  //                         children: [
+  //                           Text(
+  //                             location.name,
+  //                             style: TextStyle(
+  //                                 fontSize: 30, fontWeight: FontWeight.bold),
+  //                           ),
+  //                           Text(location.locationName,
+  //                               style: TextStyle(
+  //                                 fontSize: 15,
+  //                               )),
+  //                           Row(
+  //                             children: [
+  //                               Text('${location.rating.toString()}'),
+  //                               Icon(Icons.star_border_rounded),
+  //                               Text('(${location.numReviews.toString()})'),
+  //                             ],
+  //                           ),
+  //                           Text(location.description),
+  //                           Text('Added by: ${location.addedBy}'),
+  //                           Text('Added on: ${location.addedOn}'),
+  //                           Container(
+  //                             height: 30,
+  //                             width: 300,
+  //                             child: ElevatedButton(
+  //                               onPressed: () async {
+  //                                 await viewModel.deleteDreamlistLocation(
+  //                                     context, location);
+  //                                 Navigator.of(context).pop();
+  //                               },
+  //                               child: Text('Delete location'),
+  //                               style: ElevatedButton.styleFrom(
+  //                                   primary: Colors.red,
+  //                                   foregroundColor: Colors.white,
+  //                                   elevation: 0),
+  //                             ),
+  //                           )
+  //                         ],
+  //                       )),
+  //                 ],
+  //               ),
+  //             ),
+  //           ),
+  //         ],
+  //       ));
+  // }
+
   @override
   Widget build(BuildContext context) {
     return Stack(
@@ -117,124 +370,6 @@ class ListViewContent extends StatelessWidget {
     );
   }
 
-  // Widget FilterListWidget(BuildContext context) {
-  //   final viewModel = Provider.of<DreamListViewModel>(context);
-  //   return Center(
-  //       child: SegmentedButton(
-  //     multiSelectionEnabled: false,
-  //     selected: viewModel.segmentSelected,
-  //     onSelectionChanged: (Set<String> newSelection) {
-  //       // Update the selected value in the viewModel when the selection changes
-  //       viewModel.updateSegmentSelected(newSelection);
-  //     },
-  //     segments: [
-  //       ButtonSegment(value: '0', label: Text('Visited')),
-  //       ButtonSegment(value: '1', label: Text('Not Visited'))
-  //     ],
-  //     style: ButtonStyle(
-  //       // Customize the foreground color (text and icon color)
-  //       foregroundColor: MaterialStateProperty.resolveWith<Color?>(
-  //         (Set<MaterialState> states) {
-  //           if (states.contains(MaterialState.selected)) {
-  //             return Colors.white; // Text color when selected
-  //           }
-  //           return Colors.black; // Text color when not selected
-  //         },
-  //       ),
-  //       // Customize the background color
-  //       backgroundColor: MaterialStateProperty.resolveWith<Color?>(
-  //         (Set<MaterialState> states) {
-  //           if (states.contains(MaterialState.selected)) {
-  //             return Colors.green; // Background color when selected
-  //           }
-  //           return Colors.grey.shade300; // Background color when not selected
-  //         },
-  //       ),
-
-  //       // Customize the shape of the segments
-  //       side: MaterialStateProperty.all<BorderSide>(BorderSide.none),
-  //       // Customize the shape of the segments (still keeping rounded corners)
-  //       shape: MaterialStateProperty.all<RoundedRectangleBorder>(
-  //         RoundedRectangleBorder(
-  //           borderRadius: BorderRadius.circular(8.0), // Rounded corners
-  //         ),
-  //       ),
-  //       minimumSize: MaterialStateProperty.all<Size>(
-  //           Size(100, 40)), // Width: 100, Height: 40
-  //       // Set padding inside the button segments
-  //       padding: MaterialStateProperty.all<EdgeInsets>(
-  //         EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-  //       ),
-  //     ),
-  //   ));
-  // }
-  // Widget FilterListWidget(BuildContext context) {
-  //   final viewModel = Provider.of<DreamListViewModel>(context);
-
-  //   return Center(
-  //     child: Container(
-  //       height: 40,
-  //       padding: EdgeInsets.fromLTRB(40, 0, 40, 0),
-  //       child: Row(
-  //         children: [
-  //           Expanded(
-  //             child: SegmentedButton<String>(
-  //               multiSelectionEnabled: false,
-  //               selected: viewModel.segmentSelected,
-  //               onSelectionChanged: (Set<String> newSelection) {
-  //                 // Update the selected value in the viewModel when the selection changes
-  //                 viewModel.updateSegmentSelected(newSelection);
-  //               },
-  //               segments: const [
-  //                 ButtonSegment(value: '0', label: Text('Visited'), icon: null),
-  //                 ButtonSegment(
-  //                     value: '1', label: Text('Not Visited'), icon: null),
-  //               ],
-  //               style: ButtonStyle(
-  //                 // Customize the foreground color (text and icon color)
-  //                 foregroundColor: MaterialStateProperty.resolveWith<Color?>(
-  //                   (Set<MaterialState> states) {
-  //                     if (states.contains(MaterialState.selected)) {
-  //                       return Colors.white; // Text color when selected
-  //                     }
-  //                     return Colors.black; // Text color when not selected
-  //                   },
-  //                 ),
-  //                 // Customize the background color
-  //                 backgroundColor: MaterialStateProperty.resolveWith<Color?>(
-  //                   (Set<MaterialState> states) {
-  //                     if (states.contains(MaterialState.selected)) {
-  //                       return Colors.green; // Background color when selected
-  //                     }
-  //                     return Colors
-  //                         .grey.shade300; // Background color when not selected
-  //                   },
-  //                 ),
-  //                 // Remove the border by setting side to BorderSide.none
-  //                 side: MaterialStateProperty.all<BorderSide>(BorderSide.none),
-  //                 // Customize the shape of the segments with rounded corners
-  //                 shape: MaterialStateProperty.all<RoundedRectangleBorder>(
-  //                   RoundedRectangleBorder(
-  //                     borderRadius:
-  //                         BorderRadius.circular(8.0), // Rounded corners
-  //                   ),
-  //                 ),
-  //                 // Remove the minimumSize as it will fill the available space
-  //                 minimumSize: MaterialStateProperty.all<Size>(
-  //                     Size(double.infinity, 30)),
-  //                 // Set padding inside the button segments
-  //                 padding: MaterialStateProperty.all<EdgeInsets>(
-  //                   EdgeInsets.zero,
-  //                 ),
-  //               ),
-  //             ),
-  //           ),
-  //         ],
-  //       ),
-  //     ),
-  //   );
-  // }
-
   Widget FilterListWidget(BuildContext context) {
     final viewModel = Provider.of<DreamListViewModel>(context);
 
@@ -269,12 +404,12 @@ class ListViewContent extends StatelessWidget {
               Container(
                 color: isFirstSelected ? Colors.green : Colors.grey.shade300,
                 alignment: Alignment.center,
-                child: Text('Visited', textAlign: TextAlign.center),
+                child: Text('Not Visited', textAlign: TextAlign.center),
               ),
               Container(
                 color: isSecondSelected ? Colors.green : Colors.grey.shade300,
                 alignment: Alignment.center,
-                child: Text('Not Visited', textAlign: TextAlign.center),
+                child: Text('Visited', textAlign: TextAlign.center),
               ),
             ],
           ),
@@ -373,71 +508,148 @@ class ListViewContent extends StatelessWidget {
     );
   }
 
+  // Widget ListItem(DreamListLocation location, BuildContext context) {
+  //   return Align(
+  //     alignment: Alignment.topCenter,
+  //     child: Padding(
+  //       padding: EdgeInsets.fromLTRB(0, 3, 0, 3),
+  //       child: Container(
+  //         height: MediaQuery.of(context).size.height * 0.13,
+  //         width: MediaQuery.of(context).size.width * 0.8,
+  //         decoration: BoxDecoration(
+  //           color: Color.fromARGB(255, 240, 240, 240),
+  //           borderRadius: BorderRadius.circular(10),
+  //         ),
+  //         child: Row(
+  //           children: [
+  //             Padding(
+  //               padding: EdgeInsets.all(10),
+  //               child: Container(
+  //                 height: 70,
+  //                 width: 70,
+  //                 decoration: BoxDecoration(
+  //                   image: DecorationImage(
+  //                     image: MemoryImage(location.imageDatas.first),
+  //                     fit: BoxFit.cover, // Adjust the fit as needed
+  //                   ),
+  //                   borderRadius: BorderRadius.circular(10),
+  //                 ),
+  //               ),
+  //             ),
+  //             Expanded(
+  //               child: Column(
+  //                 crossAxisAlignment: CrossAxisAlignment.start,
+  //                 mainAxisAlignment: MainAxisAlignment.center,
+  //                 children: [
+  //                   ClipRRect(
+  //                     child: Text(
+  //                       location.name,
+  //                       overflow: TextOverflow.ellipsis,
+  //                       style: TextStyle(
+  //                         fontSize: 20,
+  //                         fontWeight: FontWeight.w500,
+  //                       ),
+  //                     ),
+  //                   ),
+  //                   ClipRRect(
+  //                     child: Text(
+  //                       location.locationName,
+  //                       overflow: TextOverflow.ellipsis,
+  //                       style: TextStyle(
+  //                         fontSize: 14,
+  //                         color: Colors.grey,
+  //                       ),
+  //                     ),
+  //                   ),
+  //                   Text(
+  //                     'Added on: ${location.addedOn}',
+  //                     style: TextStyle(fontSize: 12),
+  //                   ),
+  //                   Text(
+  //                     'Added by: ${location.addedBy}',
+  //                     style: TextStyle(fontSize: 12),
+  //                   ),
+  //                 ],
+  //               ),
+  //             ),
+  //           ],
+  //         ),
+  //       ),
+  //     ),
+  //   );
+  // }
+
   Widget ListItem(DreamListLocation location, BuildContext context) {
     return Align(
       alignment: Alignment.topCenter,
       child: Padding(
         padding: EdgeInsets.fromLTRB(0, 3, 0, 3),
-        child: Container(
-          height: MediaQuery.of(context).size.height * 0.13,
-          width: MediaQuery.of(context).size.width * 0.8,
-          decoration: BoxDecoration(
-            color: Color.fromARGB(255, 240, 240, 240),
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Row(
-            children: [
-              Padding(
-                padding: EdgeInsets.all(10),
-                child: Container(
-                  height: 70,
-                  width: 70,
-                  decoration: BoxDecoration(
-                    image: DecorationImage(
-                      image: MemoryImage(location.imageDatas.first),
-                      fit: BoxFit.cover, // Adjust the fit as needed
+        child: GestureDetector(
+          onTap: () {
+            // Add your onTap functionality here
+            showLocationInfo(context, location);
+          },
+          child: Container(
+            height: MediaQuery.of(context).size.height * 0.13,
+            width: MediaQuery.of(context).size.width * 0.8,
+            decoration: BoxDecoration(
+              color: Color.fromARGB(255, 240, 240, 240),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Row(
+              children: [
+                Padding(
+                  padding: EdgeInsets.all(10),
+                  child: Container(
+                    height: 70,
+                    width: 70,
+                    decoration: BoxDecoration(
+                      image: DecorationImage(
+                        image: MemoryImage(location.imageDatas.first),
+                        fit: BoxFit.cover, // Adjust the fit as needed
+                      ),
+                      borderRadius: BorderRadius.circular(10),
                     ),
-                    borderRadius: BorderRadius.circular(10),
                   ),
                 ),
-              ),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    ClipRRect(
-                      child: Text(
-                        location.name,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w500,
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      ClipRRect(
+                        child: Text(
+                          location.name,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
                       ),
-                    ),
-                    ClipRRect(
-                      child: Text(
-                        location.locationName,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey,
+                      ClipRRect(
+                        child: Text(
+                          location.locationName,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey,
+                          ),
                         ),
                       ),
-                    ),
-                    Text(
-                      'Added on: ${location.addedOn}',
-                      style: TextStyle(fontSize: 12),
-                    ),
-                    Text(
-                      'Added by: ${location.addedBy}',
-                      style: TextStyle(fontSize: 12),
-                    ),
-                  ],
+                      Text(
+                        'Added on: ${location.addedOn}',
+                        style: TextStyle(fontSize: 12),
+                      ),
+                      Text(
+                        'Added by: ${location.addedBy}',
+                        style: TextStyle(fontSize: 12),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
