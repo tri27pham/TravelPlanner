@@ -897,6 +897,15 @@ class RoutePlannerViewModel extends ChangeNotifier {
     return convertMetersToMiles(dreamlistRouteDistance - directRouteDistance);
   }
 
+  String displayDistanceDifference() {
+    int distance = getDistanceDifference();
+    if (distance >= 0) {
+      return '+ $distance miles';
+    } else {
+      return '$distance miles';
+    }
+  }
+
   String getTimeDifference() {
     int differenceSeconds = int.parse(dreamlistRouteTime.replaceAll('s', '')) -
         int.parse(directRouteTime.replaceAll('s', ''));

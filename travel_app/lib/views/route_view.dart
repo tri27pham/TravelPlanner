@@ -184,7 +184,7 @@ class RoutePlanner extends StatelessWidget {
                         Padding(
                           padding: EdgeInsets.fromLTRB(20, 0, 0, 0),
                           child: Text(
-                            ' + ${viewModel.getDistanceDifference()} miles',
+                            '${viewModel.displayDistanceDifference()}',
                             style: TextStyle(color: Colors.red),
                           ),
                         ),

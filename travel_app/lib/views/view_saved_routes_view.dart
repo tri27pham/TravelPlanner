@@ -416,7 +416,7 @@ class ViewSavedRoutes extends StatelessWidget {
                               Padding(
                                 padding: EdgeInsets.fromLTRB(20, 0, 0, 0),
                                 child: Text(
-                                  ' + ${route.getDistanceDifference()} miles',
+                                  '${route.displayDistanceDifference()}',
                                   style: TextStyle(color: Colors.red),
                                 ),
                               ),

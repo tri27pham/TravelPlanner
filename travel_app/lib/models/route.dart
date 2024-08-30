@@ -33,6 +33,15 @@ class RouteWithDreamlistLocations {
     required this.timeDifference,
   });
 
+  String displayDistanceDifference() {
+    int distance = getDistanceDifference();
+    if (distance >= 0) {
+      return '+ $distance miles';
+    } else {
+      return '$distance miles';
+    }
+  }
+
   void showImageData() {
     if (locationsOnRoute.isNotEmpty) {
       log('has locations');
