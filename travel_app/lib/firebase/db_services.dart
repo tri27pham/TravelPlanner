@@ -116,8 +116,12 @@ class DbService {
           "polyline": polylineToGeoPoints(route.polyline),
           "origin": route.origin.toMap(),
           "destination": route.destination.toMap(),
-          "distance": route.distance,
-          "time": route.time,
+          "directDistance": route.directDistance,
+          "indirectDistance": route.indirectDistance,
+          "distanceDifference": route.distanceDifference,
+          "directTime": route.directTime,
+          "indirectTime": route.indirectTime,
+          "timeDifference": route.timeDifference
         };
 
         await docRef.set(routeData);
@@ -137,7 +141,8 @@ class DbService {
             "rating": location.rating,
             "numReviews": location.numReviews,
             "addedOn": location.addedOn,
-            "addedBy": location.addedBy
+            "addedBy": location.addedBy,
+            "visited": location.visited
           };
 
           await collectionRef.doc(location.id).set(locationData);
@@ -157,6 +162,27 @@ class DbService {
       }
     } else {
       log("Account is null or email is empty");
+    }
+  }
+
+  Future<void> deleteRoute(
+      BuildContext context, RouteWithDreamlistLocations route) async {
+    final appState = Provider.of<AppState>(context, listen: false);
+    try {
+      // Create a reference to the 'routes' collection for the user's account
+      CollectionReference collectionRef = FirebaseFirestore.instance
+          .collection('accounts')
+          .doc(appState.account!.uid)
+          .collection('routes');
+
+      // Delete the document with the given route ID
+      await collectionRef
+          .doc(route.id) // Use the route's ID to locate the document
+          .delete();
+
+      print("Document deleted successfully.");
+    } catch (e) {
+      print("Error deleting document: $e");
     }
   }
 
@@ -188,60 +214,80 @@ class DbService {
             name: doc['destination']['name'],
             coordinates: LatLng(doc['destination']['coordinates']['latitude'],
                 doc['destination']['coordinates']['longitude']));
-        int distance = doc['distance'];
-        String time = doc['time'];
+
+        int directDistance = doc['directDistance'];
+        int indirectDistance = doc['indirectDistance'];
+        int distanceDifference = doc['distanceDifference'];
+        String directTime = doc['directTime'];
+        String indirectTime = doc['indirectTime'];
+        String timeDifference = doc['timeDifference'];
 
         CollectionReference locationsOnRouteRef =
             routesCollection.doc(routeID).collection('locationsOnRoute');
 
-        QuerySnapshot locationsOnRoute = await locationsOnRouteRef.get();
+        QuerySnapshot locationsOnRouteDocs =
+            await locationsOnRouteRef.limit(1).get();
 
         List<DreamListLocation> locations = [];
 
-        for (var location in locationsOnRoute.docs) {
-          String id = location.id;
-          String name = location['name'];
-          String locationName = location['locationName'];
-          LatLng locationCoordinates = LatLng(
-              location['coordinates']['latitude'],
-              location['coordinates']['longitude']);
-          String description = location['description'];
-          double rating = location['rating'];
-          int numReviews = location['numReviews'];
-          String addedOn = location['addedOn'];
-          String addedBy = location['addedBy'];
+        if (locationsOnRouteDocs.docs.isNotEmpty) {
+          QuerySnapshot locationsOnRoute = await locationsOnRouteRef.get();
 
-          QuerySnapshot querySnapshotPhotos =
-              await locationsOnRouteRef.doc(id).collection('photos').get();
+          for (var location in locationsOnRoute.docs) {
+            String id = location.id;
+            String name = location['name'];
+            String locationName = location['locationName'];
+            LatLng locationCoordinates = LatLng(
+                location['coordinates']['latitude'],
+                location['coordinates']['longitude']);
+            String description = location['description'];
+            double rating = location['rating'];
+            int numReviews = location['numReviews'];
+            String addedOn = location['addedOn'];
+            String addedBy = location['addedBy'];
+            bool visited = location['visited'];
 
-          List<Uint8List> imageDatas = [];
+            QuerySnapshot querySnapshotPhotos =
+                await locationsOnRouteRef.doc(id).collection('photos').get();
 
-          for (var photoDoc in querySnapshotPhotos.docs) {
-            imageDatas.add(base64Decode(photoDoc['imageData']));
+            List<Uint8List> imageDatas = [];
+
+            for (var photoDoc in querySnapshotPhotos.docs) {
+              imageDatas.add(base64Decode(photoDoc['imageData']));
+            }
+
+            locations.add(DreamListLocation(
+                id: id,
+                name: name,
+                locationName: locationName,
+                locationCoordinates: locationCoordinates,
+                description: description,
+                rating: rating,
+                numReviews: numReviews,
+                imageDatas: imageDatas,
+                photoRefs: [],
+                addedOn: addedOn,
+                addedBy: addedBy,
+                visited: visited));
           }
-
-          locations.add(DreamListLocation(
-              id: id,
-              name: name,
-              locationName: locationName,
-              locationCoordinates: locationCoordinates,
-              description: description,
-              rating: rating,
-              numReviews: numReviews,
-              imageDatas: imageDatas,
-              photoRefs: [],
-              addedOn: addedOn,
-              addedBy: addedBy));
         }
 
         routes.add(RouteWithDreamlistLocations(
+            id: routeID,
             polyline: polyline,
             origin: origin,
             destination: destination,
             locationsOnRoute: locations,
-            distance: distance,
-            time: time));
+            directDistance: directDistance,
+            indirectDistance: indirectDistance,
+            distanceDifference: distanceDifference,
+            directTime: directTime,
+            indirectTime: indirectTime,
+            timeDifference: timeDifference));
       }
+
+      log(routes.first.directDistance.toString());
+
       return routes;
     } catch (e) {
       log("Error fetching routes: $e");
@@ -322,6 +368,7 @@ class DbService {
         int numReviews = doc['numReviews'];
         String addedOn = formatTimestamp(doc['addedOn']);
         String addedBy = doc['addedBy'];
+        bool visited = doc['visited'];
 
         QuerySnapshot querySnapshotPhotos =
             await dreamlistCollection.doc(id).collection('photos').get();
@@ -343,12 +390,60 @@ class DbService {
             imageDatas: imageDatas,
             photoRefs: [],
             addedOn: addedOn,
-            addedBy: addedBy));
+            addedBy: addedBy,
+            visited: visited));
       }
       return locations;
     } catch (e) {
       log("Error fetching locations: $e");
       return [];
+    }
+  }
+
+  Future<void> deleteDreamListLocation(
+      BuildContext context, DreamListLocation location) async {
+    final appState = Provider.of<AppState>(context, listen: false);
+    try {
+      // Reference to the 'dreamlist' collection for the user's account
+      DocumentReference docRef = FirebaseFirestore.instance
+          .collection('accounts')
+          .doc(appState.account!.uid)
+          .collection('dreamlist')
+          .doc(location.id);
+
+      // Step 1: Delete all subcollections of the document
+      await deleteSubcollections(docRef);
+
+      // Step 2: Delete the parent document
+      await docRef.delete();
+
+      print("Document and its subcollections deleted successfully.");
+    } catch (e) {
+      print("Error deleting document and subcollections: $e");
+    }
+  }
+
+  Future<void> deleteSubcollections(DocumentReference docRef) async {
+    try {
+      // Get all subcollections of the document
+      final subcollections = await docRef.collection('photos').get();
+
+      // Iterate over each subcollection
+      for (var subcollection in subcollections.docs) {
+        // Get the reference of each document in the subcollection
+        final subDocRef = docRef.collection(subcollection.reference.parent.id);
+
+        // Get all documents in this subcollection
+        final subDocSnapshot = await subDocRef.get();
+
+        // Delete each document in the subcollection
+        for (var doc in subDocSnapshot.docs) {
+          log(doc.id);
+          await doc.reference.delete();
+        }
+      }
+    } catch (e) {
+      print("Error deleting subcollections: $e");
     }
   }
 
@@ -371,6 +466,7 @@ class DbService {
           "numReviews": location.numReviews,
           "addedOn": DateTime.now(),
           "addedBy": appState.profile!.name,
+          "visited": false,
         };
 
         CollectionReference collectionRef =
@@ -396,6 +492,27 @@ class DbService {
       }
     } else {
       log("Account is null or email is empty");
+    }
+  }
+
+  Future<void> updateDreamlistLocation(
+      BuildContext context, DreamListLocation location) async {
+    final appState = Provider.of<AppState>(context, listen: false);
+    final FirebaseFirestore firestore = FirebaseFirestore.instance;
+
+    // Specify the collection and document you want to update
+    final DocumentReference documentRef = firestore
+        .collection('accounts')
+        .doc(appState.account!.uid)
+        .collection('dreamlist')
+        .doc(location.id);
+
+    // Update a specific field in the document
+    try {
+      await documentRef.update({'visited': location.visited});
+      print('Document field updated successfully');
+    } catch (e) {
+      print('Error updating document field: $e');
     }
   }
 }

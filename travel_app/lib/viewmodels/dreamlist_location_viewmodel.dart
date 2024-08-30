@@ -50,7 +50,8 @@ class DreamListLocationViewModel extends ChangeNotifier {
       imageDatas: [],
       photoRefs: [],
       addedBy: '',
-      addedOn: '');
+      addedOn: '',
+      visited: false);
 
   DreamListLocationViewModel() {
     textEditingController.addListener(onModify);
@@ -122,7 +123,8 @@ class DreamListLocationViewModel extends ChangeNotifier {
         imageDatas: [],
         photoRefs: [],
         addedOn: '',
-        addedBy: '');
+        addedBy: '',
+        visited: false);
   }
 
   void onModify() {

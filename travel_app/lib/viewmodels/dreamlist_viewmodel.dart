@@ -11,12 +11,14 @@ import '../models/dreamlist_location.dart';
 class DreamListViewModel extends ChangeNotifier {
   int _page = 1;
 
-  Set<String> _segmentSelected = {'0'};
+  // Set<String> _segmentSelected = {'0'};
 
-  Set<String> get segmentSelected => _segmentSelected;
+  bool viewVisited = false;
 
-  void updateSegmentSelected(Set<String> newSelection) {
-    _segmentSelected = newSelection;
+  // Set<String> get segmentSelected => _segmentSelected;
+
+  void updateSegmentSelected(bool visited) {
+    viewVisited = visited;
     notifyListeners(); // Notify listeners to rebuild the UI
   }
 
@@ -24,6 +26,8 @@ class DreamListViewModel extends ChangeNotifier {
 
   bool locationsLoaded = false;
   List<DreamListLocation> locations = [];
+  List<DreamListLocation> visitedLocations = [];
+  List<DreamListLocation> notVisitedLocations = [];
 
   void setPage(int newPage) {
     if (newPage != _page) {
@@ -52,6 +56,10 @@ class DreamListViewModel extends ChangeNotifier {
     }
     try {
       locations = await db_service.loadDreamlistFromDb(context);
+      visitedLocations =
+          locations.where((location) => location.visited).toList();
+      notVisitedLocations =
+          locations.where((location) => !location.visited).toList();
       createMarkers();
       locationsLoaded = true;
       log('Locations loaded successfully.');
@@ -60,6 +68,16 @@ class DreamListViewModel extends ChangeNotifier {
     } catch (e) {
       log('Error loading locations: $e');
     }
+  }
+
+  Future<void> deleteDreamlistLocation(
+      BuildContext context, DreamListLocation location) async {
+    await db_service.deleteDreamListLocation(context, location);
+  }
+
+  Future<void> updateDreamlistLocation(
+      BuildContext context, DreamListLocation location) async {
+    await db_service.updateDreamlistLocation(context, location);
   }
 
   Future<Position> getUserLocation() async {

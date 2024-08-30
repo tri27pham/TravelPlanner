@@ -1,9 +1,9 @@
 import 'dart:typed_data';
-
+import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'dart:developer';
 
-class DreamListLocation {
+class DreamListLocation extends ChangeNotifier {
   final String id;
   final String name;
   final String locationName;
@@ -15,6 +15,7 @@ class DreamListLocation {
   List<String> photoRefs = [];
   String? addedOn;
   String? addedBy;
+  bool visited;
 
   DreamListLocation(
       {required this.id,
@@ -27,7 +28,13 @@ class DreamListLocation {
       required this.imageDatas,
       required this.photoRefs,
       required this.addedOn,
-      required this.addedBy});
+      required this.addedBy,
+      required this.visited});
+
+  void toggleVisited() {
+    visited = !visited;
+    notifyListeners();
+  }
 
   displayInfo() {
     log(id);
@@ -92,6 +99,7 @@ class DreamListLocation {
             : '',
         addedBy: json.containsKey('addedBy') && json['addedBy'] != null
             ? json['addedBy']
-            : '');
+            : '',
+        visited: false);
   }
 }

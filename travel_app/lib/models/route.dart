@@ -7,34 +7,50 @@ import 'package:travel_app/models/route_place.dart';
 import 'dart:developer';
 
 class RouteWithDreamlistLocations {
+  String id;
   Polyline polyline;
   RoutePlace origin;
   RoutePlace destination;
   List<DreamListLocation> locationsOnRoute;
-  int distance;
-  String time;
+  int directDistance;
+  int indirectDistance;
+  int distanceDifference;
+  String directTime;
+  String indirectTime;
+  String timeDifference;
 
   RouteWithDreamlistLocations({
+    required this.id,
     required this.polyline,
     required this.origin,
     required this.destination,
     required this.locationsOnRoute,
-    required this.distance,
-    required this.time,
+    required this.directDistance,
+    required this.indirectDistance,
+    required this.distanceDifference,
+    required this.directTime,
+    required this.indirectTime,
+    required this.timeDifference,
   });
 
-  void showImageData() {
-    if (locationsOnRoute.isNotEmpty) {
-      log('has locations');
-      for (DreamListLocation location in locationsOnRoute) {
-        if (location.imageDatas.isNotEmpty) {
-          log(location.imageDatas.first.toString());
-        }
-      }
+  String displayDistanceDifference() {
+    int distance = getDistanceDifference();
+    if (distance >= 0) {
+      return '+ $distance miles';
     } else {
-      log('fuck');
+      return '$distance miles';
     }
   }
+
+  // void showImageData() {
+  //   if (locationsOnRoute.isNotEmpty) {
+  //     for (DreamListLocation location in locationsOnRoute) {
+  //       if (location.imageDatas.isNotEmpty) {
+  //         log(location.imageDatas.first.toString());
+  //       }
+  //     }
+  //   }
+  // }
 
   Set<Marker> getMarkers(BuildContext context) {
     Set<Marker> markers = {};
@@ -46,7 +62,7 @@ class RouteWithDreamlistLocations {
           position: location.locationCoordinates,
           infoWindow: InfoWindow(
             title: location.name, // Name to display
-            snippet: 'Tap to view more info',
+            snippet: 'Tap to view more info test',
             onTap: () {
               _showImageDialog(context, location);
             },
@@ -181,27 +197,51 @@ class RouteWithDreamlistLocations {
                 ),
               ],
             ),
-          ), // Display image from memory
-          // actions: <Widget>[
-          //   TextButton(
-          //     child: Text('Close'),
-          //     onPressed: () {
-          //       Navigator.of(context).pop();
-          //     },
-          //   ),
-          // ],
+          ),
         );
       },
     );
   }
 
-  int getDistance() {
+  int convertDistance(int distanceInMeters) {
     const double metersPerMile = 1609.344; // 1 mile = 1609.344 meters
-    double miles = distance / metersPerMile;
+    double miles = distanceInMeters / metersPerMile;
     return miles.toInt(); // Rounds to the nearest mile
   }
 
-  String getTime() {
+  int getDirectDistance() {
+    return convertDistance(directDistance);
+  }
+
+  int getIndirectDistance() {
+    return convertDistance(indirectDistance);
+  }
+
+  int getDistanceDifference() {
+    return distanceDifference;
+  }
+
+  String getDirectTime() {
+    return convertTime(directTime);
+  }
+
+  String getIndirectTime() {
+    return convertTime(indirectTime);
+  }
+
+  String getTimeDifference() {
+    int totalSeconds = int.parse(indirectTime.replaceAll('s', '')) -
+        int.parse(directTime.replaceAll('s', ''));
+
+    // Calculate hours and minutes
+    int hours = totalSeconds ~/ 3600; // 1 hour = 3600 seconds
+    int minutes = (totalSeconds % 3600) ~/ 60; // Remaining minutes
+
+    // Create the formatted string
+    return '${hours}h ${minutes}m';
+  }
+
+  String convertTime(String time) {
     // Remove the trailing 's' and parse the number
     int totalSeconds = int.parse(time.replaceAll('s', ''));
 

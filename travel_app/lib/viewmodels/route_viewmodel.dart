@@ -1,8 +1,10 @@
 // view_models/route_planner_view_model.dart
 
 import 'dart:convert';
+import 'dart:math';
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:http/http.dart' as http;
@@ -13,12 +15,15 @@ import 'package:geocoding/geocoding.dart';
 import '../models/predicted_route_place_model.dart';
 import '../models/route_place.dart';
 import 'package:dio/dio.dart';
-import 'dart:developer';
+import 'dart:developer' as dev;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../models/route.dart';
+import 'package:flutter/scheduler.dart';
 
 class RoutePlannerViewModel extends ChangeNotifier {
-  final Completer<GoogleMapController> _mapController = Completer();
+  final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
+  Completer<GoogleMapController> _mapController = Completer();
   Completer<GoogleMapController> get mapController => _mapController;
   String apiKey = dotenv.env['GOOGLE_MAPS_API_KEY'] ?? '';
 
@@ -53,7 +58,7 @@ class RoutePlannerViewModel extends ChangeNotifier {
 
   List<DreamListLocation> dreamlistLocationsOnRoute = [];
 
-  Set<Polyline> polyines = {};
+  Set<Polyline> polylines = {};
 
   Polyline? directPolyline;
 
@@ -62,12 +67,18 @@ class RoutePlannerViewModel extends ChangeNotifier {
   List<RouteWithDreamlistLocations> routes = [];
 
   RouteWithDreamlistLocations currentRoute = RouteWithDreamlistLocations(
-      polyline: Polyline(polylineId: PolylineId('')),
-      origin: RoutePlace(placeId: '', name: '', coordinates: LatLng(0, 0)),
-      destination: RoutePlace(placeId: '', name: '', coordinates: LatLng(0, 0)),
-      locationsOnRoute: [],
-      distance: 0,
-      time: '');
+    id: 'null',
+    polyline: Polyline(polylineId: PolylineId('')),
+    origin: RoutePlace(placeId: '', name: '', coordinates: LatLng(0, 0)),
+    destination: RoutePlace(placeId: '', name: '', coordinates: LatLng(0, 0)),
+    locationsOnRoute: [],
+    directDistance: 0,
+    indirectDistance: 0,
+    distanceDifference: 0,
+    directTime: '0s',
+    indirectTime: '0s',
+    timeDifference: '0h 0mins',
+  );
 
   RoutePlace start =
       RoutePlace(placeId: '', name: '', coordinates: LatLng(0, 0));
@@ -112,6 +123,11 @@ class RoutePlannerViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> deleteRoute(
+      BuildContext context, RouteWithDreamlistLocations route) async {
+    await db_service.deleteRoute(context, route);
+  }
+
   Future<void> saveRoute(BuildContext context) async {
     await db_service.addRoute(context, currentRoute);
   }
@@ -121,44 +137,387 @@ class RoutePlannerViewModel extends ChangeNotifier {
     routes = await db_service.loadRoutesFromDb(context);
   }
 
+  List<DreamListLocation> reorderLocations(List<DreamListLocation> locations) {
+    locations.sort((a, b) {
+      double distanceA = calculateDistance(
+          start.coordinates.latitude,
+          start.coordinates.longitude,
+          a.locationCoordinates.latitude,
+          a.locationCoordinates.longitude);
+      double distanceB = calculateDistance(
+          start.coordinates.latitude,
+          start.coordinates.longitude,
+          b.locationCoordinates.latitude,
+          b.locationCoordinates.longitude);
+      return distanceA.compareTo(distanceB);
+    });
+
+    return locations;
+  }
+
+  double calculateDistance(double startLatitude, double startLongitude,
+      double endLatitude, double endLongitude) {
+    const double earthRadius = 6371.0; // Radius of the Earth in kilometers
+
+    double latDiff = _degreeToRadian(endLatitude - startLatitude);
+    double lonDiff = _degreeToRadian(endLongitude - startLongitude);
+
+    double a = sin(latDiff / 2) * sin(latDiff / 2) +
+        cos(_degreeToRadian(startLatitude)) *
+            cos(_degreeToRadian(endLatitude)) *
+            sin(lonDiff / 2) *
+            sin(lonDiff / 2);
+
+    double c = 2 * atan2(sqrt(a), sqrt(1 - a));
+    return earthRadius * c;
+  }
+
+  double _degreeToRadian(double degree) {
+    return degree * pi / 180;
+  }
+
   Future<void> addNearbyBucketListLocations(BuildContext context) async {
+    // Capture the parent context for use in async operations
+    // BuildContext parentContext = context;
+
     DbService db_service = DbService();
 
     List<DreamListLocation> locationsOnRoute = [];
     double radius = selectedRadius * 1000;
+
+    // Use the parent context to load data from the database
     List<DreamListLocation> dreamlistLocations =
         await db_service.loadDreamlistFromDb(context);
 
     for (DreamListLocation location in dreamlistLocations) {
-      if (await isNearRoute(location, radius)) {
+      if (isNearRoute(location, radius)) {
         locationsOnRoute.add(location);
       }
     }
 
-    if (locationsOnRoute.isNotEmpty) {
+    // Ensure the widget associated with the parent context is still mounted
+    if (locationsOnRoute.isNotEmpty && context.mounted) {
+      locationsOnRoute = reorderLocations(locationsOnRoute);
       var points = convertLocations(locationsOnRoute);
       dreamlistLocationsOnRoute = locationsOnRoute;
-      addLocationsOnRouteMarker(locationsOnRoute);
       await recalculateRoute(points);
+    } else {
+      dreamlistRouteDistance = directRouteDistance;
+      dreamlistRouteTime = directRouteTime;
+      currentRoute = RouteWithDreamlistLocations(
+          id: uuid.v4(),
+          polyline: directPolyline!,
+          origin: start,
+          destination: destination,
+          locationsOnRoute: locationsOnRoute,
+          directDistance: directRouteDistance,
+          indirectDistance: dreamlistRouteDistance,
+          distanceDifference: getDistanceDifference(),
+          directTime: directRouteTime,
+          indirectTime: dreamlistRouteTime,
+          timeDifference: getTimeDifference());
     }
   }
 
-  void addLocationsOnRouteMarker(List<DreamListLocation> locations) {
-    log('markers: ${markers.length.toString()}');
-    log('locations: ${locations.length.toString()}');
-    markers.clear();
-    markers.add(originMarker!);
-    markers.add(destinationMarker!);
-    for (DreamListLocation location in locations) {
-      log('id: ${location.id}');
-      log('coords: ${location.locationCoordinates.toString()}');
-      markers.add(Marker(
-          markerId: MarkerId(location.id),
-          position: location.locationCoordinates));
+  Future<void> recalculateBucketListLocations(
+      BuildContext context, DreamListLocation location) async {
+    DbService db_service = DbService();
+
+    List<DreamListLocation> locationsOnRoute =
+        dreamlistLocationsOnRoute.where((loc) => loc != location).toList();
+
+    // Ensure the widget associated with the parent context is still mounted
+    if (locationsOnRoute.isNotEmpty && context.mounted) {
+      // locationsOnRoute = reorderLocations(locationsOnRoute);
+      locationsOnRoute = reorderLocations(locationsOnRoute);
+      var points = convertLocations(locationsOnRoute);
+      dreamlistLocationsOnRoute = locationsOnRoute;
+      await recalculateRoute(points);
+    } else {
+      dreamlistRouteDistance = directRouteDistance;
+      dreamlistRouteTime = directRouteTime;
+      currentRoute = RouteWithDreamlistLocations(
+          id: uuid.v4(),
+          polyline: directPolyline!,
+          origin: start,
+          destination: destination,
+          locationsOnRoute: locationsOnRoute,
+          directDistance: directRouteDistance,
+          indirectDistance: dreamlistRouteDistance,
+          distanceDifference: getDistanceDifference(),
+          directTime: directRouteTime,
+          indirectTime: dreamlistRouteTime,
+          timeDifference: getTimeDifference());
     }
-    log('markers: ${markers.length.toString()}');
     notifyListeners();
   }
+
+  Set<Marker> getLocationsOnRouteMarkers(
+    BuildContext context,
+  ) {
+    Set<Marker> markers = {};
+    for (DreamListLocation location in dreamlistLocationsOnRoute) {
+      markers.add(
+        Marker(
+          markerId: MarkerId(location.id),
+          position: location.locationCoordinates,
+          infoWindow: InfoWindow(
+            title: location.name, // Name to display
+            snippet: 'Tap to view more info',
+            onTap: () {
+              // Use the parent context to show diadev.log
+              _showImageDialog(context, location);
+            },
+          ),
+        ),
+      );
+    }
+    markers.add(
+      Marker(
+        markerId: MarkerId(start.name),
+        position: start.coordinates,
+      ),
+    );
+    markers.add(
+      Marker(
+        markerId: MarkerId(destination.name),
+        position: destination.coordinates,
+      ),
+    );
+
+    return markers;
+  }
+
+  void _showImageDialog(BuildContext context, DreamListLocation location) {
+    showDialog(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          child: Container(
+            width: 1000,
+            height: 400,
+            decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(25), color: Colors.white),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: EdgeInsets.fromLTRB(0, 15, 0, 0),
+                  child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        Padding(
+                          padding: EdgeInsets.only(left: 10),
+                          child: Text.rich(
+                            TextSpan(
+                              children: [
+                                TextSpan(
+                                  text: 'Added By: ', // Regular text
+                                ),
+                                TextSpan(
+                                  text: location.addedBy, // Text to be bold
+                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        Padding(
+                          padding: EdgeInsets.only(right: 10),
+                          child: Text.rich(
+                            TextSpan(
+                              children: [
+                                TextSpan(
+                                  text: 'Added On: ', // Regular text
+                                ),
+                                TextSpan(
+                                  text: location.addedOn, // Text to be bold
+                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ]),
+                ),
+                Padding(
+                  padding: EdgeInsets.fromLTRB(20, 0, 0, 0),
+                  child: Text(
+                    location.name,
+                    style: TextStyle(fontSize: 25, fontWeight: FontWeight.w500),
+                  ),
+                ),
+                Padding(
+                  padding: EdgeInsets.fromLTRB(20, 0, 0, 0),
+                  child: Text(
+                    location.locationName,
+                    style: TextStyle(fontSize: 17, fontWeight: FontWeight.w400),
+                  ),
+                ),
+                Padding(
+                  padding: EdgeInsets.fromLTRB(10, 0, 10, 0),
+                  child: Container(
+                    padding: EdgeInsets.all(10),
+                    width: 500,
+                    height: 150,
+                    child: ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: location.imageDatas.length,
+                      itemBuilder: (context, index) {
+                        return Padding(
+                          padding: EdgeInsets.fromLTRB(0, 0, 5, 0),
+                          child: Container(
+                            width: 150,
+                            height: 100,
+                            decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(15)),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(10),
+                              child: Image(
+                                  image:
+                                      MemoryImage(location.imageDatas[index]),
+                                  fit: BoxFit.cover),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ),
+                Padding(
+                    padding: EdgeInsets.fromLTRB(20, 0, 0, 0),
+                    child: Row(
+                      children: [
+                        Padding(
+                          padding: EdgeInsets.fromLTRB(0, 0, 0, 0),
+                          child: Text(location.rating.toString()),
+                        ),
+                        Icon(Icons.star_border_rounded),
+                        SizedBox(width: 10),
+                        Padding(
+                          padding: EdgeInsets.fromLTRB(0, 0, 0, 0),
+                          child: Text(location.numReviews.toString()),
+                        )
+                      ],
+                    )),
+                Padding(
+                  padding: EdgeInsets.fromLTRB(20, 0, 0, 0),
+                  child: Text(location.description),
+                ),
+                Center(
+                  child: Padding(
+                    padding: EdgeInsets.only(top: 20),
+                    child: Container(
+                      width: 250,
+                      height: 40,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          recalculateBucketListLocations(context, location);
+                          Navigator.of(context).pop();
+                        },
+                        child: Text('Remove from route'),
+                        style: ElevatedButton.styleFrom(
+                            primary: Colors.red, foregroundColor: Colors.white),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  // void _showImageDialog(DreamListLocation location) {
+  //   showDialog(
+  //     context: navigatorKey.currentState!.overlay!.context,
+  //     builder: (BuildContext dialogContext) {
+  //       return Dialog(
+  //         backgroundColor: Colors.transparent,
+  //         elevation: 0,
+  //         child: Container(
+  //           width: 1000,
+  //           height: 350,
+  //           decoration: BoxDecoration(
+  //               borderRadius: BorderRadius.circular(25), color: Colors.white),
+  //           child: Column(
+  //             crossAxisAlignment: CrossAxisAlignment.start,
+  //             children: [
+  //               Padding(
+  //                 padding: EdgeInsets.fromLTRB(20, 20, 0, 0),
+  //                 child: Text(
+  //                   location.name,
+  //                   style: TextStyle(fontSize: 25, fontWeight: FontWeight.w500),
+  //                 ),
+  //               ),
+  //               Padding(
+  //                 padding: EdgeInsets.fromLTRB(20, 0, 0, 0),
+  //                 child: Text(
+  //                   location.locationName,
+  //                   style: TextStyle(fontSize: 17, fontWeight: FontWeight.w400),
+  //                 ),
+  //               ),
+  //               Padding(
+  //                 padding: EdgeInsets.fromLTRB(10, 0, 10, 0),
+  //                 child: Container(
+  //                   padding: EdgeInsets.all(10),
+  //                   width: 500,
+  //                   height: 150,
+  //                   child: ListView.builder(
+  //                     scrollDirection: Axis.horizontal,
+  //                     itemCount: location.imageDatas.length,
+  //                     itemBuilder: (context, index) {
+  //                       return Padding(
+  //                         padding: EdgeInsets.fromLTRB(0, 0, 5, 0),
+  //                         child: Container(
+  //                           width: 150,
+  //                           height: 100,
+  //                           decoration: BoxDecoration(
+  //                               borderRadius: BorderRadius.circular(15)),
+  //                           child: ClipRRect(
+  //                             borderRadius: BorderRadius.circular(10),
+  //                             child: Image(
+  //                                 image:
+  //                                     MemoryImage(location.imageDatas[index]),
+  //                                 fit: BoxFit.cover),
+  //                           ),
+  //                         ),
+  //                       );
+  //                     },
+  //                   ),
+  //                 ),
+  //               ),
+  //               Padding(
+  //                   padding: EdgeInsets.fromLTRB(20, 0, 0, 0),
+  //                   child: Row(
+  //                     children: [
+  //                       Padding(
+  //                         padding: EdgeInsets.fromLTRB(0, 0, 0, 0),
+  //                         child: Text(location.rating.toString()),
+  //                       ),
+  //                       Icon(Icons.star_border_rounded),
+  //                       SizedBox(width: 10),
+  //                       Padding(
+  //                         padding: EdgeInsets.fromLTRB(0, 0, 0, 0),
+  //                         child: Text(location.numReviews.toString()),
+  //                       )
+  //                     ],
+  //                   )),
+  //               Padding(
+  //                 padding: EdgeInsets.fromLTRB(20, 0, 0, 0),
+  //                 child: Text(location.description),
+  //               ),
+  //             ],
+  //           ),
+  //         ),
+  //       );
+  //     },
+  //   );
+  // }
 
   List<Map<String, dynamic>> convertLocations(
       List<DreamListLocation> locations) {
@@ -224,7 +583,7 @@ class RoutePlannerViewModel extends ChangeNotifier {
         List<LatLng> decodedPolyline = decodePolyline(encodedPolyline);
         polylinePoints = decodedPolyline;
 
-        polyines.clear();
+        polylines.clear();
         Polyline newPolyline = (Polyline(
           polylineId: PolylineId('route'),
           points: decodedPolyline,
@@ -234,14 +593,20 @@ class RoutePlannerViewModel extends ChangeNotifier {
         directPolyline = newPolyline;
 
         currentRoute = RouteWithDreamlistLocations(
-            polyline: newPolyline,
-            origin: start,
-            destination: destination,
-            locationsOnRoute: dreamlistLocationsOnRoute,
-            distance: dreamlistRouteDistance,
-            time: dreamlistRouteTime);
+          id: uuid.v4(),
+          polyline: newPolyline,
+          origin: start,
+          destination: destination,
+          locationsOnRoute: dreamlistLocationsOnRoute,
+          directDistance: directRouteDistance,
+          indirectDistance: dreamlistRouteDistance,
+          distanceDifference: getDistanceDifference(),
+          directTime: directRouteTime,
+          indirectTime: dreamlistRouteTime,
+          timeDifference: getTimeDifference(),
+        );
 
-        polyines.add(newPolyline);
+        polylines.add(newPolyline);
 
         adjustCameraToBounds();
 
@@ -275,7 +640,7 @@ class RoutePlannerViewModel extends ChangeNotifier {
     return;
   }
 
-  Future<bool> isNearRoute(DreamListLocation location, double radius) async {
+  bool isNearRoute(DreamListLocation location, double radius) {
     for (LatLng point in polylinePoints) {
       double distance = Geolocator.distanceBetween(
         location.locationCoordinates.latitude,
@@ -362,7 +727,7 @@ class RoutePlannerViewModel extends ChangeNotifier {
         List<LatLng> decodedPolyline = decodePolyline(encodedPolyline);
         polylinePoints = decodedPolyline;
 
-        polyines.clear();
+        polylines.clear();
         Polyline newPolyline = (Polyline(
           polylineId: PolylineId('route'),
           points: decodedPolyline,
@@ -370,16 +735,17 @@ class RoutePlannerViewModel extends ChangeNotifier {
           width: 5,
         ));
         directPolyline = newPolyline;
-        polyines.add(newPolyline);
+        polylines.add(newPolyline);
 
         adjustCameraToBounds();
 
         notifyListeners();
       } else {
-        log('Request failed with status: ${response.statusCode}, response: ${response.body}');
+        dev.log(
+            'Request failed with status: ${response.statusCode}, response: ${response.body}');
       }
     } catch (e) {
-      log('Error making request: $e');
+      dev.log('Error making request: $e');
     }
   }
 
@@ -447,15 +813,16 @@ class RoutePlannerViewModel extends ChangeNotifier {
       notifyListeners();
       return routePlace;
     } on DioException catch (e) {
-      log('DioException: ${e.message}');
+      dev.log('DioException: ${e.message}');
       if (e.response != null) {
-        log('Error response: ${e.response?.statusCode} ${e.response?.statusMessage}');
-        log('Response data: ${e.response?.data}');
+        dev.log(
+            'Error response: ${e.response?.statusCode} ${e.response?.statusMessage}');
+        dev.log('Response data: ${e.response?.data}');
       } else {
-        log('Error request: ${e.message}');
+        dev.log('Error request: ${e.message}');
       }
     } catch (e) {
-      log('General error: $e');
+      dev.log('General error: $e');
     }
 
     return RoutePlace(placeId: 'id', name: '', coordinates: LatLng(0, 0));
@@ -465,38 +832,6 @@ class RoutePlannerViewModel extends ChangeNotifier {
     await Geolocator.requestPermission();
     return await Geolocator.getCurrentPosition();
   }
-
-  // void _adjustCameraToBounds(List<LatLng> polylinePoints) async {
-  //   if (polylinePoints.isEmpty) return;
-
-  //   LatLngBounds bounds;
-  //   if (polylinePoints.length == 1) {
-  //     bounds = LatLngBounds(
-  //       southwest: polylinePoints.first,
-  //       northeast: polylinePoints.first,
-  //     );
-  //   } else {
-  //     double minLat = polylinePoints.first.latitude;
-  //     double maxLat = polylinePoints.first.latitude;
-  //     double minLng = polylinePoints.first.longitude;
-  //     double maxLng = polylinePoints.first.longitude;
-
-  //     for (LatLng point in polylinePoints) {
-  //       if (point.latitude < minLat) minLat = point.latitude;
-  //       if (point.latitude > maxLat) maxLat = point.latitude;
-  //       if (point.longitude < minLng) minLng = point.longitude;
-  //       if (point.longitude > maxLng) maxLng = point.longitude;
-  //     }
-
-  //     bounds = LatLngBounds(
-  //       southwest: LatLng(minLat, minLng),
-  //       northeast: LatLng(maxLat, maxLng),
-  //     );
-  //   }
-
-  //   final GoogleMapController controller = await mapController.future;
-  //   controller.animateCamera(CameraUpdate.newLatLngBounds(bounds, 50));
-  // }
 
   LatLngBounds calculatePolylineBounds(List<LatLng> polylinePoints) {
     double minLat = polylinePoints.first.latitude;
@@ -517,41 +852,18 @@ class RoutePlannerViewModel extends ChangeNotifier {
     );
   }
 
-  // void adjustCameraToBounds(List<LatLng> polylinePoints) async {
-  //   if (polylinePoints.isEmpty) return;
-
-  //   double minLat = polylinePoints.first.latitude;
-  //   double maxLat = polylinePoints.first.latitude;
-  //   double minLng = polylinePoints.first.longitude;
-  //   double maxLng = polylinePoints.first.longitude;
-
-  //   for (LatLng point in polylinePoints) {
-  //     if (point.latitude < minLat) minLat = point.latitude;
-  //     if (point.latitude > maxLat) maxLat = point.latitude;
-  //     if (point.longitude < minLng) minLng = point.longitude;
-  //     if (point.longitude > maxLng) maxLng = point.longitude;
-  //   }
-
-  //   LatLng southwest = LatLng(minLat, minLng);
-  //   LatLng northeast = LatLng(maxLat, maxLng);
-
-  //   LatLngBounds bounds = LatLngBounds(
-  //     southwest: southwest,
-  //     northeast: northeast,
-  //   );
-
-  //   final GoogleMapController controller = await mapController.future;
-
-  //   // Log the bounds for debugging
-  //   log('Camera bounds - Southwest: ${southwest.latitude}, ${southwest.longitude}; '
-  //       'Northeast: ${northeast.latitude}, ${northeast.longitude}');
-
-  //   controller.animateCamera(CameraUpdate.newLatLngBounds(bounds, 50));
   // }
   void adjustCameraToBounds() async {
-    final GoogleMapController controller = await mapController.future;
+    // final GoogleMapController controller = await _mapController.future;
+    // final bounds = calculateBounds();
+    // controller.animateCamera(CameraUpdate.newLatLngBounds(bounds, 50));
+    // notifyListeners();
+    _mapController = Completer<GoogleMapController>();
     final bounds = calculateBounds();
-    controller.animateCamera(CameraUpdate.newLatLngBounds(bounds, 50));
+    final GoogleMapController controller = await _mapController.future;
+    if (_isDisposed) return;
+    await controller.animateCamera(CameraUpdate.newLatLngBounds(bounds, 50));
+    if (_isDisposed) return;
     notifyListeners();
   }
 
@@ -588,16 +900,12 @@ class RoutePlannerViewModel extends ChangeNotifier {
   void packData() {
     getUserLocation().then((value) async {
       if (_isDisposed) return;
-      // myMarker.add(Marker(
-      //   markerId: const MarkerId('CurrentLocation'),
-      //   position: LatLng(value.latitude, value.longitude),
-      //   infoWindow: const InfoWindow(title: 'CurrentLocation'),
-      // ));
       CameraPosition cameraPosition = CameraPosition(
           target: LatLng(value.latitude, value.longitude), zoom: 11);
       final GoogleMapController controller = await _mapController.future;
       if (_isDisposed) return;
-      controller.animateCamera(CameraUpdate.newCameraPosition(cameraPosition));
+      await controller
+          .animateCamera(CameraUpdate.newCameraPosition(cameraPosition));
       if (_isDisposed) return;
       notifyListeners();
     });
@@ -705,7 +1013,7 @@ class RoutePlannerViewModel extends ChangeNotifier {
   }
 
   void onFocusChange() {
-    log('test');
+    dev.log('test');
     updateContainerHeight();
   }
 
@@ -762,6 +1070,15 @@ class RoutePlannerViewModel extends ChangeNotifier {
     return convertMetersToMiles(dreamlistRouteDistance - directRouteDistance);
   }
 
+  String displayDistanceDifference() {
+    int distance = getDistanceDifference();
+    if (distance >= 0) {
+      return '+ $distance miles';
+    } else {
+      return '$distance miles';
+    }
+  }
+
   String getTimeDifference() {
     int differenceSeconds = int.parse(dreamlistRouteTime.replaceAll('s', '')) -
         int.parse(directRouteTime.replaceAll('s', ''));
@@ -774,6 +1091,84 @@ class RoutePlannerViewModel extends ChangeNotifier {
 
     // Return the formatted string with hours and remaining seconds
     return '$hours h $minutes mins';
+  }
+
+  void reset() {
+    // Reset Completers
+    // _mapController.complete();
+    _mapController = Completer<GoogleMapController>();
+
+    // Reset Strings and UUID
+    apiKey = dotenv.env['GOOGLE_MAPS_API_KEY'] ?? '';
+    sessionToken = "12345";
+    uuid = Uuid();
+
+    // Reset TextEditingControllers
+    textEditingController.clear();
+    startLocationTextEditingController.clear();
+    endLocationTextEditingController.clear();
+
+    // Reset FocusNodes
+    mapSearchFocusNode.unfocus();
+    startLocationFocusNode.unfocus();
+    endLocationFocusNode.unfocus();
+
+    // Reset Booleans
+    showStart =
+        true; // This variable was flagged to "get rid of," but leaving it in case it's still needed.
+    showEnd = true;
+    startSelected = false;
+    destinationSelected = false;
+
+    // Reset Route Data
+    directRouteDistance = 0;
+    directRouteTime = '0s';
+    dreamlistRouteDistance = 0;
+    dreamlistRouteTime = '0s';
+
+    // Reset Lists
+    places = [];
+    startPlaces = [];
+    endPlaces = [];
+    dreamlistLocationsOnRoute = [];
+
+    // Reset Polylines and Markers
+    polylines = {};
+    directPolyline = null;
+    polylinePoints = [];
+    routes = [];
+
+    // Reset Current Route
+    currentRoute = RouteWithDreamlistLocations(
+      id: 'null',
+      polyline: Polyline(polylineId: PolylineId('')),
+      origin: RoutePlace(placeId: '', name: '', coordinates: LatLng(0, 0)),
+      destination: RoutePlace(placeId: '', name: '', coordinates: LatLng(0, 0)),
+      locationsOnRoute: [],
+      directDistance: 0,
+      indirectDistance: 0,
+      distanceDifference: 0,
+      directTime: '0s',
+      indirectTime: '0s',
+      timeDifference: '0h 0mins',
+    );
+
+    // Reset Route Places
+    start = RoutePlace(placeId: '', name: '', coordinates: LatLng(0, 0));
+    destination = RoutePlace(placeId: '', name: '', coordinates: LatLng(0, 0));
+
+    // Reset Markers and Positions
+    originMarker = null;
+    destinationMarker = null;
+    markers = [];
+
+    // Reset Miscellaneous Variables
+    _isDisposed = false;
+    containerHeight = 370;
+    page = 1;
+    selectedRadius = 10.0;
+
+    notifyListeners();
   }
 
   @override

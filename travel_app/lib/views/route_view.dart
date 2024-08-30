@@ -12,6 +12,7 @@ import 'package:travel_app/views/view_saved_routes_view.dart';
 import '../../viewmodels/route_viewmodel.dart';
 import '../models/route_place.dart';
 import 'dart:developer';
+import 'package:travel_app/main.dart';
 
 class RoutePlanner extends StatelessWidget {
   const RoutePlanner({super.key});
@@ -60,22 +61,31 @@ class RoutePlanner extends StatelessWidget {
     final viewModel = Provider.of<RoutePlannerViewModel>(context);
     return Stack(
       children: [
-        GoogleMap(
-          initialCameraPosition: CameraPosition(
-            target: viewModel
-                .getCentreOfMarkers(), // Set the center as the initial target
-            zoom: 14, // Adjust zoom level as needed
+        Align(
+          alignment: Alignment.bottomCenter,
+          child: GoogleMap(
+            initialCameraPosition: CameraPosition(
+              target: viewModel
+                  .getCentreOfMarkers(), // Set the center as the initial target
+              zoom: 14, // Adjust zoom level as needed
+            ),
+            mapType: MapType.normal,
+            // markers: Set<Marker>.of(viewModel.myMarker),
+            markers:
+                Set<Marker>.of(viewModel.getLocationsOnRouteMarkers(context)),
+
+            polylines: viewModel.polylines,
+            onMapCreated: (GoogleMapController controller) async {
+              if (!viewModel.mapController.isCompleted) {
+                viewModel.mapController.complete(controller);
+              }
+              await Future.delayed(Duration(
+                  milliseconds: 100)); // Ensure the map is fully loaded
+
+              controller.animateCamera(CameraUpdate.newLatLngBounds(
+                  viewModel.calculateBounds(), 50));
+            },
           ),
-          mapType: MapType.normal,
-          markers: Set<Marker>.of(viewModel.myMarker),
-          polylines: viewModel.polyines,
-          onMapCreated: (GoogleMapController controller) async {
-            if (!viewModel.mapController.isCompleted) {
-              viewModel.mapController.complete(controller);
-            }
-            await Future.delayed(
-                Duration(milliseconds: 100)); // Ensure the map is fully loaded
-          },
         ),
         Align(
           alignment: Alignment.topCenter,
@@ -114,7 +124,7 @@ class RoutePlanner extends StatelessWidget {
               child: ElevatedButton(
                 onPressed: () async {
                   await viewModel.saveRoute(context);
-                  viewModel.togglePage(1);
+                  viewModel.reset();
                 },
                 child: Text('Save route'),
                 style: ElevatedButton.styleFrom(
@@ -183,7 +193,7 @@ class RoutePlanner extends StatelessWidget {
                         Padding(
                           padding: EdgeInsets.fromLTRB(20, 0, 0, 0),
                           child: Text(
-                            ' + ${viewModel.getDistanceDifference()} miles',
+                            '${viewModel.displayDistanceDifference()}',
                             style: TextStyle(color: Colors.red),
                           ),
                         ),
@@ -218,7 +228,7 @@ class RoutePlanner extends StatelessWidget {
             initialCameraPosition: RoutePlannerViewModel.initPos,
             mapType: MapType.normal,
             markers: Set<Marker>.of(viewModel.myMarker),
-            polylines: viewModel.polyines,
+            polylines: viewModel.polylines,
             onMapCreated: (GoogleMapController controller) {
               if (!viewModel.mapController.isCompleted) {
                 viewModel.mapController.complete(controller);
@@ -445,10 +455,10 @@ class RoutePlanner extends StatelessWidget {
               backgroundColor: Colors.white,
               itemExtent: 32.0,
               onSelectedItemChanged: (int index) {
-                viewModel.setRadius((index + 1) * 10.0);
+                viewModel.setRadius((index) * 10);
               },
-              children: List<Widget>.generate(5, (int index) {
-                return Center(child: Text('${(index + 1) * 10} km'));
+              children: List<Widget>.generate(6, (int index) {
+                return Center(child: Text('${((index) * 10)} km'));
               }),
             ),
           );
@@ -473,7 +483,8 @@ class RoutePlanner extends StatelessWidget {
                     onPressed: () {
                       _showCupertinoPicker(context);
                     },
-                    child: Text('Radius: ${viewModel.selectedRadius}'),
+                    child:
+                        Text('Radius: ${viewModel.selectedRadius.toInt()} km'),
                     style: ElevatedButton.styleFrom(
                         elevation: 0,
                         primary: Colors.grey[300],
@@ -518,27 +529,6 @@ class RoutePlanner extends StatelessWidget {
     });
   }
 
-  void _showDialog(BuildContext context, Widget child) {
-    showCupertinoModalPopup<void>(
-      context: context,
-      builder: (BuildContext context) => Container(
-        height: 216,
-        padding: const EdgeInsets.only(top: 6.0),
-        // The Bottom margin is provided to align the popup above the system navigation bar.
-        margin: EdgeInsets.only(
-          bottom: MediaQuery.of(context).viewInsets.bottom,
-        ),
-        // Provide a background color for the popup.
-        color: CupertinoColors.systemBackground.resolveFrom(context),
-        // Use a SafeArea widget to avoid system overlaps.
-        child: SafeArea(
-          top: false,
-          child: child,
-        ),
-      ),
-    );
-  }
-
   Widget CreateRouteTitleWidget(RoutePlannerViewModel viewModel) {
     return Padding(
       padding: EdgeInsets.fromLTRB(0, 20, 0, 0),
@@ -577,7 +567,8 @@ class RoutePlanner extends StatelessWidget {
               width: 60,
               child: ElevatedButton(
                 onPressed: () {
-                  viewModel.togglePage(1);
+                  viewModel.reset();
+                  // viewModel.togglePage(1);
                 },
                 child: Icon(Icons.arrow_back_sharp),
                 style: ElevatedButton.styleFrom(
