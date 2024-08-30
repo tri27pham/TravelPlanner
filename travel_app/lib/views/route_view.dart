@@ -446,10 +446,10 @@ class RoutePlanner extends StatelessWidget {
               backgroundColor: Colors.white,
               itemExtent: 32.0,
               onSelectedItemChanged: (int index) {
-                viewModel.setRadius((index + 1) * 10.0);
+                viewModel.setRadius((index + 1) * 10);
               },
-              children: List<Widget>.generate(5, (int index) {
-                return Center(child: Text('${(index + 1) * 10} km'));
+              children: List<Widget>.generate(6, (int index) {
+                return Center(child: Text('${((index) * 10)} km'));
               }),
             ),
           );
@@ -474,7 +474,8 @@ class RoutePlanner extends StatelessWidget {
                     onPressed: () {
                       _showCupertinoPicker(context);
                     },
-                    child: Text('Radius: ${viewModel.selectedRadius}'),
+                    child:
+                        Text('Radius: ${viewModel.selectedRadius.toInt()} km'),
                     style: ElevatedButton.styleFrom(
                         elevation: 0,
                         primary: Colors.grey[300],
