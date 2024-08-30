@@ -69,7 +69,7 @@ class RoutePlanner extends StatelessWidget {
           ),
           mapType: MapType.normal,
           markers: Set<Marker>.of(viewModel.myMarker),
-          polylines: viewModel.polyines,
+          polylines: viewModel.polylines,
           onMapCreated: (GoogleMapController controller) async {
             if (!viewModel.mapController.isCompleted) {
               viewModel.mapController.complete(controller);
@@ -219,7 +219,7 @@ class RoutePlanner extends StatelessWidget {
             initialCameraPosition: RoutePlannerViewModel.initPos,
             mapType: MapType.normal,
             markers: Set<Marker>.of(viewModel.myMarker),
-            polylines: viewModel.polyines,
+            polylines: viewModel.polylines,
             onMapCreated: (GoogleMapController controller) {
               if (!viewModel.mapController.isCompleted) {
                 viewModel.mapController.complete(controller);
@@ -519,26 +519,26 @@ class RoutePlanner extends StatelessWidget {
     });
   }
 
-  void _showDialog(BuildContext context, Widget child) {
-    showCupertinoModalPopup<void>(
-      context: navigatorKey.currentContext!,
-      builder: (BuildContext context) => Container(
-        height: 216,
-        padding: const EdgeInsets.only(top: 6.0),
-        // The Bottom margin is provided to align the popup above the system navigation bar.
-        margin: EdgeInsets.only(
-          bottom: MediaQuery.of(context).viewInsets.bottom,
-        ),
-        // Provide a background color for the popup.
-        color: CupertinoColors.systemBackground.resolveFrom(context),
-        // Use a SafeArea widget to avoid system overlaps.
-        child: SafeArea(
-          top: false,
-          child: child,
-        ),
-      ),
-    );
-  }
+  // void _showDialog(BuildContext context, Widget child) {
+  //   showCupertinoModalPopup<void>(
+  //     context: context,
+  //     builder: (BuildContext context) => Container(
+  //       height: 216,
+  //       padding: const EdgeInsets.only(top: 6.0),
+  //       // The Bottom margin is provided to align the popup above the system navigation bar.
+  //       margin: EdgeInsets.only(
+  //         bottom: MediaQuery.of(context).viewInsets.bottom,
+  //       ),
+  //       // Provide a background color for the popup.
+  //       color: CupertinoColors.systemBackground.resolveFrom(context),
+  //       // Use a SafeArea widget to avoid system overlaps.
+  //       child: SafeArea(
+  //         top: false,
+  //         child: child,
+  //       ),
+  //     ),
+  //   );
+  // }
 
   Widget CreateRouteTitleWidget(RoutePlannerViewModel viewModel) {
     return Padding(
@@ -578,7 +578,8 @@ class RoutePlanner extends StatelessWidget {
               width: 60,
               child: ElevatedButton(
                 onPressed: () {
-                  viewModel.togglePage(1);
+                  viewModel.reset();
+                  // viewModel.togglePage(1);
                 },
                 child: Icon(Icons.arrow_back_sharp),
                 style: ElevatedButton.styleFrom(

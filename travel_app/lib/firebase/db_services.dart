@@ -225,46 +225,51 @@ class DbService {
         CollectionReference locationsOnRouteRef =
             routesCollection.doc(routeID).collection('locationsOnRoute');
 
-        QuerySnapshot locationsOnRoute = await locationsOnRouteRef.get();
+        QuerySnapshot locationsOnRouteDocs =
+            await locationsOnRouteRef.limit(1).get();
 
         List<DreamListLocation> locations = [];
 
-        for (var location in locationsOnRoute.docs) {
-          String id = location.id;
-          String name = location['name'];
-          String locationName = location['locationName'];
-          LatLng locationCoordinates = LatLng(
-              location['coordinates']['latitude'],
-              location['coordinates']['longitude']);
-          String description = location['description'];
-          double rating = location['rating'];
-          int numReviews = location['numReviews'];
-          String addedOn = location['addedOn'];
-          String addedBy = location['addedBy'];
-          bool visited = location['visited'];
+        if (locationsOnRouteDocs.docs.isNotEmpty) {
+          QuerySnapshot locationsOnRoute = await locationsOnRouteRef.get();
 
-          QuerySnapshot querySnapshotPhotos =
-              await locationsOnRouteRef.doc(id).collection('photos').get();
+          for (var location in locationsOnRoute.docs) {
+            String id = location.id;
+            String name = location['name'];
+            String locationName = location['locationName'];
+            LatLng locationCoordinates = LatLng(
+                location['coordinates']['latitude'],
+                location['coordinates']['longitude']);
+            String description = location['description'];
+            double rating = location['rating'];
+            int numReviews = location['numReviews'];
+            String addedOn = location['addedOn'];
+            String addedBy = location['addedBy'];
+            bool visited = location['visited'];
 
-          List<Uint8List> imageDatas = [];
+            QuerySnapshot querySnapshotPhotos =
+                await locationsOnRouteRef.doc(id).collection('photos').get();
 
-          for (var photoDoc in querySnapshotPhotos.docs) {
-            imageDatas.add(base64Decode(photoDoc['imageData']));
+            List<Uint8List> imageDatas = [];
+
+            for (var photoDoc in querySnapshotPhotos.docs) {
+              imageDatas.add(base64Decode(photoDoc['imageData']));
+            }
+
+            locations.add(DreamListLocation(
+                id: id,
+                name: name,
+                locationName: locationName,
+                locationCoordinates: locationCoordinates,
+                description: description,
+                rating: rating,
+                numReviews: numReviews,
+                imageDatas: imageDatas,
+                photoRefs: [],
+                addedOn: addedOn,
+                addedBy: addedBy,
+                visited: visited));
           }
-
-          locations.add(DreamListLocation(
-              id: id,
-              name: name,
-              locationName: locationName,
-              locationCoordinates: locationCoordinates,
-              description: description,
-              rating: rating,
-              numReviews: numReviews,
-              imageDatas: imageDatas,
-              photoRefs: [],
-              addedOn: addedOn,
-              addedBy: addedBy,
-              visited: visited));
         }
 
         routes.add(RouteWithDreamlistLocations(

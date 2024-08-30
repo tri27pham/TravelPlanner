@@ -191,15 +191,7 @@ class RouteWithDreamlistLocations {
                 ),
               ],
             ),
-          ), // Display image from memory
-          // actions: <Widget>[
-          //   TextButton(
-          //     child: Text('Close'),
-          //     onPressed: () {
-          //       Navigator.of(context).pop();
-          //     },
-          //   ),
-          // ],
+          ),
         );
       },
     );
