@@ -68,7 +68,10 @@ class RoutePlanner extends StatelessWidget {
             zoom: 14, // Adjust zoom level as needed
           ),
           mapType: MapType.normal,
-          markers: Set<Marker>.of(viewModel.myMarker),
+          // markers: Set<Marker>.of(viewModel.myMarker),
+          markers:
+              Set<Marker>.of(viewModel.getLocationsOnRouteMarkers(context)),
+
           polylines: viewModel.polylines,
           onMapCreated: (GoogleMapController controller) async {
             if (!viewModel.mapController.isCompleted) {
@@ -115,7 +118,7 @@ class RoutePlanner extends StatelessWidget {
               child: ElevatedButton(
                 onPressed: () async {
                   await viewModel.saveRoute(context);
-                  viewModel.togglePage(1);
+                  viewModel.reset();
                 },
                 child: Text('Save route'),
                 style: ElevatedButton.styleFrom(
@@ -519,27 +522,6 @@ class RoutePlanner extends StatelessWidget {
       );
     });
   }
-
-  // void _showDialog(BuildContext context, Widget child) {
-  //   showCupertinoModalPopup<void>(
-  //     context: context,
-  //     builder: (BuildContext context) => Container(
-  //       height: 216,
-  //       padding: const EdgeInsets.only(top: 6.0),
-  //       // The Bottom margin is provided to align the popup above the system navigation bar.
-  //       margin: EdgeInsets.only(
-  //         bottom: MediaQuery.of(context).viewInsets.bottom,
-  //       ),
-  //       // Provide a background color for the popup.
-  //       color: CupertinoColors.systemBackground.resolveFrom(context),
-  //       // Use a SafeArea widget to avoid system overlaps.
-  //       child: SafeArea(
-  //         top: false,
-  //         child: child,
-  //       ),
-  //     ),
-  //   );
-  // }
 
   Widget CreateRouteTitleWidget(RoutePlannerViewModel viewModel) {
     return Padding(

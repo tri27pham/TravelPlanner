@@ -17,8 +17,11 @@ import 'package:dio/dio.dart';
 import 'dart:developer' as dev;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../models/route.dart';
+import 'package:flutter/scheduler.dart';
 
 class RoutePlannerViewModel extends ChangeNotifier {
+  final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
   Completer<GoogleMapController> _mapController = Completer();
   Completer<GoogleMapController> get mapController => _mapController;
   String apiKey = dotenv.env['GOOGLE_MAPS_API_KEY'] ?? '';
@@ -134,9 +137,6 @@ class RoutePlannerViewModel extends ChangeNotifier {
   }
 
   List<DreamListLocation> reorderLocations(List<DreamListLocation> locations) {
-    for (DreamListLocation location in locations) {
-      dev.log(location.name);
-    }
     locations.sort((a, b) {
       double distanceA = calculateDistance(
           start.coordinates.latitude,
@@ -150,9 +150,7 @@ class RoutePlannerViewModel extends ChangeNotifier {
           b.locationCoordinates.longitude);
       return distanceA.compareTo(distanceB);
     });
-    for (DreamListLocation location in locations) {
-      dev.log(location.name);
-    }
+
     return locations;
   }
 
@@ -177,9 +175,9 @@ class RoutePlannerViewModel extends ChangeNotifier {
     return degree * pi / 180;
   }
 
-  Future<void> addNearbyBucketListLocations(BuildContext parentContext) async {
+  Future<void> addNearbyBucketListLocations(BuildContext context) async {
     // Capture the parent context for use in async operations
-    final capturedContext = parentContext;
+    // BuildContext parentContext = context;
 
     DbService db_service = DbService();
 
@@ -188,23 +186,19 @@ class RoutePlannerViewModel extends ChangeNotifier {
 
     // Use the parent context to load data from the database
     List<DreamListLocation> dreamlistLocations =
-        await db_service.loadDreamlistFromDb(capturedContext);
+        await db_service.loadDreamlistFromDb(context);
 
     for (DreamListLocation location in dreamlistLocations) {
-      if (await isNearRoute(location, radius)) {
+      if (isNearRoute(location, radius)) {
         locationsOnRoute.add(location);
       }
     }
 
     // Ensure the widget associated with the parent context is still mounted
-    if (locationsOnRoute.isNotEmpty && capturedContext.mounted) {
-      dev.log('test');
-      dev.log(locationsOnRoute.length.toString());
+    if (locationsOnRoute.isNotEmpty && context.mounted) {
       locationsOnRoute = reorderLocations(locationsOnRoute);
       var points = convertLocations(locationsOnRoute);
       dreamlistLocationsOnRoute = locationsOnRoute;
-      // Use the captured parent context for UI-related operations
-      addLocationsOnRouteMarker(parentContext, locationsOnRoute);
       await recalculateRoute(points);
     } else {
       dreamlistRouteDistance = directRouteDistance;
@@ -224,16 +218,17 @@ class RoutePlannerViewModel extends ChangeNotifier {
     }
   }
 
-  void addLocationsOnRouteMarker(
-      BuildContext parentContext, List<DreamListLocation> locations) {
+  Set<Marker> getLocationsOnRouteMarkers(
+    BuildContext context,
+  ) {
     // dev.log('markers: ${markers.length.toString()}');
-    // dev.log('locations: ${locations.length.toString()}');
-    markers.clear();
-    markers.add(originMarker!);
-    markers.add(destinationMarker!);
+    // markers.clear();
+    // markers.add(originMarker!);
+    // markers.add(destinationMarker!);
 
-    for (DreamListLocation location in locations) {
-      // dev.dev.log('id: ${location.id}');
+    // dev.log(dreamlistLocationsOnRoute.length.toString());
+    Set<Marker> markers = {};
+    for (DreamListLocation location in dreamlistLocationsOnRoute) {
       // dev.dev.log('coords: ${location.locationCoordinates.toString()}');
       markers.add(
         Marker(
@@ -244,20 +239,68 @@ class RoutePlannerViewModel extends ChangeNotifier {
             snippet: 'Tap to view more info',
             onTap: () {
               // Use the parent context to show diadev.log
-              _showImageDialog(parentContext, location);
+              _showImageDialog(context, location);
             },
           ),
         ),
       );
     }
-    dev.log('markers: ${markers.length.toString()}');
-    notifyListeners();
+    markers.add(
+      Marker(
+        markerId: MarkerId(start.name),
+        position: start.coordinates,
+      ),
+    );
+    markers.add(
+      Marker(
+        markerId: MarkerId(destination.name),
+        position: destination.coordinates,
+      ),
+    );
+
+    // dev.log(dreamlistLocationsOnRoute.length.toString());
+    // dev.log('markers: ${markers.length.toString()}');
+    return markers;
+    // notifyListeners();
   }
 
-  void _showImageDialog(
-      BuildContext parentContext, DreamListLocation location) {
+  // void addLocationsOnRouteMarker(
+
+  //     // final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+  //     BuildContext context,
+  //     List<DreamListLocation> locations) {
+  //   // dev.log('markers: ${markers.length.toString()}');
+  //   // dev.log('locations: ${locations.length.toString()}');
+  //   markers.clear();
+  //   markers.add(originMarker!);
+  //   markers.add(destinationMarker!);
+
+  //   dev.log(locations.length.toString());
+  //   for (DreamListLocation location in locations) {
+  //     // dev.dev.log('coords: ${location.locationCoordinates.toString()}');
+  //     markers.add(
+  //       Marker(
+  //         markerId: MarkerId(location.id),
+  //         position: location.locationCoordinates,
+  //         infoWindow: InfoWindow(
+  //           title: location.name, // Name to display
+  //           snippet: 'Tap to view more info',
+  //           onTap: () {
+  //             // Use the parent context to show diadev.log
+  //             _showImageDialog(location);
+  //           },
+  //         ),
+  //       ),
+  //     );
+  //   }
+  //   dev.log(locations.length.toString());
+  //   dev.log('markers: ${markers.length.toString()}');
+  //   notifyListeners();
+  // }
+
+  void _showImageDialog(BuildContext context, DreamListLocation location) {
     showDialog(
-      context: parentContext,
+      context: context,
       builder: (BuildContext dialogContext) {
         return Dialog(
           backgroundColor: Colors.transparent,
@@ -341,6 +384,93 @@ class RoutePlannerViewModel extends ChangeNotifier {
       },
     );
   }
+
+  // void _showImageDialog(DreamListLocation location) {
+  //   showDialog(
+  //     context: navigatorKey.currentState!.overlay!.context,
+  //     builder: (BuildContext dialogContext) {
+  //       return Dialog(
+  //         backgroundColor: Colors.transparent,
+  //         elevation: 0,
+  //         child: Container(
+  //           width: 1000,
+  //           height: 350,
+  //           decoration: BoxDecoration(
+  //               borderRadius: BorderRadius.circular(25), color: Colors.white),
+  //           child: Column(
+  //             crossAxisAlignment: CrossAxisAlignment.start,
+  //             children: [
+  //               Padding(
+  //                 padding: EdgeInsets.fromLTRB(20, 20, 0, 0),
+  //                 child: Text(
+  //                   location.name,
+  //                   style: TextStyle(fontSize: 25, fontWeight: FontWeight.w500),
+  //                 ),
+  //               ),
+  //               Padding(
+  //                 padding: EdgeInsets.fromLTRB(20, 0, 0, 0),
+  //                 child: Text(
+  //                   location.locationName,
+  //                   style: TextStyle(fontSize: 17, fontWeight: FontWeight.w400),
+  //                 ),
+  //               ),
+  //               Padding(
+  //                 padding: EdgeInsets.fromLTRB(10, 0, 10, 0),
+  //                 child: Container(
+  //                   padding: EdgeInsets.all(10),
+  //                   width: 500,
+  //                   height: 150,
+  //                   child: ListView.builder(
+  //                     scrollDirection: Axis.horizontal,
+  //                     itemCount: location.imageDatas.length,
+  //                     itemBuilder: (context, index) {
+  //                       return Padding(
+  //                         padding: EdgeInsets.fromLTRB(0, 0, 5, 0),
+  //                         child: Container(
+  //                           width: 150,
+  //                           height: 100,
+  //                           decoration: BoxDecoration(
+  //                               borderRadius: BorderRadius.circular(15)),
+  //                           child: ClipRRect(
+  //                             borderRadius: BorderRadius.circular(10),
+  //                             child: Image(
+  //                                 image:
+  //                                     MemoryImage(location.imageDatas[index]),
+  //                                 fit: BoxFit.cover),
+  //                           ),
+  //                         ),
+  //                       );
+  //                     },
+  //                   ),
+  //                 ),
+  //               ),
+  //               Padding(
+  //                   padding: EdgeInsets.fromLTRB(20, 0, 0, 0),
+  //                   child: Row(
+  //                     children: [
+  //                       Padding(
+  //                         padding: EdgeInsets.fromLTRB(0, 0, 0, 0),
+  //                         child: Text(location.rating.toString()),
+  //                       ),
+  //                       Icon(Icons.star_border_rounded),
+  //                       SizedBox(width: 10),
+  //                       Padding(
+  //                         padding: EdgeInsets.fromLTRB(0, 0, 0, 0),
+  //                         child: Text(location.numReviews.toString()),
+  //                       )
+  //                     ],
+  //                   )),
+  //               Padding(
+  //                 padding: EdgeInsets.fromLTRB(20, 0, 0, 0),
+  //                 child: Text(location.description),
+  //               ),
+  //             ],
+  //           ),
+  //         ),
+  //       );
+  //     },
+  //   );
+  // }
 
   List<Map<String, dynamic>> convertLocations(
       List<DreamListLocation> locations) {
@@ -463,7 +593,7 @@ class RoutePlannerViewModel extends ChangeNotifier {
     return;
   }
 
-  Future<bool> isNearRoute(DreamListLocation location, double radius) async {
+  bool isNearRoute(DreamListLocation location, double radius) {
     for (LatLng point in polylinePoints) {
       double distance = Geolocator.distanceBetween(
         location.locationCoordinates.latitude,
@@ -722,11 +852,6 @@ class RoutePlannerViewModel extends ChangeNotifier {
   void packData() {
     getUserLocation().then((value) async {
       if (_isDisposed) return;
-      // myMarker.add(Marker(
-      //   markerId: const MarkerId('CurrentLocation'),
-      //   position: LatLng(value.latitude, value.longitude),
-      //   infoWindow: const InfoWindow(title: 'CurrentLocation'),
-      // ));
       CameraPosition cameraPosition = CameraPosition(
           target: LatLng(value.latitude, value.longitude), zoom: 11);
       final GoogleMapController controller = await _mapController.future;

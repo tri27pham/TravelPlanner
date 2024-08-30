@@ -42,18 +42,15 @@ class RouteWithDreamlistLocations {
     }
   }
 
-  void showImageData() {
-    if (locationsOnRoute.isNotEmpty) {
-      log('has locations');
-      for (DreamListLocation location in locationsOnRoute) {
-        if (location.imageDatas.isNotEmpty) {
-          log(location.imageDatas.first.toString());
-        }
-      }
-    } else {
-      log('fuck');
-    }
-  }
+  // void showImageData() {
+  //   if (locationsOnRoute.isNotEmpty) {
+  //     for (DreamListLocation location in locationsOnRoute) {
+  //       if (location.imageDatas.isNotEmpty) {
+  //         log(location.imageDatas.first.toString());
+  //       }
+  //     }
+  //   }
+  // }
 
   Set<Marker> getMarkers(BuildContext context) {
     Set<Marker> markers = {};
@@ -65,7 +62,7 @@ class RouteWithDreamlistLocations {
           position: location.locationCoordinates,
           infoWindow: InfoWindow(
             title: location.name, // Name to display
-            snippet: 'Tap to view more info',
+            snippet: 'Tap to view more info test',
             onTap: () {
               _showImageDialog(context, location);
             },
