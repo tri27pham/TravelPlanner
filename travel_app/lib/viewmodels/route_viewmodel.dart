@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'dart:math';
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:http/http.dart' as http;
@@ -218,18 +219,44 @@ class RoutePlannerViewModel extends ChangeNotifier {
     }
   }
 
+  Future<void> recalculateBucketListLocations(
+      BuildContext context, DreamListLocation location) async {
+    DbService db_service = DbService();
+
+    List<DreamListLocation> locationsOnRoute =
+        dreamlistLocationsOnRoute.where((loc) => loc != location).toList();
+
+    // Ensure the widget associated with the parent context is still mounted
+    if (locationsOnRoute.isNotEmpty && context.mounted) {
+      // locationsOnRoute = reorderLocations(locationsOnRoute);
+      locationsOnRoute = reorderLocations(locationsOnRoute);
+      var points = convertLocations(locationsOnRoute);
+      dreamlistLocationsOnRoute = locationsOnRoute;
+      await recalculateRoute(points);
+    } else {
+      dreamlistRouteDistance = directRouteDistance;
+      dreamlistRouteTime = directRouteTime;
+      currentRoute = RouteWithDreamlistLocations(
+          id: uuid.v4(),
+          polyline: directPolyline!,
+          origin: start,
+          destination: destination,
+          locationsOnRoute: locationsOnRoute,
+          directDistance: directRouteDistance,
+          indirectDistance: dreamlistRouteDistance,
+          distanceDifference: getDistanceDifference(),
+          directTime: directRouteTime,
+          indirectTime: dreamlistRouteTime,
+          timeDifference: getTimeDifference());
+    }
+    notifyListeners();
+  }
+
   Set<Marker> getLocationsOnRouteMarkers(
     BuildContext context,
   ) {
-    // dev.log('markers: ${markers.length.toString()}');
-    // markers.clear();
-    // markers.add(originMarker!);
-    // markers.add(destinationMarker!);
-
-    // dev.log(dreamlistLocationsOnRoute.length.toString());
     Set<Marker> markers = {};
     for (DreamListLocation location in dreamlistLocationsOnRoute) {
-      // dev.dev.log('coords: ${location.locationCoordinates.toString()}');
       markers.add(
         Marker(
           markerId: MarkerId(location.id),
@@ -258,45 +285,8 @@ class RoutePlannerViewModel extends ChangeNotifier {
       ),
     );
 
-    // dev.log(dreamlistLocationsOnRoute.length.toString());
-    // dev.log('markers: ${markers.length.toString()}');
     return markers;
-    // notifyListeners();
   }
-
-  // void addLocationsOnRouteMarker(
-
-  //     // final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
-  //     BuildContext context,
-  //     List<DreamListLocation> locations) {
-  //   // dev.log('markers: ${markers.length.toString()}');
-  //   // dev.log('locations: ${locations.length.toString()}');
-  //   markers.clear();
-  //   markers.add(originMarker!);
-  //   markers.add(destinationMarker!);
-
-  //   dev.log(locations.length.toString());
-  //   for (DreamListLocation location in locations) {
-  //     // dev.dev.log('coords: ${location.locationCoordinates.toString()}');
-  //     markers.add(
-  //       Marker(
-  //         markerId: MarkerId(location.id),
-  //         position: location.locationCoordinates,
-  //         infoWindow: InfoWindow(
-  //           title: location.name, // Name to display
-  //           snippet: 'Tap to view more info',
-  //           onTap: () {
-  //             // Use the parent context to show diadev.log
-  //             _showImageDialog(location);
-  //           },
-  //         ),
-  //       ),
-  //     );
-  //   }
-  //   dev.log(locations.length.toString());
-  //   dev.log('markers: ${markers.length.toString()}');
-  //   notifyListeners();
-  // }
 
   void _showImageDialog(BuildContext context, DreamListLocation location) {
     showDialog(
@@ -307,14 +297,53 @@ class RoutePlannerViewModel extends ChangeNotifier {
           elevation: 0,
           child: Container(
             width: 1000,
-            height: 350,
+            height: 400,
             decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(25), color: Colors.white),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Padding(
-                  padding: EdgeInsets.fromLTRB(20, 20, 0, 0),
+                  padding: EdgeInsets.fromLTRB(0, 15, 0, 0),
+                  child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        Padding(
+                          padding: EdgeInsets.only(left: 10),
+                          child: Text.rich(
+                            TextSpan(
+                              children: [
+                                TextSpan(
+                                  text: 'Added By: ', // Regular text
+                                ),
+                                TextSpan(
+                                  text: location.addedBy, // Text to be bold
+                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        Padding(
+                          padding: EdgeInsets.only(right: 10),
+                          child: Text.rich(
+                            TextSpan(
+                              children: [
+                                TextSpan(
+                                  text: 'Added On: ', // Regular text
+                                ),
+                                TextSpan(
+                                  text: location.addedOn, // Text to be bold
+                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ]),
+                ),
+                Padding(
+                  padding: EdgeInsets.fromLTRB(20, 0, 0, 0),
                   child: Text(
                     location.name,
                     style: TextStyle(fontSize: 25, fontWeight: FontWeight.w500),
@@ -376,6 +405,24 @@ class RoutePlannerViewModel extends ChangeNotifier {
                 Padding(
                   padding: EdgeInsets.fromLTRB(20, 0, 0, 0),
                   child: Text(location.description),
+                ),
+                Center(
+                  child: Padding(
+                    padding: EdgeInsets.only(top: 20),
+                    child: Container(
+                      width: 250,
+                      height: 40,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          recalculateBucketListLocations(context, location);
+                          Navigator.of(context).pop();
+                        },
+                        child: Text('Remove from route'),
+                        style: ElevatedButton.styleFrom(
+                            primary: Colors.red, foregroundColor: Colors.white),
+                      ),
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -811,6 +858,7 @@ class RoutePlannerViewModel extends ChangeNotifier {
     // final bounds = calculateBounds();
     // controller.animateCamera(CameraUpdate.newLatLngBounds(bounds, 50));
     // notifyListeners();
+    _mapController = Completer<GoogleMapController>();
     final bounds = calculateBounds();
     final GoogleMapController controller = await _mapController.future;
     if (_isDisposed) return;

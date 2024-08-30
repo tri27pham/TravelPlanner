@@ -61,25 +61,31 @@ class RoutePlanner extends StatelessWidget {
     final viewModel = Provider.of<RoutePlannerViewModel>(context);
     return Stack(
       children: [
-        GoogleMap(
-          initialCameraPosition: CameraPosition(
-            target: viewModel
-                .getCentreOfMarkers(), // Set the center as the initial target
-            zoom: 14, // Adjust zoom level as needed
-          ),
-          mapType: MapType.normal,
-          // markers: Set<Marker>.of(viewModel.myMarker),
-          markers:
-              Set<Marker>.of(viewModel.getLocationsOnRouteMarkers(context)),
+        Align(
+          alignment: Alignment.bottomCenter,
+          child: GoogleMap(
+            initialCameraPosition: CameraPosition(
+              target: viewModel
+                  .getCentreOfMarkers(), // Set the center as the initial target
+              zoom: 14, // Adjust zoom level as needed
+            ),
+            mapType: MapType.normal,
+            // markers: Set<Marker>.of(viewModel.myMarker),
+            markers:
+                Set<Marker>.of(viewModel.getLocationsOnRouteMarkers(context)),
 
-          polylines: viewModel.polylines,
-          onMapCreated: (GoogleMapController controller) async {
-            if (!viewModel.mapController.isCompleted) {
-              viewModel.mapController.complete(controller);
-            }
-            await Future.delayed(
-                Duration(milliseconds: 100)); // Ensure the map is fully loaded
-          },
+            polylines: viewModel.polylines,
+            onMapCreated: (GoogleMapController controller) async {
+              if (!viewModel.mapController.isCompleted) {
+                viewModel.mapController.complete(controller);
+              }
+              await Future.delayed(Duration(
+                  milliseconds: 100)); // Ensure the map is fully loaded
+
+              controller.animateCamera(CameraUpdate.newLatLngBounds(
+                  viewModel.calculateBounds(), 50));
+            },
+          ),
         ),
         Align(
           alignment: Alignment.topCenter,
