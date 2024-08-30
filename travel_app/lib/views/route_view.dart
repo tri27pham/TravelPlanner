@@ -446,7 +446,7 @@ class RoutePlanner extends StatelessWidget {
               backgroundColor: Colors.white,
               itemExtent: 32.0,
               onSelectedItemChanged: (int index) {
-                viewModel.setRadius((index + 1) * 10);
+                viewModel.setRadius((index) * 10);
               },
               children: List<Widget>.generate(6, (int index) {
                 return Center(child: Text('${((index) * 10)} km'));

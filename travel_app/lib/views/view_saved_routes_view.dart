@@ -81,8 +81,7 @@ class ViewSavedRoutes extends StatelessWidget {
                                   width: 60,
                                   child: ElevatedButton(
                                     onPressed: () {
-                                      viewModel
-                                          .togglePage(1); // Use the ViewModel
+                                      viewModel.reset();
                                     },
                                     child: Icon(Icons.arrow_back_sharp),
                                     style: ElevatedButton.styleFrom(
