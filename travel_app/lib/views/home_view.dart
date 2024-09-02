@@ -172,7 +172,7 @@ class UpcomingTripsWidget extends StatelessWidget {
         children: [
           Padding(
             padding: EdgeInsets.fromLTRB(40, 0, 0, 10),
-            child: Text('Upcoming Trips'),
+            child: Text('Suggested routes'),
           ),
           Center(
             child: Container(

@@ -53,6 +53,7 @@ class LoginPage extends StatelessWidget {
                           borderRadius: BorderRadius.all(Radius.circular(25))),
                       child: TextFormField(
                         controller: viewModel.passwordController,
+                        obscureText: true,
                         decoration: InputDecoration(
                           hintText: 'Enter password',
                           border: InputBorder.none, // Remove the border
