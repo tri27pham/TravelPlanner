@@ -48,7 +48,7 @@ class WelcomePage extends StatelessWidget {
           ElevatedButton(
             onPressed: () {
               final appState = Provider.of<AppState>(context, listen: false);
-              appState.updateProfile(CurrentProfile(name: profile.name));
+              appState.updateProfile(profile);
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => App()),

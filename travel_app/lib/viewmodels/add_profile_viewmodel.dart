@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:travel_app/firebase/db_services.dart';
-import 'package:travel_app/models/current_profile.dart';
+import 'package:travel_app/models/profile_model.dart';
 import 'package:travel_app/models/AppState.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
+// import '../models/profile_model.dart';
+import 'package:uuid/uuid.dart';
 
 class AddProfileViewModel extends ChangeNotifier {
   AddProfileViewModel() {
@@ -20,6 +22,8 @@ class AddProfileViewModel extends ChangeNotifier {
   List<dynamic> profiles = [];
 
   bool validProfileDetails = false;
+
+  final uuid = Uuid();
 
   void onModify() {
     if (profileNameController.text.isNotEmpty) {
@@ -58,14 +62,11 @@ class AddProfileViewModel extends ChangeNotifier {
   }
 
   Future<void> addProfileToDb(BuildContext context, name, color) async {
-    await db_service.addProfile(context,
-        name: name, color: color, dateOfBirth: dateOfBirth);
+    Profile newProfile =
+        Profile(pid: uuid.v4(), name: name, dob: dateOfBirth, color: color);
+    await db_service.addProfile(context, newProfile);
     final appState = Provider.of<AppState>(context, listen: false);
-    appState.updateProfile(
-      CurrentProfile(
-        name: name,
-      ),
-    );
+    appState.updateProfile(newProfile);
     Navigator.pushReplacementNamed(context, '/app');
   }
 

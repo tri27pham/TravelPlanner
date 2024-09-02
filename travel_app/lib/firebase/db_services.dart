@@ -22,8 +22,7 @@ class DbService {
     return includeAlpha ? '#$hex' : '${hex.substring(2)}';
   }
 
-  Future<void> addProfile(BuildContext context,
-      {String? name, Color? color, DateTime? dateOfBirth}) async {
+  Future<void> addProfile(BuildContext context, Profile profile) async {
     final appState = Provider.of<AppState>(context, listen: false);
 
     if (appState.account != null && appState.account!.email.isNotEmpty) {
@@ -31,15 +30,16 @@ class DbService {
 
       try {
         Map<String, dynamic> profileData = {
-          "name": name ?? appState.account!.email,
-          "color": colorToHex(color!) ?? "ffffff",
-          "dob": Timestamp.fromDate(dateOfBirth!) ?? DateTime.now(),
+          "name": profile.name ?? appState.account!.email,
+          "color": colorToHex(profile.color) ?? "ffffff",
+          "dob": Timestamp.fromDate(profile.dob) ?? DateTime.now(),
         };
 
         CollectionReference collectionRef =
             firestore.collection('accounts').doc(uid).collection('profiles');
 
-        String profileID = collectionRef.doc().id;
+        // String profileID = collectionRef.doc().id;
+        String profileID = profile.pid;
 
         DocumentReference docRef = collectionRef.doc(profileID);
 

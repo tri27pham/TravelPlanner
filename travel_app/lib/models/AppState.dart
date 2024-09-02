@@ -1,21 +1,28 @@
 import 'package:flutter/material.dart';
 import 'account.dart';
 import 'current_profile.dart';
+import '../models/profile_model.dart';
 
 class AppState with ChangeNotifier {
   CurrentAccount? _account;
-  CurrentProfile? _profile;
+  Profile? _profile;
 
   CurrentAccount? get account => _account;
-  CurrentProfile? get profile => _profile;
+  Profile? get profile => _profile;
 
   void updateAccount(CurrentAccount account) {
     _account = account;
     notifyListeners();
   }
 
-  void updateProfile(CurrentProfile profile) {
+  void updateProfile(Profile profile) {
     _profile = profile;
+    notifyListeners();
+  }
+
+  void reset() {
+    _account = null;
+    _profile = null;
     notifyListeners();
   }
 }

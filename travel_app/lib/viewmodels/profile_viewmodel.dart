@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:travel_app/firebase/db_services.dart';
 import '../models/profile_model.dart';
+import '../firebase/auth_services.dart';
 
 class ProfileViewModel extends ChangeNotifier {
   Profile profile;
@@ -49,5 +51,10 @@ class ProfileViewModel extends ChangeNotifier {
     if (dateTime != null) {
       selectedDate = dateTime;
     }
+  }
+
+  Future<void> signOut() async {
+    final auth_service = AuthService();
+    await auth_service.signout();
   }
 }

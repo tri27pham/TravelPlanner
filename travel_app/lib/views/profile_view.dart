@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:travel_app/views/login_view.dart';
+import 'package:travel_app/views/welcome_page_view.dart';
 import '../viewmodels/profile_viewmodel.dart';
+import '../models/AppState.dart';
 
 class ProfileView extends StatelessWidget {
   const ProfileView({super.key});
@@ -46,6 +49,7 @@ class ProfileInfoWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final profileViewModel = Provider.of<ProfileViewModel>(context);
+    final appState = Provider.of<AppState>(context, listen: false);
 
     return Center(
       child: Container(
@@ -61,7 +65,9 @@ class ProfileInfoWidget extends StatelessWidget {
               padding: EdgeInsets.fromLTRB(0, 20, 0, 0),
               child: CircleAvatar(
                 radius: 30.0,
-                backgroundColor: profileViewModel.color,
+                backgroundColor: appState.profile != null
+                    ? appState.profile!.color
+                    : Colors.green,
               ),
             ),
             ElevatedButton(
@@ -88,18 +94,19 @@ class ProfileInfoWidget extends StatelessWidget {
                   ),
                   Expanded(
                     child: Padding(
-                      padding: EdgeInsets.fromLTRB(0, 0, 0, 0),
+                      padding: EdgeInsets.fromLTRB(30, 0, 0, 0),
                       child: TextFormField(
-                        initialValue: profileViewModel.name,
+                        initialValue: appState.profile != null
+                            ? appState.profile!.name
+                            : '',
                         decoration: InputDecoration(
                           contentPadding: EdgeInsets.all(0),
-                          hintText: 'John',
                           border: InputBorder.none,
                           enabledBorder: InputBorder.none,
                           focusedBorder: InputBorder.none,
                         ),
                         onChanged: (value) {
-                          profileViewModel.name = value;
+                          appState.profile!.name = value;
                         },
                       ),
                     ),
@@ -129,6 +136,7 @@ class ProfileInfoWidget extends StatelessWidget {
                         },
                         child: Text(
                           '${profileViewModel.selectedDate.day} - ${profileViewModel.selectedDate.month} - ${profileViewModel.selectedDate.year}',
+                          style: TextStyle(fontSize: 17),
                         ),
                         style: ElevatedButton.styleFrom(
                           elevation: 0,
@@ -169,9 +177,18 @@ class ProfileButtonBar extends StatelessWidget {
 class LogOutButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final profileViewModel = Provider.of<ProfileViewModel>(context);
+    final appState = Provider.of<AppState>(context, listen: false);
     return Container(
       child: ElevatedButton(
-        onPressed: () {},
+        onPressed: () async {
+          await profileViewModel.signOut();
+          appState.reset();
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => LoginPage()),
+          );
+        },
         child: Row(
           children: [
             Padding(
@@ -195,7 +212,12 @@ class SwitchProfileButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       child: ElevatedButton(
-        onPressed: () {},
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => WelcomePage()),
+          );
+        },
         child: Row(
           children: [
             Padding(

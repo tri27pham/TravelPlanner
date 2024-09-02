@@ -6,6 +6,8 @@ import '../models/account.dart';
 import 'package:travel_app/models/AppState.dart';
 import 'dart:developer';
 import 'package:provider/provider.dart';
+import '../models/profile_model.dart';
+import 'package:uuid/uuid.dart';
 
 class CreateAccountViewModel extends ChangeNotifier {
   final AuthService _authService = AuthService();
@@ -13,6 +15,7 @@ class CreateAccountViewModel extends ChangeNotifier {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController password1Controller = TextEditingController();
   final TextEditingController password2Controller = TextEditingController();
+  final uuid = Uuid();
 
   Future<void> signUp(BuildContext context) async {
     if (emailController.text.isNotEmpty &&
@@ -42,13 +45,14 @@ class CreateAccountViewModel extends ChangeNotifier {
           email: user.email ?? "Unknown Email",
         ),
       );
+      Profile newProfile = Profile(
+          pid: uuid.v4(),
+          name: _appState.account!.email,
+          dob: DateTime.now(),
+          color: Colors.green);
       await _dbService.createAccount(context);
-      _appState.updateProfile(
-        CurrentProfile(
-          name: user.email ?? "Unknown Email",
-        ),
-      );
-      await _dbService.addProfile(context);
+      await _dbService.addProfile(context, newProfile);
+      _appState.updateProfile(newProfile);
       Navigator.pushReplacementNamed(context, '/welcome');
     } else {
       _showDialog(context, "Account Creation Failed",
