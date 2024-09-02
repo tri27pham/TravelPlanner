@@ -38,16 +38,158 @@ class DreamListViewModel extends ChangeNotifier {
 
   final db_service = DbService();
 
-  createMarkers() {
-    markers.clear();
+  Set<Marker> createMarkers(BuildContext context) {
+    // markers.clear();
+
+    Set<Marker> markers = {};
+
     for (DreamListLocation location in locations) {
-      log(location.name);
-      log(location.locationCoordinates.toString());
-      markers.add(Marker(
-          markerId: MarkerId(location.name),
+      markers.add(
+        Marker(
+          markerId: MarkerId(location.id),
           position: location.locationCoordinates,
-          icon: BitmapDescriptor.defaultMarker));
+          infoWindow: InfoWindow(
+            title: location.name, // Name to display
+            snippet: 'Tap to view more info',
+            onTap: () {
+              // Use the parent context to show diadev.log
+              _showImageDialog(context, location);
+            },
+          ),
+        ),
+      );
+      // markers.add(Marker(
+      //     markerId: MarkerId(location.name),
+      //     position: location.locationCoordinates,
+      //     icon: BitmapDescriptor.defaultMarker));
     }
+    return markers;
+  }
+
+  void _showImageDialog(BuildContext context, DreamListLocation location) {
+    showDialog(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          child: Container(
+            width: 1000,
+            height: 400,
+            decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(25), color: Colors.white),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: EdgeInsets.fromLTRB(0, 15, 0, 0),
+                  child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        Padding(
+                          padding: EdgeInsets.only(left: 10),
+                          child: Text.rich(
+                            TextSpan(
+                              children: [
+                                TextSpan(
+                                  text: 'Added By: ', // Regular text
+                                ),
+                                TextSpan(
+                                  text: location.addedBy, // Text to be bold
+                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        Padding(
+                          padding: EdgeInsets.only(right: 10),
+                          child: Text.rich(
+                            TextSpan(
+                              children: [
+                                TextSpan(
+                                  text: 'Added On: ', // Regular text
+                                ),
+                                TextSpan(
+                                  text: location.addedOn, // Text to be bold
+                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ]),
+                ),
+                Padding(
+                  padding: EdgeInsets.fromLTRB(20, 0, 0, 0),
+                  child: Text(
+                    location.name,
+                    style: TextStyle(fontSize: 25, fontWeight: FontWeight.w500),
+                  ),
+                ),
+                Padding(
+                  padding: EdgeInsets.fromLTRB(20, 0, 0, 0),
+                  child: Text(
+                    location.locationName,
+                    style: TextStyle(fontSize: 17, fontWeight: FontWeight.w400),
+                  ),
+                ),
+                Padding(
+                  padding: EdgeInsets.fromLTRB(10, 0, 10, 0),
+                  child: Container(
+                    padding: EdgeInsets.all(10),
+                    width: 500,
+                    height: 150,
+                    child: ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: location.imageDatas.length,
+                      itemBuilder: (context, index) {
+                        return Padding(
+                          padding: EdgeInsets.fromLTRB(0, 0, 5, 0),
+                          child: Container(
+                            width: 150,
+                            height: 100,
+                            decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(15)),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(10),
+                              child: Image(
+                                  image:
+                                      MemoryImage(location.imageDatas[index]),
+                                  fit: BoxFit.cover),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ),
+                Padding(
+                    padding: EdgeInsets.fromLTRB(20, 0, 0, 0),
+                    child: Row(
+                      children: [
+                        Padding(
+                          padding: EdgeInsets.fromLTRB(0, 0, 0, 0),
+                          child: Text(location.rating.toString()),
+                        ),
+                        Icon(Icons.star_border_rounded),
+                        SizedBox(width: 10),
+                        Padding(
+                          padding: EdgeInsets.fromLTRB(0, 0, 0, 0),
+                          child: Text(location.numReviews.toString()),
+                        )
+                      ],
+                    )),
+                Padding(
+                  padding: EdgeInsets.fromLTRB(20, 0, 0, 0),
+                  child: Text(location.description),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 
   Future<void> loadLocations(BuildContext context) async {
@@ -60,7 +202,6 @@ class DreamListViewModel extends ChangeNotifier {
           locations.where((location) => location.visited).toList();
       notVisitedLocations =
           locations.where((location) => !location.visited).toList();
-      createMarkers();
       locationsLoaded = true;
       log('Locations loaded successfully.');
       log(locations.length.toString());

@@ -47,7 +47,6 @@ class RoutePlanner extends StatelessWidget {
               Center(
                 child: Text('Page not found'),
               );
-          ;
         },
       )),
     );
@@ -123,7 +122,9 @@ class RoutePlanner extends StatelessWidget {
               //     ),
               child: ElevatedButton(
                 onPressed: () async {
+                  showLoading(context);
                   await viewModel.saveRoute(context);
+                  Navigator.of(context).pop();
                   viewModel.reset();
                 },
                 child: Text('Save route'),
@@ -502,7 +503,9 @@ class RoutePlanner extends StatelessWidget {
                       BoxDecoration(borderRadius: BorderRadius.circular(25)),
                   child: ElevatedButton(
                     onPressed: () async {
+                      showLoading(context);
                       await viewModel.addNearbyBucketListLocations(context);
+                      Navigator.of(context).pop();
                       viewModel.togglePage(2);
                     },
                     child: Text('Calculate route'),
@@ -527,6 +530,31 @@ class RoutePlanner extends StatelessWidget {
         ),
       );
     });
+  }
+
+  void showLoading(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierDismissible:
+          false, // Prevents dialog from being dismissed by tapping outside
+      builder: (BuildContext context) {
+        return Center(
+          child: Container(
+            width: 100,
+            height: 100,
+            decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(20), color: Colors.white),
+            child: Center(
+              child: Container(
+                width: 50,
+                height: 50,
+                child: CircularProgressIndicator(),
+              ),
+            ),
+          ),
+        );
+      },
+    );
   }
 
   Widget CreateRouteTitleWidget(RoutePlannerViewModel viewModel) {

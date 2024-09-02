@@ -123,6 +123,13 @@ class RoutePlannerViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  bool isLoading = false;
+
+  void setLoading(bool value) {
+    isLoading = value;
+    notifyListeners(); // If using a ChangeNotifier
+  }
+
   Future<void> deleteRoute(
       BuildContext context, RouteWithDreamlistLocations route) async {
     await db_service.deleteRoute(context, route);
@@ -297,7 +304,7 @@ class RoutePlannerViewModel extends ChangeNotifier {
           elevation: 0,
           child: Container(
             width: 1000,
-            height: 400,
+            height: 450,
             decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(25), color: Colors.white),
             child: Column(
@@ -641,6 +648,7 @@ class RoutePlannerViewModel extends ChangeNotifier {
   }
 
   bool isNearRoute(DreamListLocation location, double radius) {
+    dev.log('radius: ${radius} km');
     for (LatLng point in polylinePoints) {
       double distance = Geolocator.distanceBetween(
         location.locationCoordinates.latitude,
@@ -648,8 +656,8 @@ class RoutePlannerViewModel extends ChangeNotifier {
         point.latitude,
         point.longitude,
       );
-      // log('${location.name}: ${distance}');
       if (distance <= radius) {
+        dev.log('${location.name}: ${distance}');
         return true;
       }
     }

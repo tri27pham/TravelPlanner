@@ -157,7 +157,7 @@ class AddDreamlistLocation extends StatelessWidget {
                                 children: [
                                   Center(
                                     child: Container(
-                                      width: 150,
+                                      width: 280,
                                       height: 150,
                                       // Use FutureBuilder to wait for the image data
                                       child: FutureBuilder(
@@ -186,22 +186,22 @@ class AddDreamlistLocation extends StatelessWidget {
                                                 children: List.generate(
                                                     images.length, (index) {
                                                   return Container(
-                                                    margin: EdgeInsets.all(8.0),
+                                                    margin: EdgeInsets.only(
+                                                        right: 5),
                                                     width:
-                                                        100, // Set a fixed width for each container
+                                                        200, // Set a fixed width for each container
                                                     height:
-                                                        100, // Set a fixed height for each container
-                                                    decoration: BoxDecoration(
-                                                      color: Colors.grey[
-                                                          300], // Background color
+                                                        150, // Set a fixed height for each container
+
+                                                    child: ClipRRect(
                                                       borderRadius:
                                                           BorderRadius.circular(
-                                                              8.0), // Rounded corners
-                                                    ),
-                                                    child: Image.memory(
-                                                      images[index],
-                                                      fit: BoxFit
-                                                          .cover, // Adjusts image within the container
+                                                              20),
+                                                      child: Image.memory(
+                                                        images[index],
+                                                        fit: BoxFit
+                                                            .fill, // Adjusts image within the container
+                                                      ),
                                                     ),
                                                   );
                                                 }),
@@ -227,8 +227,23 @@ class AddDreamlistLocation extends StatelessWidget {
                                           ),
                                           Text(viewModel
                                               .selectedLocation.locationName),
-                                          Text(
-                                              "${viewModel.selectedLocation.rating.toString()} (${viewModel.selectedLocation.numReviews.toString()})"),
+                                          Row(
+                                            children: [
+                                              Text(
+                                                viewModel
+                                                    .selectedLocation.rating
+                                                    .toString(),
+                                                style: TextStyle(),
+                                              ),
+                                              Icon(Icons.star_border_rounded),
+                                              Text(
+                                                viewModel
+                                                    .selectedLocation.numReviews
+                                                    .toString(),
+                                                style: TextStyle(),
+                                              ),
+                                            ],
+                                          ),
                                           Text(viewModel
                                               .selectedLocation.description),
                                         ],

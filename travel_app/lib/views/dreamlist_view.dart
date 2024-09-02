@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -466,6 +468,7 @@ class ListViewContent extends StatelessWidget {
         child: GestureDetector(
           onTap: () {
             // Add your onTap functionality here
+            log(base64Encode(location.imageDatas.first));
             showLocationInfo(context, location);
           },
           child: Container(
@@ -536,13 +539,14 @@ class ListViewContent extends StatelessWidget {
   }
 
   Widget YourListWidget() {
-    return Expanded(
+    return Container(
+      height: 200,
       child: Padding(
         padding: EdgeInsets.fromLTRB(0, 0, 0, 0),
         child: Consumer<DreamListViewModel>(
           builder: (context, viewModel, child) {
             return ListView.builder(
-              padding: EdgeInsets.only(top: 10, bottom: 90),
+              padding: EdgeInsets.only(top: 10, bottom: 10),
               itemCount: viewModel.viewVisited
                   ? viewModel.visitedLocations.length
                   : viewModel.notVisitedLocations.length,
@@ -612,7 +616,7 @@ class MapViewContent extends StatelessWidget {
         GoogleMap(
           initialCameraPosition: DreamListViewModel.initPos,
           mapType: MapType.normal,
-          markers: Set<Marker>.of(viewModel.markers),
+          markers: Set<Marker>.of(viewModel.createMarkers(context)),
           zoomControlsEnabled: false,
           onMapCreated: (GoogleMapController controller) {
             log(viewModel.markers.length.toString());
