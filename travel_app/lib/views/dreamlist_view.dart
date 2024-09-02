@@ -467,8 +467,6 @@ class ListViewContent extends StatelessWidget {
         padding: EdgeInsets.fromLTRB(0, 3, 0, 3),
         child: GestureDetector(
           onTap: () {
-            // Add your onTap functionality here
-            log(base64Encode(location.imageDatas.first));
             showLocationInfo(context, location);
           },
           child: Container(
@@ -777,6 +775,188 @@ class MapViewContent extends StatelessWidget {
 class BucketListListView extends StatelessWidget {
   const BucketListListView({super.key});
 
+  Widget locationInfoPopUp(BuildContext context, DreamListLocation location) {
+    return ChangeNotifierProvider<DreamListLocation>.value(
+      value: location,
+      child: ChangeNotifierProvider<DreamListViewModel>(
+        create: (_) => DreamListViewModel(),
+        builder: (context, child) {
+          final viewModel =
+              Provider.of<DreamListViewModel>(context, listen: false);
+
+          return Container(
+            height: MediaQuery.of(context).size.height * 0.7,
+            width: MediaQuery.of(context).size.width * 0.8,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(25),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: EdgeInsets.fromLTRB(10, 5, 0, 0),
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                    child: Text(
+                      'Back',
+                      style: TextStyle(fontSize: 15),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      padding: EdgeInsets.zero,
+                      elevation: 0,
+                      foregroundColor: Colors.grey[700],
+                      backgroundColor: Colors.transparent,
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: Center(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Consumer<DreamListLocation>(
+                          builder: (context, location, child) {
+                            return Center(
+                              child: Padding(
+                                padding: EdgeInsets.only(bottom: 10),
+                                child: Container(
+                                  width: 250,
+                                  height: 30,
+                                  child: ElevatedButton(
+                                    onPressed: () {
+                                      location.toggleVisited();
+                                    },
+                                    child: Text(
+                                      location.visited
+                                          ? 'VISITED'
+                                          : 'NOT VISITED',
+                                      style: TextStyle(color: Colors.white),
+                                    ),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: location.visited
+                                          ? Colors.green
+                                          : Colors.grey,
+                                      foregroundColor: location.visited
+                                          ? Colors.white
+                                          : Colors.black,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                        Center(
+                          child: Container(
+                            width: 250,
+                            height: 150,
+                            child: ListView.builder(
+                              scrollDirection: Axis.horizontal,
+                              itemCount: location.imageDatas.length,
+                              itemBuilder: (context, index) {
+                                return Padding(
+                                  padding: EdgeInsets.only(left: 2, right: 2),
+                                  child: Container(
+                                    width: 200,
+                                    height: 150,
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(20),
+                                    ),
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.circular(20),
+                                      child: Image(
+                                        image: MemoryImage(
+                                            location.imageDatas[index]),
+                                        fit: BoxFit.cover,
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                        ),
+                        Padding(
+                          padding: EdgeInsets.fromLTRB(30, 10, 30, 0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                location.name,
+                                style: TextStyle(
+                                  fontSize: 30,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              Text(
+                                location.locationName,
+                                style: TextStyle(fontSize: 15),
+                              ),
+                              Row(
+                                children: [
+                                  Text('${location.rating.toString()}'),
+                                  Icon(Icons.star_border_rounded),
+                                  Text('(${location.numReviews.toString()})'),
+                                ],
+                              ),
+                              Text(location.description),
+                              Text('Added by: ${location.addedBy}'),
+                              Text('Added on: ${location.addedOn}'),
+                              Padding(
+                                padding: EdgeInsets.only(top: 10, bottom: 30),
+                                child: Container(
+                                  height: 40,
+                                  width: 300,
+                                  child: ElevatedButton(
+                                    onPressed: () async {
+                                      await viewModel.updateDreamlistLocation(
+                                          context, location);
+                                      Navigator.of(context).pop();
+                                    },
+                                    child: Text('Update location'),
+                                    style: ElevatedButton.styleFrom(
+                                      primary: Colors.green,
+                                      foregroundColor: Colors.white,
+                                      elevation: 0,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              Container(
+                                height: 30,
+                                width: 300,
+                                child: ElevatedButton(
+                                  onPressed: () async {
+                                    await viewModel.deleteDreamlistLocation(
+                                        context, location);
+                                    Navigator.of(context).pop();
+                                  },
+                                  child: Text('Delete location'),
+                                  style: ElevatedButton.styleFrom(
+                                    primary: Colors.red,
+                                    foregroundColor: Colors.white,
+                                    elevation: 0,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+
   void showAddLocation(BuildContext context) {
     showDialog<void>(
       context: context,
@@ -788,7 +968,19 @@ class BucketListListView extends StatelessWidget {
     );
   }
 
-  Widget YourListWidget() {
+  void showLocationInfo(BuildContext context, DreamListLocation location) {
+    showDialog<void>(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          child: locationInfoPopUp(context, location),
+          backgroundColor: Colors.transparent,
+        );
+      },
+    );
+  }
+
+  Widget EditYourListWidget() {
     return Expanded(
       child: Padding(
         padding: EdgeInsets.fromLTRB(0, 0, 0, 75),
@@ -799,7 +991,7 @@ class BucketListListView extends StatelessWidget {
               itemCount: viewModel.locations.length,
               itemBuilder: (context, index) {
                 final location = viewModel.locations[index];
-                return ListItem(location, context);
+                return EditListItem(location, context);
               },
             );
           },
@@ -808,74 +1000,78 @@ class BucketListListView extends StatelessWidget {
     );
   }
 
-  Widget ListItem(DreamListLocation location, BuildContext context) {
+  Widget EditListItem(DreamListLocation location, BuildContext context) {
     return Align(
       alignment: Alignment.topCenter,
       child: Padding(
-        padding: EdgeInsets.fromLTRB(0, 3, 0, 3),
-        child: Container(
-          height: MediaQuery.of(context).size.height * 0.13,
-          width: MediaQuery.of(context).size.width * 0.8,
-          decoration: BoxDecoration(
-            color: Color.fromARGB(255, 240, 240, 240),
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Row(
-            children: [
-              Padding(
-                padding: EdgeInsets.all(10),
-                child: Container(
-                  height: 70,
-                  width: 70,
-                  decoration: BoxDecoration(
-                    image: DecorationImage(
-                      image: MemoryImage(location.imageDatas.first),
-                      fit: BoxFit.cover, // Adjust the fit as needed
+          padding: EdgeInsets.fromLTRB(0, 3, 0, 3),
+          child: GestureDetector(
+            onTap: () {
+              showLocationInfo(context, location);
+            },
+            child: Container(
+              height: MediaQuery.of(context).size.height * 0.13,
+              width: MediaQuery.of(context).size.width * 0.8,
+              decoration: BoxDecoration(
+                color: Color.fromARGB(255, 240, 240, 240),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Row(
+                children: [
+                  Padding(
+                    padding: EdgeInsets.all(10),
+                    child: Container(
+                      height: 70,
+                      width: 70,
+                      decoration: BoxDecoration(
+                        image: DecorationImage(
+                          image: MemoryImage(location.imageDatas.first),
+                          fit: BoxFit.cover, // Adjust the fit as needed
+                        ),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
                     ),
-                    borderRadius: BorderRadius.circular(10),
                   ),
-                ),
-              ),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    ClipRRect(
-                      child: Text(
-                        location.name,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w500,
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        ClipRRect(
+                          child: Text(
+                            location.name,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
                         ),
-                      ),
-                    ),
-                    ClipRRect(
-                      child: Text(
-                        location.locationName,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey,
+                        ClipRRect(
+                          child: Text(
+                            location.locationName,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey,
+                            ),
+                          ),
                         ),
-                      ),
+                        Text(
+                          'Added on: ${location.addedOn}',
+                          style: TextStyle(fontSize: 12),
+                        ),
+                        Text(
+                          'Added by: ${location.addedBy}',
+                          style: TextStyle(fontSize: 12),
+                        ),
+                      ],
                     ),
-                    Text(
-                      'Added on: ${location.addedOn}',
-                      style: TextStyle(fontSize: 12),
-                    ),
-                    Text(
-                      'Added by: ${location.addedBy}',
-                      style: TextStyle(fontSize: 12),
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-            ],
-          ),
-        ),
-      ),
+            ),
+          )),
     );
   }
 
@@ -992,7 +1188,7 @@ class BucketListListView extends StatelessWidget {
                     ),
                   ),
                 ),
-                YourListWidget(),
+                EditYourListWidget(),
               ],
             ),
           ),
