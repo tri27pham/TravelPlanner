@@ -426,7 +426,8 @@ class RoutePlannerViewModel extends ChangeNotifier {
                         },
                         child: Text('Remove from route'),
                         style: ElevatedButton.styleFrom(
-                            primary: Colors.red, foregroundColor: Colors.white),
+                            backgroundColor: Colors.red,
+                            foregroundColor: Colors.white),
                       ),
                     ),
                   ),

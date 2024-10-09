@@ -56,7 +56,7 @@ class WelcomePage extends StatelessWidget {
             },
             style: ElevatedButton.styleFrom(
               fixedSize: Size(100, 100),
-              primary: profile.color,
+              backgroundColor: profile.color,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(7),
               ),
@@ -90,7 +90,7 @@ class WelcomePage extends StatelessWidget {
             style: ElevatedButton.styleFrom(
               padding: EdgeInsets.zero,
               fixedSize: Size(100, 100),
-              primary: Colors.transparent,
+              backgroundColor: Colors.transparent,
               elevation: 0,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(7),

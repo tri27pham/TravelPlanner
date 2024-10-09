@@ -69,7 +69,8 @@ class LoginPage extends StatelessWidget {
                       },
                       child: Text('LOG IN'),
                       style: ElevatedButton.styleFrom(
-                          primary: Colors.green, foregroundColor: Colors.white),
+                          backgroundColor: Colors.green,
+                          foregroundColor: Colors.white),
                     ),
                   ),
                   Container(
@@ -91,7 +92,7 @@ class LoginPage extends StatelessWidget {
                         ),
                       ),
                       style: ElevatedButton.styleFrom(
-                          primary: Colors.transparent,
+                          backgroundColor: Colors.transparent,
                           elevation: 0,
                           foregroundColor: Colors.grey),
                     ),

@@ -86,7 +86,8 @@ class CreateAccountPage extends StatelessWidget {
                       },
                       child: Text('CREATE ACCOUNT'),
                       style: ElevatedButton.styleFrom(
-                          primary: Colors.green, foregroundColor: Colors.white),
+                          backgroundColor: Colors.green,
+                          foregroundColor: Colors.white),
                     ),
                   ),
                   Container(
@@ -107,7 +108,7 @@ class CreateAccountPage extends StatelessWidget {
                         ),
                       ),
                       style: ElevatedButton.styleFrom(
-                          primary: Colors.transparent,
+                          backgroundColor: Colors.transparent,
                           elevation: 0,
                           foregroundColor: Colors.grey),
                     ),

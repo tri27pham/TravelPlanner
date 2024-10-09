@@ -133,7 +133,7 @@ class ProfileInfoWidget extends StatelessWidget {
                         style: ElevatedButton.styleFrom(
                           elevation: 0,
                           minimumSize: Size(0, 0),
-                          primary: Colors.transparent,
+                          backgroundColor: Colors.transparent,
                           foregroundColor: Colors.grey[700],
                           padding: EdgeInsets.all(0),
                         ),

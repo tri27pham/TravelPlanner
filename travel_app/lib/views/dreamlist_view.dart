@@ -217,7 +217,7 @@ class ListViewContent extends StatelessWidget {
                                     },
                                     child: Text('Update location'),
                                     style: ElevatedButton.styleFrom(
-                                      primary: Colors.green,
+                                      backgroundColor: Colors.green,
                                       foregroundColor: Colors.white,
                                       elevation: 0,
                                     ),
@@ -235,7 +235,7 @@ class ListViewContent extends StatelessWidget {
                                   },
                                   child: Text('Delete location'),
                                   style: ElevatedButton.styleFrom(
-                                    primary: Colors.red,
+                                    backgroundColor: Colors.red,
                                     foregroundColor: Colors.white,
                                     elevation: 0,
                                   ),
@@ -382,7 +382,7 @@ class ListViewContent extends StatelessWidget {
             viewModel.setPage(2);
           },
           style: ElevatedButton.styleFrom(
-            primary: Colors.green,
+            backgroundColor: Colors.green,
             padding: EdgeInsets.all(0),
           ),
           child: Center(
@@ -430,7 +430,7 @@ class ListViewContent extends StatelessWidget {
                   viewModel.setPage(3);
                 },
                 style: ElevatedButton.styleFrom(
-                  primary: Colors.green,
+                  backgroundColor: Colors.green,
                   padding: EdgeInsets.all(0),
                 ),
                 child: Center(
@@ -670,8 +670,8 @@ class MapViewContent extends StatelessWidget {
                               },
                               child: Icon(Icons.arrow_back_sharp),
                               style: ElevatedButton.styleFrom(
-                                primary: Colors.grey[900],
-                                onPrimary: Colors.white,
+                                backgroundColor: Colors.grey[900],
+                                foregroundColor: Colors.white,
                                 padding: EdgeInsets.zero,
                                 minimumSize: Size(50, 40),
                               ),
@@ -705,7 +705,7 @@ class MapViewContent extends StatelessWidget {
             viewModel.setPage(1);
           },
           style: ElevatedButton.styleFrom(
-            primary: Colors.green,
+            backgroundColor: Colors.green,
             padding: EdgeInsets.all(0),
           ),
           child: Center(
@@ -918,7 +918,7 @@ class BucketListListView extends StatelessWidget {
                                     },
                                     child: Text('Update location'),
                                     style: ElevatedButton.styleFrom(
-                                      primary: Colors.green,
+                                      backgroundColor: Colors.green,
                                       foregroundColor: Colors.white,
                                       elevation: 0,
                                     ),
@@ -936,7 +936,7 @@ class BucketListListView extends StatelessWidget {
                                   },
                                   child: Text('Delete location'),
                                   style: ElevatedButton.styleFrom(
-                                    primary: Colors.red,
+                                    backgroundColor: Colors.red,
                                     foregroundColor: Colors.white,
                                     elevation: 0,
                                   ),
@@ -1131,8 +1131,8 @@ class BucketListListView extends StatelessWidget {
                             },
                             child: Icon(Icons.arrow_back_sharp),
                             style: ElevatedButton.styleFrom(
-                              primary: Colors.grey[900],
-                              onPrimary: Colors.white,
+                              backgroundColor: Colors.grey[900],
+                              foregroundColor: Colors.white,
                               padding: EdgeInsets.zero,
                               minimumSize: Size(35, 35),
                             ),
@@ -1158,7 +1158,7 @@ class BucketListListView extends StatelessWidget {
                           showAddLocation(context);
                         },
                         style: ElevatedButton.styleFrom(
-                          primary: Colors.green,
+                          backgroundColor: Colors.green,
                           padding: EdgeInsets.all(0),
                         ),
                         child: Center(

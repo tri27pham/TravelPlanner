@@ -129,7 +129,7 @@ class RoutePlanner extends StatelessWidget {
                 },
                 child: Text('Save route'),
                 style: ElevatedButton.styleFrom(
-                  primary: Colors.green,
+                  backgroundColor: Colors.green,
                   foregroundColor: Colors.white,
                   elevation: 2,
                 ),
@@ -275,7 +275,8 @@ class RoutePlanner extends StatelessWidget {
                   },
                   child: Text('View saved routes'),
                   style: ElevatedButton.styleFrom(
-                      primary: Colors.green, foregroundColor: Colors.white),
+                      backgroundColor: Colors.green,
+                      foregroundColor: Colors.white),
                 ),
               ),
             ),
@@ -488,7 +489,7 @@ class RoutePlanner extends StatelessWidget {
                         Text('Radius: ${viewModel.selectedRadius.toInt()} km'),
                     style: ElevatedButton.styleFrom(
                         elevation: 0,
-                        primary: Colors.grey[300],
+                        backgroundColor: Colors.grey[300],
                         foregroundColor: Colors.black),
                   ),
                 ),
@@ -511,7 +512,7 @@ class RoutePlanner extends StatelessWidget {
                     child: Text('Calculate route'),
                     style: ElevatedButton.styleFrom(
                         elevation: 0,
-                        primary: Colors.green,
+                        backgroundColor: Colors.green,
                         foregroundColor: Colors.white),
                   ),
                 ),
@@ -600,8 +601,8 @@ class RoutePlanner extends StatelessWidget {
                 },
                 child: Icon(Icons.arrow_back_sharp),
                 style: ElevatedButton.styleFrom(
-                  primary: Colors.grey[900],
-                  onPrimary: Colors.white,
+                  backgroundColor: Colors.grey[900],
+                  foregroundColor: Colors.white,
                   padding: EdgeInsets.zero,
                   minimumSize: Size(50, 40),
                 ),
@@ -672,8 +673,8 @@ class RoutePlanner extends StatelessWidget {
                             },
                             child: Icon(Icons.arrow_back_sharp),
                             style: ElevatedButton.styleFrom(
-                              primary: Colors.grey[900],
-                              onPrimary: Colors.white,
+                              backgroundColor: Colors.grey[900],
+                              foregroundColor: Colors.white,
                               padding: EdgeInsets.zero,
                               minimumSize: Size(50, 40),
                             ),
@@ -794,7 +795,7 @@ class RoutePlanner extends StatelessWidget {
                                   color: Colors.grey,
                                 ),
                                 style: ElevatedButton.styleFrom(
-                                  primary: Colors.transparent,
+                                  backgroundColor: Colors.transparent,
                                   shadowColor: Colors.transparent,
                                   padding: EdgeInsets.all(0),
                                 ),
